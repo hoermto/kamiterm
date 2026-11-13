@@ -543,7 +543,12 @@ function openBrowser(url) {
   }
 }
 
+// Ports that browsers and Node's fetch refuse to connect to (Fetch spec "bad ports" above 1023):
+// a server there would run but nobody could open it, so they are skipped.
+const BAD_PORTS = new Set([1719, 1720, 1723, 2049, 3659, 4045, 4190, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6679, 6697, 10080]);
+
 export function start(port = START_PORT, tries = 20) {
+  if (port && BAD_PORTS.has(port)) return start(port + 1, tries);
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       handle(req, res).catch((e) => {
