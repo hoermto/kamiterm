@@ -26,7 +26,7 @@ There's no `npm install` step. Next time, double-click `start.command` (Mac) or 
 2. checks the git repo for a newer version on the release branch and installs it automatically. Only a clean fast-forward happens: a folder with local edits or local commits is never changed, only reported. `data\` (settings, holdings, caches) is never touched;
 3. starts the terminal in its own app window (Edge or Chrome app mode: no tabs, no address bar), or a browser tab if neither is installed.
 
-If the terminal is already running from this folder, `start.bat` skips all of that and just opens the window again.
+If the terminal is already running from this folder, `start.bat` skips the downloads, checks for an update (installing one restarts the server on the same port) and opens the window again.
 
 **Quitting.** Closing the app window stops the terminal. Once no window or tab has been connected for 20 seconds, the server shuts down (a reload doesn't count). The **⏻** key in the top bar quits at once. Alerts only fire while the terminal runs. Opened in a normal browser tab (`APP_WINDOW=0`, or `node scripts/launch.js`), it keeps running until ⏻ or `node scripts/stop.js`.
 

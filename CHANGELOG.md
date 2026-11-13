@@ -6,7 +6,6 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ### Windows-Starter
 - **Update auch bei laufendem Terminal:** `start.bat` prüft jetzt auch dann auf Updates, wenn das Terminal noch läuft (z. B. Fenster gerade erst geschlossen oder Browser-Tab). Gibt es eins, wird der Server beendet, aktualisiert und auf demselben Port neu gestartet. Vorher öffnete er nur das Fenster und das Update blieb liegen.
-- Node-Download unter Windows PowerShell 5.1 repariert (HTTP 400).
 
 ## [1.3.0] – in Arbeit
 
