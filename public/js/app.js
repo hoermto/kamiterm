@@ -5,6 +5,7 @@ import { APP_VERSION } from "./version.js";
 import { api, esc, px, pct, cls } from "./api.js";
 import { parse, defaultFn, suggestions, securityQuery } from "./commands.js";
 import { FUNCS } from "./fn/index.js";
+import { loadPrefs } from "./prefs.js";
 import { lookupList, bbgCode } from "./securities.js";
 import {
   tableBlocks,
@@ -467,6 +468,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 // ---------- start ----------
+await loadPrefs(); // colour scheme, name, top-bar apps (SETTINGS)
 for (let i = 0; i < 4; i++) {
   const p = new Panel(i);
   panels.push(p);

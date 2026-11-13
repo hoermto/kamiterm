@@ -83,6 +83,11 @@ export function tabs(names, current, onPick) {
 
 const css = (n) =>
   getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+// "#rrggbb" + alpha -> rgba(), for chart fills that follow the colour scheme.
+const alpha = (hex, a) => {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || "");
+  return m ? `rgba(${parseInt(m[1], 16)},${parseInt(m[2], 16)},${parseInt(m[3], 16)},${a})` : `rgba(255,160,40,${a})`;
+};
 
 // A price chart in the terminal's colours. Returns { chart, series, remove }.
 export function priceChart(host, { type = "line", height } = {}) {
@@ -113,8 +118,8 @@ export function priceChart(host, { type = "line", height } = {}) {
         })
       : chart.addSeries(LW.AreaSeries, {
           lineColor: css("--amber"),
-          topColor: "rgba(255,160,40,0.28)",
-          bottomColor: "rgba(255,160,40,0.02)",
+          topColor: alpha(css("--amber"), 0.28),
+          bottomColor: alpha(css("--amber"), 0.02),
           lineWidth: 2,
         });
   return { chart, series, remove: () => chart.remove() };
