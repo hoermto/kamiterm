@@ -426,7 +426,14 @@ function listenForAlerts() {
   if (!window.EventSource) return;
   // ?app=1: this is the app window from start.bat; closing the last window then stops the server.
   const isApp = new URLSearchParams(location.search).get("app") === "1";
-  const es = (window.amberEvents = new EventSource(`/api/events${isApp ? "?app=1" : ""}`));
+  const streamId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const es = (window.amberEvents = new EventSource(`/api/events?id=${streamId}${isApp ? "&app=1" : ""}`));
+  // Say goodbye when the page goes away: some browsers keep a closed window's connection open for a while,
+  // and only a closed connection used to count. A reload says goodbye too and reconnects at once.
+  addEventListener("pagehide", (e) => {
+    if (e.persisted) return;
+    try { fetch(`/api/events/bye?id=${streamId}`, { method: "POST", keepalive: true, headers: { "x-qt": "1" } }); } catch {}
+  });
   es.addEventListener("update", (e) => {
     try { showUpdate(JSON.parse(e.data)); } catch {}
   });
