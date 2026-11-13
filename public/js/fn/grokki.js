@@ -1,5 +1,5 @@
 import {api,esc,px,big} from '../api.js';
-import {table,kv,sect,tabs,html,lineChart,equityChart,downloadText} from '../ui.js';
+import {table,kv,sect,tabs,html,equityChart,downloadText} from '../ui.js';
 import {topXVal,buySlotCandidates} from './rsl-slots.js';
 import {pnlRow,pnlTotals} from './rsl-pnl.js';
 const fmt=(v,d=2)=>Number.isFinite(v)?v.toFixed(d):'—';
@@ -836,13 +836,14 @@ async function rsl(ctx) {
         info.textContent=r.points?.length?`${r.trades} Trades · Währung ${r.reportCur} · P&L ${money2(r.pnl,r.reportCur)} vs. Benchmark ${money2(r.benchPnl,r.reportCur)} · ⓘ Methode (Tooltip)`:(r.note||'Keine Daten.');
         bar.append(info);body.append(bar);
         if(r.points?.length){
-          const host=html('<div style="height:260px;position:relative"></div>');body.append(host);
+          const host=html('<div data-rsl-equity-chart></div>');body.append(host);
           chart?.remove();
-          chart=lineChart(host,[
+          // Einzahlungen = flows: P&L-Balken ziehen neu eingezahltes Kapital ab (gleiche Logik wie r.pnl).
+          chart=equityChart(host,[
             {title:`Holdings (${r.reportCur})`,color:'#ffa028',data:r.points.map(p=>({time:p.date,value:p.equity}))},
             {title:`${r.bench} gleiche Cashflows`,color:'#63a9ff',data:r.points.map(p=>({time:p.date,value:p.bench}))},
-            {title:'Einzahlungen',color:'#777',data:r.points.map(p=>({time:p.date,value:p.deposits}))},
-          ]);
+            {title:'Einzahlungen',color:'#777',flows:true,data:r.points.map(p=>({time:p.date,value:p.deposits}))},
+          ],{storeKey:'rsl26-holdings',cur:curSym(r.reportCur)});
           ctx.onCleanup(()=>chart?.remove());
         }
         const notes=[r.method,r.fxNote,r.skipped?.length?`Nicht enthalten: ${r.skipped.map(x=>`${x.symbol} (${x.reason})`).join(', ')}`:null,r.errors?.length?`Datenfehler: ${r.errors.map(e=>e.ticker).join(', ')}`:null].filter(Boolean);
