@@ -127,7 +127,10 @@ foreach ($cand in @($portableNode, (Get-Command node.exe -ErrorAction SilentlyCo
 }
 if (-not $node) {
   Say "Node.js $MinNode or newer not found: downloading a portable copy (about 30 MB) ..."
-  $rel = Invoke-RestMethod -UseBasicParsing 'https://nodejs.org/dist/index.json' | Where-Object { $_.lts -and ($_.files -contains "win-$arch-zip") } | Select-Object -First 1
+  # Windows PowerShell 5.1 passes a JSON array down the pipe as ONE object: assign first, then filter,
+  # or the 'version' becomes every version joined with spaces (bad URL, HTTP 400).
+  $all = @(Invoke-RestMethod -UseBasicParsing 'https://nodejs.org/dist/index.json')
+  $rel = $all | ForEach-Object { $_ } | Where-Object { $_.lts -and ($_.files -contains "win-$arch-zip") -and [version]($_.version.TrimStart('v')) -ge $MinNode } | Select-Object -First 1
   if (-not $rel) { Fail 'Could not find a Node.js LTS download for this PC.' }
   $v = $rel.version
   $name = "node-$v-win-$arch.zip"
