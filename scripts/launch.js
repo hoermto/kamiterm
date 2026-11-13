@@ -15,7 +15,7 @@ const same = (a, b) => !!a && path.resolve(a).toLowerCase() === path.resolve(b).
 async function running() {
   for (let p = first; p < first + 21; p++) {
     try {
-      const r = await fetch(`http://127.0.0.1:${p}/api/health`, { signal: AbortSignal.timeout(700) });
+      const r = await fetch(`http://127.0.0.1:${p}/api/health`, { signal: AbortSignal.timeout(2500) });
       const j = await r.json();
       // Only this folder's copy counts; another install on the same port range is left alone.
       if (j.app === 'amber-terminal' && same(j.root, root)) return p;

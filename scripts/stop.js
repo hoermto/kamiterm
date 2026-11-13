@@ -10,9 +10,15 @@ const first = Number(process.env.PORT) || 3787;
 let stopped = 0;
 for (let p = first; p < first + 21; p++) {
   try {
-    const h = await (await fetch(`http://127.0.0.1:${p}/api/health`, { signal: AbortSignal.timeout(700) })).json();
+    // A refused port answers at once; a busy server (just started, loading) may need a few seconds.
+    const h = await (await fetch(`http://127.0.0.1:${p}/api/health`, { signal: AbortSignal.timeout(4000) })).json();
     if (h.app !== 'amber-terminal' || (!all && !same(h.root, root))) continue;
-    await fetch(`http://127.0.0.1:${p}/api/shutdown`, { method: 'POST', headers: { 'x-qt': '1' } });
+    await fetch(`http://127.0.0.1:${p}/api/shutdown`, { method: 'POST', headers: { 'x-qt': '1' }, signal: AbortSignal.timeout(4000) });
+    // Wait until it is really gone, so a restart (start.bat after an update) gets the same port back.
+    for (let i = 0; i < 25; i++) {
+      await new Promise((r) => setTimeout(r, 200));
+      try { await fetch(`http://127.0.0.1:${p}/api/health`, { signal: AbortSignal.timeout(300) }); } catch { break; }
+    }
     console.log(`Stopped Amber Terminal on port ${p}`);
     stopped++;
   } catch { /* nothing here */ }
