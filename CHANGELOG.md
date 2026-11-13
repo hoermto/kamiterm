@@ -4,6 +4,9 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ## [1.4.0] – in Arbeit
 
+### Einstellungen
+- **Laufband (Tickerzeile unten)**: Scroll (Standard), Follow Windows oder Off. Bisher stand es still, sobald Windows weniger Animationen verlangt, was in Remote-Desktop-Sitzungen automatisch passiert oder wenn unter Einstellungen › Barrierefreiheit › Visuelle Effekte die Animationseffekte aus sind. SETTINGS zeigt an, was Windows gerade meldet.
+
 ## [1.3.1] – in Arbeit
 
 ### Windows-Starter

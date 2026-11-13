@@ -4,7 +4,7 @@
 import { esc } from "../api.js";
 import { table, sect, html } from "../ui.js";
 import { FUNCS } from "./index.js";
-import { THEMES, DEFAULT_NAME, DEFAULT_BAR, NAME_MAX, BAR_MIN, BAR_MAX, barApps, barCandidates } from "../prefs-core.js";
+import { THEMES, TAPE_MODES, DEFAULT_NAME, DEFAULT_BAR, NAME_MAX, BAR_MIN, BAR_MAX, barApps, barCandidates } from "../prefs-core.js";
 import { getPrefs, getUsage, savePrefs, resetUsage, onPrefs } from "../prefs.js";
 
 const fname = (id) => FUNCS[id]?.name || "";
@@ -65,6 +65,21 @@ function render(ctx) {
     themes.append(b);
   }
   ctx.el.append(row(html("<label>Colour scheme</label>")), themes);
+
+  const tapes = html('<div class="tabs" role="radiogroup" aria-label="Ticker tape"></div>');
+  for (const [id, label] of Object.entries(TAPE_MODES)) {
+    const b = btn(label, () => p.tape !== id && save({ tape: id }));
+    b.className = `tab${p.tape === id ? " on" : ""}`;
+    b.setAttribute("role", "radio");
+    b.setAttribute("aria-checked", String(p.tape === id));
+    tapes.append(b);
+  }
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  ctx.el.append(
+    row(html("<label>Ticker tape (bottom line)</label>")),
+    tapes,
+    html(`<p class="para dim">Windows on this computer currently ${reduced ? "<b>asks for fewer animations</b> (Remote Desktop session, or Settings › Accessibility › Visual effects › Animation effects is off), so “Follow Windows” stands still here" : "allows animations"}.</p>`),
+  );
 
   // ---- top bar ----
   ctx.el.append(sect("Top bar apps"));

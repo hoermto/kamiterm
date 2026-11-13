@@ -521,8 +521,13 @@ table.t td.wrap {
     transform: translateX(-50%);
   }
 }
+/* SETTINGS > Ticker tape: "scroll" (default) always moves; "system" stops when the system asks for fewer
+   animations (Remote Desktop, Windows "Animation effects" off); "off" stands still. */
+:root[data-tape="off"] .tape-run {
+  animation: none;
+}
 @media (prefers-reduced-motion: reduce) {
-  .tape-run {
+  :root[data-tape="system"] .tape-run {
     animation: none;
   }
 }

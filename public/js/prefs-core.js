@@ -17,9 +17,14 @@ export const BAR_MAX = 30;
 // Today's app keys, in their original order: the auto bar's fallback and tie-break, and the start of a configured bar.
 export const DEFAULT_BAR = Object.freeze(["WEI", "TOP", "ECO", "GC", "BTMM", "WIRP", "FXC", "GLCO", "CRYPTO", "MOST", "EQS", "W", "ALRT", "HELP", "DATA"]);
 
+// Ticker tape at the bottom: always scroll, follow the system's "reduce animations" (Remote Desktop sessions and
+// Windows' "Animation effects: off" set it), or stand still.
+export const TAPE_MODES = Object.freeze({ scroll: "Scroll", system: "Follow Windows", off: "Off" });
+
 export const DEFAULT_PREFS = Object.freeze({
   theme: "amber",
   name: DEFAULT_NAME,
+  tape: "scroll",
   bar: Object.freeze({ mode: "auto", size: DEFAULT_BAR.length, apps: DEFAULT_BAR }),
 });
 
@@ -37,6 +42,7 @@ export function normalizePrefs(raw) {
   return {
     theme: Object.hasOwn(THEMES, r.theme) ? r.theme : DEFAULT_PREFS.theme,
     name,
+    tape: Object.hasOwn(TAPE_MODES, r.tape) ? r.tape : DEFAULT_PREFS.tape,
     bar: {
       mode: b.mode === "custom" ? "custom" : "auto",
       size: clampInt(b.size, BAR_MIN, BAR_MAX, DEFAULT_PREFS.bar.size),

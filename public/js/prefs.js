@@ -28,6 +28,7 @@ export function applyPrefs(p = prefs) {
   const root = document.documentElement;
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
   root.dataset.theme = p.theme;
+  root.dataset.tape = p.tape;
   const logo = document.querySelector(".brand .logo");
   if (logo) logo.textContent = p.name;
   document.title = p.name === DEFAULT_NAME ? "Amber Terminal" : `${p.name} Terminal`;
