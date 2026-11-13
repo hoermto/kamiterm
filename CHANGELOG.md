@@ -11,6 +11,13 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 - **App-Nutzung** wird je Funktionscode gezählt (Wiederherstellen der Panels beim Start und „Zurück“ zählen nicht); Tabelle mit Anteil und **Zurücksetzen**. Die Auto-Rangfolge wird beim Start bzw. bei Änderung der Einstellungen neu sortiert, nicht nach jedem Klick.
 - Gespeichert in `data/state.json` (`amberPrefs`, `amberUsage`).
 
+### Windows-Starter und Updates
+- **`start.bat`** prüft Node.js (≥ 22.13) und Git und lädt bei Bedarf portable Versionen nach `.runtime` (ohne Admin-Rechte, Prüfsummen geprüft). Allein in einen leeren Ordner kopiert, installiert er die App per `git clone`.
+- **Automatisches Update beim Start** aus dem Git-Repo (Standard: LAN-Origin, Branch `master`), nur als Fast-Forward. Lokale Änderungen oder lokale Commits blockieren das Update, ohne etwas zu verändern. `data\` bleibt unberührt. Eine laufende alte Version wird vorher beendet.
+- **Eigenes App-Fenster** (Edge/Chrome App-Modus) statt Browser-Tab; `APP_WINDOW=0` schaltet das ab.
+- **Tägliche Update-Prüfung** im laufenden Terminal: Badge **⚠ UPDATE** neben der Versionsnummer, Tooltip mit den neuen Commits, Klick prüft sofort. Einstellungen je Rechner in `data\launcher.cfg`.
+- Server überspringt Ports, die Browser blockieren (z. B. 4190). `stop.js` und `launch.js` warten länger auf einen beschäftigten Server.
+
 ### Charts
 - **Equity-Charts in RSLBT und RSL26-Holdings**: Umschalter Kurve (Y-Achse **linear / log**) oder **P&L je Jahr / Monat** als Balken (Betrag oder %), Strategie neben Benchmark; bei Holdings ohne Einzahlungen. 10-Jahres-Kurven werden jetzt vollständig angezeigt (vorher nur die letzten ~5 Jahre).
 

@@ -20,6 +20,25 @@ node scripts/launch.js
 
 There's no `npm install` step. Next time, double-click `start.command` (Mac) or `start.bat` (Windows), or run `./start.sh` (Linux). Stop it with `node scripts/stop.js`.
 
+**Windows starter (`start.bat`).** Double-click it. It:
+
+1. uses the installed Node.js (22.13 or newer, for the price cache) and Git. If either is missing, it downloads a portable copy into `.runtime` next to `start.bat` (checksums verified, no admin rights needed);
+2. checks the git repo for a newer version on the release branch and installs it automatically. Only a clean fast-forward happens: a folder with local edits or local commits is never changed, only reported. `data\` (settings, holdings, caches) is never touched;
+3. starts the terminal in its own app window (Edge or Chrome app mode: no tabs, no address bar), or a browser tab if neither is installed.
+
+To install on a new PC, copy only `start.bat` into an empty folder and run it. It clones the app into `.\amber-terminal` first. The defaults are at the top of `start.bat` (`AMBER_REPO_URL`, `AMBER_BRANCH=master`, `AMBER_APP_WINDOW=1`). Per machine, `data\launcher.cfg` overrides them and survives updates:
+
+```ini
+REPO_URL=http://host/path/amber-terminal.git
+BRANCH=master
+APP_WINDOW=0          # browser tab instead of an app window
+UPDATE_CHECK_HOURS=24
+```
+
+While it runs, the terminal checks the repo once a day. If a newer version exists, a yellow **⚠ UPDATE** badge appears next to the version (tooltip: the new commits; click it to check again). Close the terminal and run `start.bat` to install. `node scripts/update.js` reports the same from the command line, and `AMBER_UPDATE_CHECK=0` turns the daily check off.
+
+Releases are developed on `rel-<version>` branches and merged into `master`, so installs following `master` only get finished releases.
+
 ## How to use it
 
 Each panel has its own command line, and the bar at the top runs a command in the active panel. A command is a security, then a function, then Enter (that's GO):
