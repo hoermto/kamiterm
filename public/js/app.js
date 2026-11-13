@@ -5,7 +5,7 @@ import { APP_VERSION } from "./version.js";
 import { api, esc, px, pct, cls } from "./api.js";
 import { parse, defaultFn, suggestions, securityQuery } from "./commands.js";
 import { FUNCS } from "./fn/index.js";
-import { loadPrefs } from "./prefs.js";
+import { loadPrefs, countApp } from "./prefs.js";
 import { lookupList, bbgCode } from "./securities.js";
 import {
   tableBlocks,
@@ -103,10 +103,11 @@ class Panel {
   back() {
     this.history.pop();
     const prev = this.history.pop();
-    if (prev) this.run(prev);
+    if (prev) this.run(prev, { count: false });
   }
 
-  async run(input, { push = true } = {}) {
+  // count: false for runs the user didn't start now (restoring panels at startup, going back).
+  async run(input, { push = true, count = true } = {}) {
     const p = parse(input);
     if (!p) return;
     let { fn, sec, args } = p;
@@ -121,6 +122,7 @@ class Panel {
         true,
       );
     const subject = f.needs ? this.sec : null;
+    if (count) countApp(fn); // app usage: ranks the top bar in auto mode (SETTINGS)
     Object.assign(this, { fn, fname: f.name, subject, srcText: "" });
     this.cmd = `${subject ? `${subject.raw} ` : ""}${fn}${args.length ? ` ${args.join(" ")}` : ""}`;
     if (push) this.history.push(this.cmd);
@@ -481,6 +483,6 @@ try {
 } catch {}
 setLayout(state.layout);
 setActive(state.active);
-panels.forEach((p, i) => p.run(state.panels[i] || DEFAULT[i]));
+panels.forEach((p, i) => p.run(state.panels[i] || DEFAULT[i], { count: false }));
 gInput.focus();
 window.amber = { panels, run: (c, i = state.active) => panels[i].run(c) };
