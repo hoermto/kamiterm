@@ -13,7 +13,7 @@ rem    REPO_URL=...   BRANCH=...   APP_WINDOW=0 (browser tab)   UPDATE_CHECK_HOU
 rem ===========================================================================
 setlocal
 rem --- default config --------------------------------------------------------
-set "AMBER_REPO_URL="
+set "AMBER_REPO_URL=http://192.168.0.25:4000/home/amber-terminal.git"
 set "AMBER_BRANCH=master"
 set "AMBER_APP_WINDOW=1"
 rem ---------------------------------------------------------------------------
