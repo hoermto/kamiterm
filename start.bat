@@ -1,18 +1,18 @@
 @echo off
 rem ===========================================================================
 rem  Amber Terminal - starter for Windows. Double-click to start.
-rem   1. Node.js 22.13+ and Git: uses installed ones, otherwise downloads portable
-rem      copies into .runtime next to this file (no admin rights needed).
-rem   2. Checks the git repo below for a newer version and installs it
-rem      (fast-forward only: local changes are never overwritten, data\ is never touched).
+rem   1. Node.js 22.13+: uses an installed one, otherwise downloads a portable
+rem      copy into .runtime next to this file (no admin rights needed).
+rem   2. Asks the repo server below for a newer version and installs it as a ZIP
+rem      (no git needed; data\ is never touched). A git checkout updates by git.
 rem   3. Starts the terminal in its own app window (Edge/Chrome app mode).
-rem  Copied alone into an empty folder, it first downloads the app (git clone)
-rem  into .\amber-terminal.
+rem  Copied alone into an empty folder, it first downloads the app (ZIP from the
+rem  repo server) into .\amber-terminal.
 rem  Per-machine overrides: launcher.cfg next to this file, or data\launcher.cfg
 rem  (kept across updates, wins over launcher.cfg):
 rem    REPO_URL=...   BRANCH=...   APP_WINDOW=0 (browser tab)   UPDATE_CHECK_HOURS=24
 rem    EXIT_ON_CLOSE=0 (keep running when the window is closed)
-rem  Already running from this folder: just opens the window again.
+rem  Already running from this folder: checks for an update, then opens the window again.
 rem ===========================================================================
 setlocal
 rem --- default config --------------------------------------------------------
@@ -71,6 +71,18 @@ function Get-Zip($url, $dest, $sha256) {
   Move-Item $src $dest
   if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
 }
+# Download the branch as a ZIP from the repo server (Gitea/Forgejo: <repo>/archive/<branch>.zip) and copy it
+# over $dest. data\, .runtime\ and .git\ in $dest are kept; nothing else is deleted.
+function Install-Zip($url, $branch, $dest) {
+  $web = ($url.Trim() -replace '/+$', '') -replace '\.git$', ''
+  $tmp = Join-Path $Runtime 'app-download'
+  try { Get-Zip "$web/archive/$branch.zip" $tmp $null }
+  catch { Fail "Download failed: $($_.Exception.Message) (repo URL, network or access rights?)" }
+  if (-not (Test-Path (Join-Path $tmp 'server.js'))) { Fail "The download from $web is not an Amber Terminal archive." }
+  New-Item -ItemType Directory -Force $dest | Out-Null
+  Get-ChildItem -Force $tmp | Where-Object { @('data', '.runtime', '.git') -notcontains $_.Name } | ForEach-Object { Copy-Item $_.FullName $dest -Recurse -Force }
+  Remove-Item $tmp -Recurse -Force
+}
 
 Write-Host ''
 Write-Host '  AMBER TERMINAL - starter' -ForegroundColor Yellow
@@ -78,7 +90,7 @@ $baseCfg = Read-Cfg (Join-Path $Base 'launcher.cfg')
 if ($baseCfg.REPO_URL) { $env:AMBER_REPO_URL = $baseCfg.REPO_URL }
 if ($baseCfg.BRANCH) { $env:AMBER_BRANCH = $baseCfg.BRANCH }
 
-# ---- 0. Already running from this folder? Then just open the window (no update, no downloads) ----
+# ---- 0. Already running from this folder? Check for an update (installing it restarts the server), then open the window ----
 # Health check on the terminal's ports; only a copy whose folder matches counts.
 function Find-Running($dir) {
   $first = if ($env:PORT) { [int]$env:PORT } else { 3787 }
@@ -103,15 +115,25 @@ function Find-Running($dir) {
 $known = @($Base, (Join-Path $Base 'amber-terminal')) | Where-Object { Test-Path (Join-Path $_ 'server.js') } | Select-Object -First 1
 if ($known) {
   $port = Find-Running $known
+  if ($port -and -not (Test-Path (Join-Path $known '.git')) -and -not (Test-Path (Join-Path $known 'data\installed.json'))) {
+    # ZIP copy with unknown version: needs the one-time refresh below, which needs the server stopped.
+    $qn = @((Join-Path $Runtime 'node\node.exe'), (Get-Command node.exe -ErrorAction SilentlyContinue).Source) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    if ($qn) { Say "Running on port $port - stopping it to refresh this copy."; $env:PORT = "$port"; Push-Location $known; & $qn scripts\stop.js; Pop-Location }
+    $port = $null
+  }
   if ($port) {
     $qn = @((Join-Path $Runtime 'node\node.exe'), (Get-Command node.exe -ErrorAction SilentlyContinue).Source) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
     if ($qn) {
-      Say "Already running on port $port - opening the window (updates are installed on the next fresh start)."
+      Say "Already running on port $port - checking for updates, then opening the window."
       Set-Location $known
       $cfg = Read-Cfg (Join-Path $known 'data\launcher.cfg')
       if ($cfg.APP_WINDOW) { $env:AMBER_APP_WINDOW = $cfg.APP_WINDOW }
       if ($cfg.EXIT_ON_CLOSE) { $env:AMBER_EXIT_ON_CLOSE = $cfg.EXIT_ON_CLOSE }
       $env:PORT = "$port"
+      # An update stops the running server and installs; launch.js then starts the new version on the same port.
+      $qg = Join-Path $Runtime 'git\cmd\git.exe'
+      if (Test-Path $qg) { $env:PATH = (Split-Path $qg) + ';' + $env:PATH; $env:AMBER_GIT = $qg }
+      & $qn scripts\update.js --apply
       & $qn scripts\launch.js
       Start-Sleep -Seconds 2
       exit 0
@@ -143,29 +165,8 @@ if (-not $node) {
 }
 Say ("Node.js  v{0}  {1}" -f (Get-NodeVersion $node), $node)
 
-# ---- 2. Git ----
-$git = $null
-$portableGit = Join-Path $Runtime 'git\cmd\git.exe'
-foreach ($cand in @($portableGit, (Get-Command git.exe -ErrorAction SilentlyContinue).Source)) {
-  if ($cand -and (Test-Path $cand)) { $git = $cand; break }
-}
-if (-not $git) {
-  Say 'Git not found: downloading portable MinGit (about 40 MB) ...'
-  $rel = Invoke-RestMethod -UseBasicParsing -Headers @{ 'User-Agent' = 'amber-terminal-starter' } 'https://api.github.com/repos/git-for-windows/git/releases/latest'
-  $pats = @('^MinGit-[\d.]+(\.windows\.\d+)?-64-bit\.zip$')
-  if ($arch -eq 'arm64') { $pats = @('^MinGit-[\d.]+(\.windows\.\d+)?-arm64\.zip$') + $pats }
-  $asset = $null
-  foreach ($p in $pats) { $asset = $rel.assets | Where-Object { $_.name -match $p } | Select-Object -First 1; if ($asset) { break } }
-  if (-not $asset) { Fail 'Could not find MinGit in the latest Git for Windows release.' }
-  $sha = if ("$($asset.digest)" -match '^sha256:([0-9a-fA-F]{64})$') { $Matches[1] } else { $null }
-  Get-Zip $asset.browser_download_url (Join-Path $Runtime 'git') $sha
-  $git = $portableGit
-}
-Say "Git      $git"
-$env:PATH = (Split-Path $node) + ';' + (Split-Path $git) + ';' + $env:PATH
-$env:AMBER_GIT = $git
-
-# ---- 3. The app: next to this file, or install it into .\amber-terminal ----
+# ---- 2. The app: next to this file, or install it into .\amber-terminal ----
+# Installed as a ZIP from the repo server (no git needed); start.bat stays next to the folder.
 $App = $Base
 if (-not (Test-Path (Join-Path $App 'server.js'))) {
   $App = Join-Path $Base 'amber-terminal'
@@ -174,10 +175,28 @@ if (-not (Test-Path (Join-Path $App 'server.js'))) {
     $branch = $env:AMBER_BRANCH
     if (-not $url) { Fail 'No app next to start.bat and no repo to install from. Set AMBER_REPO_URL at the top of start.bat (or REPO_URL= in launcher.cfg next to it).' }
     Say "Installing Amber Terminal from $url ($branch) ..."
-    & $git clone --quiet --branch $branch $url $App
-    if ($LASTEXITCODE) { Fail 'git clone failed (repo URL, network or access rights?).' }
+    Install-Zip $url $branch $App
+  }
+} elseif (-not (Test-Path (Join-Path $App '.git')) -and -not (Test-Path (Join-Path $App 'data\installed.json'))) {
+  # A ZIP copy whose version is not recorded (downloaded by hand, or installed by an older starter): its own
+  # updater may be too old to update without git, so refresh it once here; from then on it updates itself.
+  $c0 = Read-Cfg (Join-Path $App 'data\launcher.cfg')
+  $url = if ($c0.REPO_URL) { $c0.REPO_URL } else { $env:AMBER_REPO_URL }
+  $branch = if ($c0.BRANCH) { $c0.BRANCH } else { $env:AMBER_BRANCH }
+  if ($url) {
+    Say "Version of this copy unknown (ZIP download): getting the current one from $url ($branch) ..."
+    Install-Zip $url $branch $App
   }
 }
+$env:PATH = (Split-Path $node) + ';' + $env:PATH
+
+# ---- 3. Git: only for a git checkout (development copy), which updates by git fetch ----
+if (Test-Path (Join-Path $App '.git')) {
+  $git = @((Join-Path $Runtime 'git\cmd\git.exe'), (Get-Command git.exe -ErrorAction SilentlyContinue).Source) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+  if ($git) { Say "Git      $git (git checkout)"; $env:PATH = (Split-Path $git) + ';' + $env:PATH; $env:AMBER_GIT = $git }
+  else { Say 'Git checkout, but git is not installed: no update check.' }
+}
+
 Set-Location $App
 $cfg = Read-Cfg (Join-Path $App 'data\launcher.cfg')
 if ($cfg.APP_WINDOW) { $env:AMBER_APP_WINDOW = $cfg.APP_WINDOW }

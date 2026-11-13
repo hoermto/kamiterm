@@ -22,15 +22,15 @@ There's no `npm install` step. Next time, double-click `start.command` (Mac) or 
 
 **Windows starter (`start.bat`).** Double-click it. It:
 
-1. uses the installed Node.js (22.13 or newer, for the price cache) and Git. If either is missing, it downloads a portable copy into `.runtime` next to `start.bat` (checksums verified, no admin rights needed);
-2. checks the git repo for a newer version on the release branch and installs it automatically. Only a clean fast-forward happens: a folder with local edits or local commits is never changed, only reported. `data\` (settings, holdings, caches) is never touched;
+1. uses the installed Node.js (22.13 or newer, for the price cache). If it is missing, it downloads a portable copy into `.runtime` next to `start.bat` (checksum verified, no admin rights needed);
+2. asks the repo server for a newer version of the branch and installs it automatically. No git and no `.git` folder are needed: it uses the server's web API (Gitea/Forgejo) and downloads the new version as a ZIP over the app folder. The installed version is recorded in `data\installed.json`; a copy downloaded by hand (ZIP) is refreshed once on its first start. `data\` (settings, holdings, caches) is never touched. A git checkout (development) updates by git instead, fast-forward only, and a folder with local edits or local commits is never changed, only reported;
 3. starts the terminal in its own app window (Edge or Chrome app mode: no tabs, no address bar), or a browser tab if neither is installed.
 
-If the terminal is already running from this folder, `start.bat` skips all of that and just opens the window again.
+If the terminal is already running from this folder, `start.bat` skips the downloads, checks for an update (installing one restarts the server on the same port) and opens the window again.
 
-**Quitting.** Closing the app window stops the terminal. Once no window or tab has been connected for 20 seconds, the server shuts down (a reload doesn't count). The **⏻** key in the top bar quits at once. Alerts only fire while the terminal runs. Opened in a normal browser tab (`APP_WINDOW=0`, or `node scripts/launch.js`), it keeps running until ⏻ or `node scripts/stop.js`.
+**Quitting.** Closing the app window stops the terminal. Once no window or tab has been connected for 20 seconds, the server shuts down (a reload doesn't count). The page tells the server when it closes, because Edge can keep a closed window's connection open. `data\server.log` records each window connecting and closing. The **⏻** key in the top bar quits at once. Alerts only fire while the terminal runs. Opened in a normal browser tab (`APP_WINDOW=0`, or `node scripts/launch.js`), it keeps running until ⏻ or `node scripts/stop.js`.
 
-To install on a new PC, copy only `start.bat` into an empty folder and run it. It clones the app into `.\amber-terminal` first. The defaults are at the top of `start.bat` (`AMBER_REPO_URL`, `AMBER_BRANCH=master`, `AMBER_APP_WINDOW=1`). A `launcher.cfg` next to `start.bat`, or `data\launcher.cfg` inside the app (survives updates, wins), overrides them per machine:
+To install on a new PC, copy only `start.bat` into an empty folder and run it. It downloads the app (ZIP from the repo server) into `.\amber-terminal` first. The defaults are at the top of `start.bat` (`AMBER_REPO_URL`, `AMBER_BRANCH=master`, `AMBER_APP_WINDOW=1`). A `launcher.cfg` next to `start.bat`, or `data\launcher.cfg` inside the app (survives updates, wins), overrides them per machine:
 
 ```ini
 REPO_URL=http://host/path/amber-terminal.git

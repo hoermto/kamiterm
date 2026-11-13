@@ -182,8 +182,10 @@ function broadcast(type, payload) {
 alerts.onFire((e) => broadcast("alert", e));
 let updateStatus = null;
 // Closing the app window quits: see lib/window-watch.js (AMBER_CLOSE_GRACE_MS, default 20 s).
+const windowGraceMs = Number(process.env.AMBER_CLOSE_GRACE_MS) || 20e3;
+const streams = new Map(); // event-stream id (from the page) -> { res, release }
 const windows = windowWatch({
-  graceMs: Number(process.env.AMBER_CLOSE_GRACE_MS) || 20e3,
+  graceMs: windowGraceMs,
   onIdle: () => {
     console.log("\n  Last window closed: stopping.");
     process.exit(0);
@@ -373,15 +375,32 @@ async function handle(req, res) {
       });
       res.write("retry: 3000\n\n");
       clients.add(res);
-      windows.connect({ app: q.app === "1" });
+      const app = q.app === "1";
+      windows.connect({ app });
+      console.log(`  ${new Date().toISOString()} window connected${app ? " (app window)" : ""} · open ${windows.state.open}`);
       // A comment line every 15 s: proxies keep the stream open, and a vanished window is noticed.
       const ping = setInterval(() => res.write(": ping\n\n"), 15e3);
-      req.on("close", () => {
+      // Ends once, whether the connection drops or the page says goodbye (POST /api/events/bye): a browser
+      // can keep the connection of a closed window open for a while.
+      let gone = false;
+      const release = (why) => {
+        if (gone) return;
+        gone = true;
         clearInterval(ping);
         clients.delete(res);
+        if (q.id) streams.delete(q.id);
         windows.disconnect();
-      });
+        const st = windows.state;
+        console.log(`  ${new Date().toISOString()} window ${why} · open ${st.open}${st.pending ? ` · stopping in ${Math.round(windowGraceMs / 1000)} s unless a window comes back` : ""}`);
+      };
+      if (q.id) streams.set(q.id, { res, release });
+      req.on("close", () => release("disconnected"));
       return;
+    }
+    if (p === "/api/events/bye" && req.method === "POST") {
+      const s = streams.get(q.id || "");
+      if (s) { s.release("closed"); try { s.res.end(); } catch { /* already gone */ } }
+      return send(res, 200, { ok: true });
     }
     if (p === "/api/alerts") {
       if (req.method === "GET") return send(res, 200, alerts.list());
