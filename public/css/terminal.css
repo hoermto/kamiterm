@@ -173,13 +173,6 @@ button {
 .mk-dot.ext {
   background: var(--amber);
 }
-.toplink {
-  color: var(--amber);
-  border: 1px solid var(--amber-dim);
-  padding: 3px 8px;
-  flex: none;
-}
-
 /* function keys strip */
 .keys {
   display: flex;

@@ -4,6 +4,9 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ## [1.4.0] – in Arbeit
 
+### Bedienung
+- Der HELP-Link oben rechts (externe Website) entfällt. Die Hilfe im Terminal (Taste HELP, Befehl `HELP`) bleibt.
+
 ### RSL26
 - **GP und DES je Zeile der Rangliste:** Chart (`<Ticker> GP`) und Beschreibung (`<Ticker> DES`) mit einem Klick, neben + Kaufen und ⏏ Verkaufen.
 - **GP auch in den Holdings** (offene Positionen), vor ✎ ⏏ ✕.
