@@ -203,6 +203,13 @@ export function equityChart(host, seriesList, { storeKey = "equity", height = 26
     if (st.view === "curve") {
       line = lineChart(plot, seriesList);
       line.chart.priceScale("right").applyOptions({ mode: st.scale === "log" ? 1 : 0 });
+      line.chart.applyOptions({ localization: { priceFormatter: (v) => v.toLocaleString("de-DE", { maximumFractionDigits: Math.abs(v) >= 100 ? 0 : 2 }) } });
+      // Tageswerte über 10 Jahre (~2500 Punkte) passen bei minBarSpacing 0.5 px nicht in ~700 px → nur die letzten Jahre sichtbar.
+      // autoSize kennt die Breite zudem erst nach dem Layout, daher fitContent einen Frame später erneut.
+      const ch = line.chart;
+      ch.timeScale().applyOptions({ minBarSpacing: 0.01 });
+      ch.timeScale().fitContent();
+      requestAnimationFrame(() => { if (line?.chart === ch) ch.timeScale().fitContent(); });
       return;
     }
     const rows = barSeries.map((s) => ({ ...s, pnl: new Map(periodPnl(s.data, flows, st.view).map((r) => [r.period, r])) }));
@@ -257,7 +264,7 @@ function pnlBarsSvg(rows, { w, h, pct, unit }) {
     parts.push(`<line x1="${padL}" x2="${w - padR}" y1="${y(t)}" y2="${y(t)}" stroke="${t === 0 ? "#555" : "#1c1c1c"}"/>`);
     parts.push(`<text x="${padL - 6}" y="${y(t) + 4}" text-anchor="end" fill="${muted}">${esc(fmtAxis(t, pct))}</text>`);
   }
-  const showVals = unit === "Y" && bw >= 26;
+  const showVals = unit === "Y" && bw >= 20;
   const every = Math.max(1, Math.ceil(46 / gw));
   periods.forEach((p, i) => {
     const gx = padL + i * gw + (gw - bw * rows.length) / 2;
