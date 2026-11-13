@@ -413,6 +413,9 @@ setInterval(tape, 60e3);
 function listenForAlerts() {
   if (!window.EventSource) return;
   const es = new EventSource("/api/events");
+  es.addEventListener("update", (e) => {
+    try { showUpdate(JSON.parse(e.data)); } catch {}
+  });
   es.addEventListener("alert", (e) => {
     let a;
     try {
@@ -429,6 +432,41 @@ function listenForAlerts() {
   });
 }
 listenForAlerts();
+
+// Update warning: the server checks the git repo once a day (lib/updater.js). A newer version shows as a badge
+// next to the version, plus one notice per session. Click the badge to check again now.
+function showUpdate(st) {
+  const b = $("#updBadge");
+  if (!b || !st) return;
+  const newer = st.state === "available" || st.state === "blocked";
+  b.hidden = !newer;
+  if (!newer) return;
+  const v = st.remoteVersion ? ` v${st.remoteVersion}` : "";
+  b.textContent = `⚠ UPDATE${v}`;
+  b.classList.toggle("blocked", st.state === "blocked");
+  const list = (st.commits || []).slice(0, 8).map((c) => `• ${c.subject}`).join("\n");
+  const how = st.state === "blocked"
+    ? `Not installed automatically: ${st.reason}.`
+    : "Close the terminal and run start.bat to install it.";
+  b.title = `${st.behind} new commit(s) on ${st.branch}. ${how}\n${list}\nChecked ${new Date(st.checkedAt).toLocaleString()} · click to check again`;
+  try {
+    const seen = sessionStorage.getItem("amber.updSeen");
+    if (seen !== st.remote) {
+      sessionStorage.setItem("amber.updSeen", st.remote || "1");
+      toast(`Update available${v} (${st.behind} commit(s)). ${how}`, false, 12e3);
+    }
+  } catch {}
+}
+api.get("/api/update").then(showUpdate).catch(() => {});
+$("#updBadge")?.addEventListener("click", async () => {
+  try {
+    const st = await api.post("/api/update/check");
+    showUpdate(st);
+    if (!(st?.state === "available" || st?.state === "blocked")) toast(st?.state === "uptodate" ? "Amber Terminal is up to date." : `Update check: ${st?.reason || st?.state}`);
+  } catch (e) {
+    toast(`Update check failed: ${e.message}`, true);
+  }
+});
 
 document.addEventListener("keydown", (e) => {
   if (FKEYS[e.key] && !e.metaKey && !e.ctrlKey && !e.altKey) {

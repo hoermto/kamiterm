@@ -21,6 +21,7 @@ import * as info from "./lib/market-info.js";
 import * as bbg from "./lib/bloomberg-fields.js";
 import { yahooQuotes } from "./lib/fn/board.js";
 import * as rslWatch from "./lib/rsl-watchlist.js";
+import * as updater from "./lib/updater.js";
 import { registerIndicator } from "./public/lib/indicators.js";
 import { conditionFn } from "./public/lib/backtest.js";
 import { relaunchForProxy, proxyNote } from "./lib/proxy.js";
@@ -178,6 +179,7 @@ function broadcast(type, payload) {
   for (const res of clients) res.write(msg);
 }
 alerts.onFire((e) => broadcast("alert", e));
+let updateStatus = null;
 setInterval(() => {
   for (const res of clients) res.write(": keep-alive\n\n");
 }, 25000).unref();
@@ -428,6 +430,16 @@ async function handle(req, res) {
       fs.rmSync(path.join(CUSTOM, file), { force: true });
       return send(res, 200, { ok: true });
     }
+    // Update status (daily check against the git repo, see lib/updater.js); POST .../check checks now.
+    if (p === "/api/update") return send(res, 200, updateStatus || updater.loadStatus() || { state: "unknown" });
+    if (p === "/api/update/check" && req.method === "POST") {
+      const last = Date.parse((updateStatus || updater.loadStatus())?.checkedAt || 0) || 0;
+      if (Date.now() - last > 60e3) {
+        updateStatus = await updater.check();
+        broadcast("update", updateStatus);
+      }
+      return send(res, 200, updateStatus || updater.loadStatus());
+    }
     if (p === "/api/shutdown" && req.method === "POST") {
       // Lets the installer stop a running copy before updating it, on any OS.
       send(res, 200, { ok: true });
@@ -557,6 +569,9 @@ if (isMain) {
   const { port } = await start();
   const url = `http://localhost:${port}`;
   alerts.start();
+  // Daily update check (AMBER_UPDATE_CHECK=0 turns it off); a newer version shows as a warning in the top bar.
+  if (process.env.AMBER_UPDATE_CHECK !== "0")
+    updater.schedule({ onChange: (st) => { updateStatus = st; broadcast("update", st); } });
   console.log(
     `\n  Amber Terminal ${VERSION} is running\n\n  Open:  ${url}\n  Stop:  Ctrl+C\n  Data:  ${store.DATA_DIR}\n`,
   );

@@ -657,3 +657,19 @@ table.t td.wrap {
   opacity: 0.3;
   cursor: default;
 }
+
+/* update warning next to the version (daily check, lib/updater.js) */
+.upd {
+  background: var(--yellow);
+  color: #000;
+  border: 0;
+  font: 700 10px var(--mono);
+  padding: 1px 6px;
+  border-radius: 2px;
+  align-self: center;
+}
+.upd.blocked {
+  background: transparent;
+  color: var(--yellow);
+  border: 1px solid var(--yellow);
+}
