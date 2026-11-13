@@ -12,7 +12,7 @@ rem  Per-machine overrides: launcher.cfg next to this file, or data\launcher.cfg
 rem  (kept across updates, wins over launcher.cfg):
 rem    REPO_URL=...   BRANCH=...   APP_WINDOW=0 (browser tab)   UPDATE_CHECK_HOURS=24
 rem    EXIT_ON_CLOSE=0 (keep running when the window is closed)
-rem  Already running from this folder: just opens the window again.
+rem  Already running from this folder: checks for an update, then opens the window again.
 rem ===========================================================================
 setlocal
 rem --- default config --------------------------------------------------------
@@ -78,7 +78,7 @@ $baseCfg = Read-Cfg (Join-Path $Base 'launcher.cfg')
 if ($baseCfg.REPO_URL) { $env:AMBER_REPO_URL = $baseCfg.REPO_URL }
 if ($baseCfg.BRANCH) { $env:AMBER_BRANCH = $baseCfg.BRANCH }
 
-# ---- 0. Already running from this folder? Then just open the window (no update, no downloads) ----
+# ---- 0. Already running from this folder? Check for an update (installing it restarts the server), then open the window ----
 # Health check on the terminal's ports; only a copy whose folder matches counts.
 function Find-Running($dir) {
   $first = if ($env:PORT) { [int]$env:PORT } else { 3787 }
@@ -106,12 +106,16 @@ if ($known) {
   if ($port) {
     $qn = @((Join-Path $Runtime 'node\node.exe'), (Get-Command node.exe -ErrorAction SilentlyContinue).Source) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
     if ($qn) {
-      Say "Already running on port $port - opening the window (updates are installed on the next fresh start)."
+      Say "Already running on port $port - checking for updates, then opening the window."
       Set-Location $known
       $cfg = Read-Cfg (Join-Path $known 'data\launcher.cfg')
       if ($cfg.APP_WINDOW) { $env:AMBER_APP_WINDOW = $cfg.APP_WINDOW }
       if ($cfg.EXIT_ON_CLOSE) { $env:AMBER_EXIT_ON_CLOSE = $cfg.EXIT_ON_CLOSE }
       $env:PORT = "$port"
+      # An update stops the running server and installs; launch.js then starts the new version on the same port.
+      $qg = Join-Path $Runtime 'git\cmd\git.exe'
+      if (Test-Path $qg) { $env:PATH = (Split-Path $qg) + ';' + $env:PATH; $env:AMBER_GIT = $qg }
+      & $qn scripts\update.js --apply
       & $qn scripts\launch.js
       Start-Sleep -Seconds 2
       exit 0
