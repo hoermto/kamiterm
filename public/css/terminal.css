@@ -614,3 +614,27 @@ table.t td.wrap {
 .flash-down {
   animation: flash-down 1.2s ease-out;
 }
+
+/* equity chart toggles (RSL26 / RSLBT) */
+.eqchart-bar {
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0;
+}
+.eqchart-grp {
+  display: inline-flex;
+  gap: 2px;
+}
+.eqchart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 4px 0 0;
+}
+.eqchart-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  vertical-align: -1px;
+}

@@ -1,5 +1,6 @@
 // Building blocks for function screens: tables, key-value grids, tabs and charts, all in the terminal's look.
 import { esc } from "./api.js";
+import { periodPnl, niceTicks } from "./equity-pnl.js";
 
 // cols: [{ key, label, left, fmt(v,row) -> text, cls(v,row) -> class, html: true }]
 export function table(rows, cols, { onRow, max = 500 } = {}) {
@@ -144,6 +145,139 @@ export function lineChart(host, seriesList, { percent = false } = {}) {
   }
   chart.timeScale().fitContent();
   return { chart, remove: () => chart.remove() };
+}
+
+// ---------- equity chart with toggles ----------
+// Ansicht „Kurve“ (Y-Achse linear | log) oder P&L-Balken je Jahr | Monat (Betrag | %), Strategie und Benchmark nebeneinander.
+// seriesList wie lineChart; eine Serie mit flows:true = kumulierte Einzahlungen: nur als Linie, wird vom P&L der anderen abgezogen.
+// Auswahl bleibt pro storeKey in localStorage. Returns { el, remove }.
+const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch { /* privat/blockiert: egal */ } };
+
+export function equityChart(host, seriesList, { storeKey = "equity", height = 260, cur = "" } = {}) {
+  const key = `amber.eqchart.${storeKey}`;
+  let st = { view: "curve", scale: "lin", unit: "abs" };
+  try { st = { ...st, ...JSON.parse(lsGet(key) || "{}") }; } catch { /* default */ }
+  const save = () => lsSet(key, JSON.stringify(st));
+
+  const bar = document.createElement("div");
+  bar.className = "tabs eqchart-bar";
+  const plot = document.createElement("div");
+  plot.style.cssText = `height:${height}px;position:relative`;
+  const legend = document.createElement("div");
+  legend.className = "hint eqchart-legend";
+  host.replaceChildren(bar, plot, legend);
+
+  const group = (label, opts, get, set) => {
+    const g = document.createElement("span");
+    g.className = "eqchart-grp";
+    g.title = label;
+    for (const [v, txt, tip] of opts) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `tab${get() === v ? " on" : ""}`;
+      b.textContent = txt;
+      if (tip) b.title = tip;
+      b.onclick = () => { if (get() === v) return; set(v); save(); render(); };
+      g.append(b);
+    }
+    return g;
+  };
+
+  let line = null;
+  let ro = null;
+  const flows = seriesList.find((s) => s.flows)?.data || null;
+  const barSeries = seriesList.filter((s) => !s.flows && s.data?.length);
+
+  const render = () => {
+    line?.remove(); line = null;
+    ro?.disconnect(); ro = null;
+    plot.replaceChildren();
+    legend.replaceChildren();
+    bar.replaceChildren(
+      group("Ansicht", [["curve", "Kurve", "Equity-Verlauf"], ["Y", "P&L Jahr", "Gewinn/Verlust je Kalenderjahr"], ["M", "P&L Monat", "Gewinn/Verlust je Monat"]], () => st.view, (v) => (st.view = v)),
+      st.view === "curve"
+        ? group("Y-Achse", [["lin", "Linear"], ["log", "Log", "Logarithmische Y-Achse: gleiche %-Bewegung = gleiche Höhe"]], () => st.scale, (v) => (st.scale = v))
+        : group("Einheit", [["abs", cur || "Betrag", "P&L als Betrag"], ["pct", "%", "P&L in % des Periodenstarts (inkl. Einzahlungen der Periode)"]], () => st.unit, (v) => (st.unit = v)),
+    );
+    if (st.view === "curve") {
+      line = lineChart(plot, seriesList);
+      line.chart.priceScale("right").applyOptions({ mode: st.scale === "log" ? 1 : 0 });
+      return;
+    }
+    const rows = barSeries.map((s) => ({ ...s, pnl: new Map(periodPnl(s.data, flows, st.view).map((r) => [r.period, r])) }));
+    const draw = () => {
+      const w = plot.clientWidth;
+      if (w > 0) plot.replaceChildren(pnlBarsSvg(rows, { w, h: height, pct: st.unit === "pct", unit: st.view }));
+    };
+    draw();
+    ro = new ResizeObserver(draw);
+    ro.observe(plot);
+    for (const s of rows) {
+      const tot = [...s.pnl.values()];
+      const sum = tot.reduce((a, r) => a + r.pnl, 0);
+      const pos = tot.filter((r) => r.pnl > 0).length;
+      const item = document.createElement("span");
+      item.innerHTML = `<i style="background:${s.color}"></i>${esc(s.title)}: Σ ${esc(fmtPnl(sum, false))} · ${pos}/${tot.length} positiv`;
+      legend.append(item);
+    }
+  };
+  render();
+  return {
+    el: host,
+    remove: () => { line?.remove(); ro?.disconnect(); },
+  };
+}
+
+const fmtPnl = (v, pct) =>
+  !Number.isFinite(v) ? "—" : pct
+    ? `${v > 0 ? "+" : ""}${v.toLocaleString("de-DE", { maximumFractionDigits: 1, minimumFractionDigits: 1 })} %`
+    : `${v > 0 ? "+" : ""}${v.toLocaleString("de-DE", { maximumFractionDigits: 0 })}`;
+const fmtAxis = (v, pct) => {
+  if (pct) return `${+v.toFixed(1)}%`;
+  const a = Math.abs(v);
+  return a >= 1e6 ? `${+(v / 1e6).toFixed(1)}M` : a >= 1e4 ? `${+(v / 1e3).toFixed(0)}k` : a >= 1e3 ? `${+(v / 1e3).toFixed(1)}k` : String(+v.toFixed(0));
+};
+
+// Gruppierte Balken: je Periode ein Balken pro Serie (Serienfarbe), Tooltip mit Betrag und %.
+function pnlBarsSvg(rows, { w, h, pct, unit }) {
+  const periods = [...new Set(rows.flatMap((s) => [...s.pnl.keys()]))].sort();
+  const val = (r) => (r ? (pct ? r.pct : r.pnl) : null);
+  const vals = rows.flatMap((s) => periods.map((p) => val(s.pnl.get(p)))).filter(Number.isFinite);
+  const ticks = niceTicks(Math.min(0, ...vals), Math.max(0, ...vals), 5);
+  const lo = ticks[0], hi = ticks.at(-1);
+  const padL = 52, padR = 8, padT = 8, padB = 20;
+  const pw = Math.max(10, w - padL - padR), ph = h - padT - padB;
+  const y = (v) => padT + ((hi - v) / (hi - lo || 1)) * ph;
+  const gw = pw / Math.max(1, periods.length);
+  const bw = Math.max(1, Math.min(40, (gw * 0.8) / Math.max(1, rows.length)));
+  const muted = css("--muted") || "#8c8c8c";
+  const parts = [];
+  for (const t of ticks) {
+    parts.push(`<line x1="${padL}" x2="${w - padR}" y1="${y(t)}" y2="${y(t)}" stroke="${t === 0 ? "#555" : "#1c1c1c"}"/>`);
+    parts.push(`<text x="${padL - 6}" y="${y(t) + 4}" text-anchor="end" fill="${muted}">${esc(fmtAxis(t, pct))}</text>`);
+  }
+  const showVals = unit === "Y" && bw >= 26;
+  const every = Math.max(1, Math.ceil(46 / gw));
+  periods.forEach((p, i) => {
+    const gx = padL + i * gw + (gw - bw * rows.length) / 2;
+    rows.forEach((s, j) => {
+      const r = s.pnl.get(p);
+      const v = val(r);
+      if (!Number.isFinite(v)) return;
+      const y0 = y(Math.max(0, v)), y1 = y(Math.min(0, v));
+      const tip = `${p} · ${s.title}: ${fmtPnl(r.pnl, false)} (${fmtPnl(r.pct, true)})${r.flow ? ` · Einzahlungen ${fmtPnl(r.flow, false)}` : ""}`;
+      parts.push(`<rect x="${gx + j * bw}" y="${y0}" width="${Math.max(1, bw - 1)}" height="${Math.max(1, y1 - y0)}" fill="${s.color}" fill-opacity="${v < 0 ? 0.6 : 1}"><title>${esc(tip)}</title></rect>`);
+      if (showVals) parts.push(`<text x="${gx + j * bw + bw / 2}" y="${v < 0 ? y1 + 11 : y0 - 3}" text-anchor="middle" fill="${s.color}" font-size="9">${esc(fmtAxis(v, pct))}</text>`);
+    });
+    const lab = unit === "Y" ? p : p.endsWith("-01") || periods.length <= 24 ? (periods.length <= 24 ? `${p.slice(5)}/${p.slice(2, 4)}` : p.slice(0, 4)) : "";
+    const show = unit === "Y" ? i % every === 0 : periods.length <= 24 ? i % every === 0 : lab && (Number(p.slice(0, 4)) % Math.max(1, Math.ceil(every / 12)) === 0);
+    if (lab && show) parts.push(`<text x="${padL + i * gw + gw / 2}" y="${h - 5}" text-anchor="middle" fill="${muted}">${esc(lab)}</text>`);
+  });
+  const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="P&amp;L je ${unit === "Y" ? "Jahr" : "Monat"}" style="display:block;background:#050505;font:10px ${esc(css("--mono") || "monospace")}">${parts.join("")}</svg>`;
+  const t = document.createElement("template");
+  t.innerHTML = svg;
+  return t.content.firstChild;
 }
 
 // ---------- export to CSV (every table on a screen, for Excel) ----------
