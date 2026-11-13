@@ -7,6 +7,7 @@ import { parse, defaultFn, suggestions, securityQuery } from "./commands.js";
 import { FUNCS } from "./fn/index.js";
 import { loadPrefs, countApp, onPrefs, getPrefs, getUsage } from "./prefs.js";
 import { barApps, barCandidates } from "./prefs-core.js";
+import { sessionState, sessionTitle } from "./markets-core.js";
 import { lookupList, bbgCode } from "./securities.js";
 import {
   tableBlocks,
@@ -373,21 +374,19 @@ async function quitApp() {
   setTimeout(() => window.close(), 300);
 }
 
+// Exchange clocks top right (SETTINGS > Market clocks): local time, dot = trading / extended hours / closed.
 function clocks() {
-  const z = [
-    ["NY", "America/New_York"],
-    ["LDN", "Europe/London"],
-    ["TKY", "Asia/Tokyo"],
-  ];
-  $("#clocks").innerHTML = z
-    .map(
-      ([n, tz]) =>
-        `${n} <b>${new Date().toLocaleTimeString("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit" })}</b>`,
-    )
-    .join(" ");
+  const now = new Date();
+  $("#clocks").innerHTML = getPrefs()
+    .clocks.map((c) => {
+      const s = sessionState(c, now);
+      return s ? `<span class="mk ${s.state}" title="${esc(sessionTitle(c, now))}"><i></i>${esc(c)} <b>${s.local}</b></span>` : "";
+    })
+    .join("");
 }
 clocks();
 setInterval(clocks, 15e3);
+onPrefs(clocks);
 
 // Ticker tape: the big indices, gold, oil, the dollar and bitcoin, in one request.
 const TAPE = [

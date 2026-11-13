@@ -135,13 +135,44 @@ button {
   color: var(--white);
   font-weight: 400;
 }
-.toplink {
-  color: var(--amber);
-  border: 1px solid var(--amber-dim);
-  padding: 3px 8px;
+/* exchange clocks: dot = session state (SETTINGS > Market clocks) */
+.clocks .mk {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: default;
+}
+.clocks .mk i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #444;
   flex: none;
 }
-
+.clocks .mk.open i {
+  background: var(--up);
+  box-shadow: 0 0 4px var(--up);
+}
+.clocks .mk.ext i {
+  background: var(--amber);
+}
+.clocks .mk.closed {
+  opacity: 0.75;
+}
+.mk-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  background: #444;
+}
+.mk-dot.open {
+  background: var(--up);
+}
+.mk-dot.ext {
+  background: var(--amber);
+}
 /* function keys strip */
 .keys {
   display: flex;
@@ -521,8 +552,13 @@ table.t td.wrap {
     transform: translateX(-50%);
   }
 }
+/* SETTINGS > Ticker tape: "scroll" (default) always moves; "system" stops when the system asks for fewer
+   animations (Remote Desktop, Windows "Animation effects" off); "off" stands still. */
+:root[data-tape="off"] .tape-run {
+  animation: none;
+}
 @media (prefers-reduced-motion: reduce) {
-  .tape-run {
+  :root[data-tape="system"] .tape-run {
     animation: none;
   }
 }
@@ -710,4 +746,8 @@ button.ibtn.del:hover {
   color: #fff;
   background: var(--down);
   border-color: var(--down);
+}
+button.ibtn.txt {
+  font-size: 11px;
+  padding: 0 3px;
 }

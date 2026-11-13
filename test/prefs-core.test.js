@@ -44,3 +44,10 @@ test('barCandidates: market-wide functions only, SETTINGS has its own key', () =
   const funcs = { WEI: { id: 'WEI' }, DES: { id: 'DES', needs: true }, SETTINGS: { id: 'SETTINGS' }, RSL26: { id: 'RSL26' } };
   assert.deepEqual(barCandidates(funcs), ['WEI', 'RSL26']);
 });
+
+test('normalizePrefs: ticker tape mode, default scroll', () => {
+  assert.equal(normalizePrefs({}).tape, 'scroll');
+  assert.equal(normalizePrefs({ tape: 'system' }).tape, 'system');
+  assert.equal(normalizePrefs({ tape: 'off' }).tape, 'off');
+  assert.equal(normalizePrefs({ tape: 'sideways' }).tape, 'scroll');
+});

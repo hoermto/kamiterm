@@ -1,11 +1,13 @@
 // SETTINGS: personal settings of this terminal. Colour scheme, name top left, which apps sit in the top bar
-// (auto = most used, or your own pick and order) and the app usage counts behind the ranking.
+// (auto = most used, or your own pick and order), exchange clocks top right, ticker tape, and the app usage
+// counts behind the ranking.
 // Stored in data/state.json (amberPrefs, amberUsage) via prefs.js.
 import { esc } from "../api.js";
 import { table, sect, html } from "../ui.js";
 import { FUNCS } from "./index.js";
-import { THEMES, DEFAULT_NAME, DEFAULT_BAR, NAME_MAX, BAR_MIN, BAR_MAX, barApps, barCandidates } from "../prefs-core.js";
+import { THEMES, TAPE_MODES, DEFAULT_NAME, DEFAULT_BAR, NAME_MAX, BAR_MIN, BAR_MAX, barApps, barCandidates } from "../prefs-core.js";
 import { getPrefs, getUsage, savePrefs, resetUsage, onPrefs } from "../prefs.js";
+import { EXCHANGES, DEFAULT_CLOCKS, CLOCKS_MAX, sessionState } from "../markets-core.js";
 
 const fname = (id) => FUNCS[id]?.name || "";
 const btn = (label, onclick, title = "") => {
@@ -65,6 +67,42 @@ function render(ctx) {
     themes.append(b);
   }
   ctx.el.append(row(html("<label>Colour scheme</label>")), themes);
+
+  const tapes = html('<div class="tabs" role="radiogroup" aria-label="Ticker tape"></div>');
+  for (const [id, label] of Object.entries(TAPE_MODES)) {
+    const b = btn(label, () => p.tape !== id && save({ tape: id }));
+    b.className = `tab${p.tape === id ? " on" : ""}`;
+    b.setAttribute("role", "radio");
+    b.setAttribute("aria-checked", String(p.tape === id));
+    tapes.append(b);
+  }
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  ctx.el.append(
+    row(html("<label>Ticker tape (bottom line)</label>")),
+    tapes,
+    html(`<p class="para dim">Windows on this computer currently ${reduced ? "<b>asks for fewer animations</b> (Remote Desktop session, or Settings › Accessibility › Visual effects › Animation effects is off), so “Follow Windows” stands still here" : "allows animations"}.</p>`),
+  );
+
+  // ---- exchange clocks ----
+  ctx.el.append(sect("Market clocks (top right)"));
+  ctx.el.append(html(`<p class="para dim">Tick the exchanges to show (max. ${CLOCKS_MAX}), in the order ticked. The dot shows the session: <span class="mk-dot open"></span>trading <span class="mk-dot ext"></span>extended hours (pre-market, after hours, auctions, Tradegate for Xetra) <span class="mk-dot"></span>closed. Local exchange time, Monday to Friday; exchange holidays are not known.</p>`));
+  const now = new Date();
+  const picked = p.clocks;
+  const rng = (list) => list.map(([a, b]) => `${a}–${b}`).join(", ") || "—";
+  const ctab = html(`<table class="t"><thead><tr><th class="l">Show</th><th class="l">Code</th><th class="l">Exchange</th><th class="l">Trading</th><th class="l">Extended</th><th class="l">Now</th></tr></thead><tbody>${Object.entries(EXCHANGES)
+    .map(([code, ex]) => {
+      const st = sessionState(code, now);
+      const pos = picked.indexOf(code);
+      return `<tr><td class="l"><label><input type="checkbox" data-clock="${code}"${pos >= 0 ? " checked" : ""}${pos < 0 && picked.length >= CLOCKS_MAX ? " disabled" : ""}> ${pos >= 0 ? pos + 1 : ""}</label></td><td class="l"><b>${code}</b></td><td class="l">${esc(ex.name)} <span class="dim">${esc(ex.city)}</span></td><td class="l">${rng(ex.open)}</td><td class="l">${rng(ex.ext)}</td><td class="l"><span class="mk-dot ${st.state}"></span>${st.weekend ? "weekend" : st.text} · ${st.local}</td></tr>`;
+    })
+    .join("")}</tbody></table>`);
+  ctab.addEventListener("change", (e) => {
+    const c = e.target.dataset?.clock;
+    if (!c) return;
+    const next = e.target.checked ? [...picked.filter((x) => x !== c), c] : picked.filter((x) => x !== c);
+    save({ clocks: next });
+  });
+  ctx.el.append(ctab, row(btn("Standard (NY, LDN, TKY)", () => save({ clocks: [...DEFAULT_CLOCKS] }, "Market clocks reset")), btn("None", () => save({ clocks: [] }))));
 
   // ---- top bar ----
   ctx.el.append(sect("Top bar apps"));

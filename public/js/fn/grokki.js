@@ -773,11 +773,13 @@ async function rsl(ctx) {
           col('trailStop',`Stop\n−${trailNum(cur.trail)} %`,v=>fmt(v,2)),
           {key:'trailDistPct',label:'Fallhöhe\nbis Stop',html:true,fmt:(v,r)=>Number.isFinite(v)?`<span style="color:${r.trailHit?'#ff5555':(v<5?'#ffa028':'inherit')}" title="${esc(r.trailNote||`(Wochenschluss − Stop) / Wochenschluss · Wochenschluss ${fmt(r.trailClose,2)} · Hoch (Wochenschluss) am ${r.trailPeakDate||'—'}`)}">${v.toFixed(2)} %${r.trailNote?' *':''}</span>`:'—'},
         ]:[]),
-        {key:'_v',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-h-edit',r.id,'✎','Bearbeiten')}${iconBtn('data-h-sell',r.id,'⏏','Verkaufen (auch Teilverkauf)')}${iconBtn('data-h-del',r.id,'✕','Löschen','del')}</span>`},
+        {key:'_v',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-h-go',`${r.symbol} GP`,'GP',`Chart: ${r.symbol} GP`,'txt')}${iconBtn('data-h-edit',r.id,'✎','Bearbeiten')}${iconBtn('data-h-sell',r.id,'⏏','Verkaufen (auch Teilverkauf)')}${iconBtn('data-h-del',r.id,'✕','Löschen','del')}</span>`},
       ]);
       const byId=new Map(pos.map(p=>[p.id,p]));
       const editBox=html('<div></div>');
       posTable.addEventListener('click',e=>{
+        const go=e.target.closest('button[data-h-go]');
+        if(go){e.stopImmediatePropagation();ctx.go(go.dataset.hGo);return;}
         const b=e.target.closest('button[data-h-edit],button[data-h-sell],button[data-h-del]');
         if(!b) return;
         e.stopImmediatePropagation();
@@ -940,7 +942,7 @@ async function rsl(ctx) {
       ...(rankingVal(d.ranking)==='MOM52_4'?[{key:'score',label:'Mom\n12-1 %',html:true,fmt:v=>Number.isFinite(v)?`<b title="Rendite Wochenschluss vor 52 Wo. → vor 4 Wo. (Rangkriterium)">${(100*v).toFixed(2).replace('.',',')} %</b>`:'—'}]
         :rankingVal(d.ranking)==='RSL39'?[{key:'score',label:'RSL39',html:true,fmt:v=>Number.isFinite(v)?`<b title="Wochenschluss / SMA 39 Wochenschlüsse (Rangkriterium)">${fmt(v,4)}</b>`:'—'}]:[]),
       col('rsl',rankingVal(d.ranking)==='RSL26'?'RSL\n(1 = Ø)':'RSL26\n(RS-Exit)',v=>fmt(v,4)),col('asOf','Stand'),
-      {key:'_a',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-rsl-kauf',r.ticker,'+','Kaufen (Position anlegen)')}${iconBtn('data-rsl-verk',r.ticker,'⏏','Verkaufen')}</span>`},
+      {key:'_a',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-rsl-go',`${r.ticker} GP`,'GP',`Chart: ${r.ticker} GP`,'txt')}${iconBtn('data-rsl-go',`${r.ticker} DES`,'DES',`Beschreibung: ${r.ticker} DES`,'txt')}${iconBtn('data-rsl-kauf',r.ticker,'+','Kaufen (Position anlegen)')}${iconBtn('data-rsl-verk',r.ticker,'⏏','Verkaufen')}</span>`},
     ],{onRow:r=>ctx.go(`${r.ticker} GP`)});
     rankTable.querySelectorAll('tbody tr[data-i]').forEach(tr=>{
       const r=rankRows[+tr.dataset.i];if(!r)return;const t=String(r.ticker).toUpperCase();
@@ -948,6 +950,8 @@ async function rsl(ctx) {
       else if(candBy.has(t)){tr.dataset.rslMark='buy';tr.style.cssText+=';'+MARK_BUY;}
     });
     rankTable.addEventListener('click',e=>{
+      const go=e.target.closest('button[data-rsl-go]');
+      if(go){e.stopImmediatePropagation();ctx.go(go.dataset.rslGo);return;}
       const k=e.target.closest('button[data-rsl-kauf]');
       const v=e.target.closest('button[data-rsl-verk]');
       if(!k&&!v) return;
