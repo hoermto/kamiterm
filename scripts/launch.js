@@ -2,6 +2,7 @@
 // Start Amber Terminal in the background and open your browser. It keeps running after this
 // terminal closes. If it's already running, this just opens the browser.
 //   node scripts/launch.js            node scripts/launch.js --no-open
+//   node scripts/launch.js --app      own app window (Edge/Chrome app mode) instead of a browser tab
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -23,6 +24,29 @@ async function running() {
   return null;
 }
 
+// Own app window (no tabs, no address bar, own taskbar icon) via Edge or Chrome "--app" mode, with a separate
+// profile in data/app-window so it remembers its size and doesn't mix with your browser. Windows only;
+// elsewhere, or without Edge/Chrome, the normal browser opens. Turn off with APP_WINDOW=0 / --browser.
+function appBrowser() {
+  if (process.platform !== 'win32') return null;
+  const e = process.env;
+  const dirs = [e['ProgramFiles(x86)'], e.ProgramFiles, e.LOCALAPPDATA].filter(Boolean);
+  const exes = [['Microsoft', 'Edge', 'Application', 'msedge.exe'], ['Google', 'Chrome', 'Application', 'chrome.exe']];
+  for (const x of exes) for (const d of dirs) { const f = path.join(d, ...x); if (fs.existsSync(f)) return f; }
+  return null;
+}
+function openAppWindow(url) {
+  const exe = appBrowser();
+  if (!exe) return false;
+  const profile = path.join(root, 'data', 'app-window');
+  try {
+    const c = spawn(exe, [`--app=${url}`, `--user-data-dir=${profile}`, '--window-size=1600,1000', '--no-first-run', '--no-default-browser-check'], { detached: true, stdio: 'ignore' });
+    c.on('error', () => {});
+    c.unref();
+    return true;
+  } catch { return false; }
+}
+
 function openBrowser(url) {
   const [cmd, args] = process.platform === 'win32' ? ['cmd', ['/c', 'start', '""', url]] : process.platform === 'darwin' ? ['open', [url]] : ['xdg-open', [url]];
   try { const c = spawn(cmd, args, { detached: true, stdio: 'ignore' }); c.on('error', () => {}); c.unref(); } catch { /* headless */ }
@@ -42,6 +66,7 @@ if (!port) {
   }
 }
 const url = `http://localhost:${port}`;
-if (!process.argv.includes('--no-open') && process.env.QT_NO_OPEN !== '1') openBrowser(url);
+const wantApp = !process.argv.includes('--browser') && process.env.APP_WINDOW !== '0' && (process.argv.includes('--app') || process.env.APP_WINDOW === '1');
+if (!process.argv.includes('--no-open') && process.env.QT_NO_OPEN !== '1') { if (!(wantApp && openAppWindow(url))) openBrowser(url); }
 console.log(`Amber Terminal is running at ${url}\nStop it any time with: node scripts/stop.js`);
 process.exit(0);
