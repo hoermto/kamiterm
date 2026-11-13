@@ -135,6 +135,44 @@ button {
   color: var(--white);
   font-weight: 400;
 }
+/* exchange clocks: dot = session state (SETTINGS > Market clocks) */
+.clocks .mk {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: default;
+}
+.clocks .mk i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #444;
+  flex: none;
+}
+.clocks .mk.open i {
+  background: var(--up);
+  box-shadow: 0 0 4px var(--up);
+}
+.clocks .mk.ext i {
+  background: var(--amber);
+}
+.clocks .mk.closed {
+  opacity: 0.75;
+}
+.mk-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  background: #444;
+}
+.mk-dot.open {
+  background: var(--up);
+}
+.mk-dot.ext {
+  background: var(--amber);
+}
 .toplink {
   color: var(--amber);
   border: 1px solid var(--amber-dim);
