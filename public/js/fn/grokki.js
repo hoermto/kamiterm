@@ -257,6 +257,15 @@ function exitInfoPanel(rules) {
     </div></details>`);
 }
 const col=(key,label,format)=>({key,label,...(format?{fmt:v=>format(v)}:{left:true})});
+// RRG quadrants abbreviated in narrow tables; full name as tooltip.
+const Q_ABBR={Leading:'Lead',Weakening:'Weak',Lagging:'Lag',Improving:'Impr'};
+const Q_TIP='RRG-Quadrant (Lead = Leading, Weak = Weakening, Lag = Lagging, Impr = Improving)';
+const qShort=v=>v==null||v===''?'—':`<span title="${esc(String(v))}">${esc(String(v).split(' → ').map(q=>Q_ABBR[q]||q).join('→'))}</span>`;
+const qCol=(key,label,title)=>({key,label,html:true,left:true,title,fmt:v=>qShort(v)});
+const rrgCols=()=>[qCol('quadrant','RRG',Q_TIP),qCol('weekChange','RRG\nΔ Wo.','RRG-Quadrant Vorwoche → aktuelle Woche'),
+  {key:'openSince',label:'RRG-Exit\nseit',left:true,title:'Beginn der noch aktiven Schwächephase (Leading → Weakening/Lagging); — = keine Schwächephase',fmt:v=>v||'—'}];
+// Icon buttons for row actions: symbol plus tooltip / aria-label.
+const iconBtn=(attr,id,sym,label,cls='')=>`<button type="button" class="ibtn${cls?' '+cls:''}" ${attr}="${esc(id)}" title="${esc(label)}" aria-label="${esc(label)}">${sym}</button>`;
 
 /** German Excel CSV (UTF-8 BOM + semicolon + decimal comma). downloadText also adds BOM — strip first. */
 function germanCsv(rows, columns) {
@@ -359,8 +368,7 @@ function renderBacktestResults(ctx,d) {
       note('Nur Research: Monats-Rotation bzw. aktuelles Top-N. Dieselbe Kriterienlogik wie Holdings-Exits (aktueller Stand, ohne Kaufdatum-Gate).'),
       table(holdings,[
         col('rank','#',fmt0),col('ticker','Ticker'),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
-        col('quadrant','RRG\nQuadrant'),col('weekChange','Woche\nΔ'),col('weaknessPhase','Schwäche-\nphase',v=>v?'ja':'nein'),
-        col('rrgExitLabel','RRG-\nExit'),col('exitHint','Exit-\nHinweis'),col('bought','Gekauft'),
+        ...rrgCols(),col('exitHint','Exit-\nHinweis'),col('bought','Gekauft'),
         ...(holdings.some(h=>h.trailStop!=null)?[col('trailPeak','Trail-\nHoch',v=>fmt(v,2)),col('trailStop','Trail-\nStop',v=>fmt(v,2))]:[]),
       ],{onRow:r=>ctx.go(`${r.ticker} GP`)}));
   }
@@ -667,8 +675,6 @@ async function rsl(ctx) {
   const btBtn=document.createElement('button');btBtn.type='button';btBtn.textContent='Zum Backtest';
   btBtn.title='Öffnet RSL-BT mit den aktuellen Parametern. Der Backtest startet erst dort auf Knopfdruck.';
   gAct.append(btBtn);
-  const watchBtn=document.createElement('button');watchBtn.type='button';watchBtn.textContent='Holdings';
-  watchBtn.onclick=()=>holdingsHost?.scrollIntoView({behavior:'smooth',block:'start'});gAct.append(watchBtn);
   const resetBtn=document.createElement('button');resetBtn.type='button';resetBtn.textContent='Zurücksetzen';
   resetBtn.title='Gespeicherte RSL26-Einstellungen löschen und Standard laden: Favorit RSL26 Trail20 (RANK N5 RT25 RS-Exit, TRAIL 20 %, Sperre 4 Wo.). Profile bleiben.';
   resetBtn.onclick=()=>ctx.go('RSL26 RESET');gAct.append(resetBtn);
@@ -760,17 +766,14 @@ async function rsl(ctx) {
         col('symbol','Ticker'),uniCol,maCol,col('buyDate','Kauf-\ndatum'),
         col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),col('note','Notiz'),
         col('rank','Rank',fmt0),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
-        col('quadrant','RRG\nQuadrant'),col('weekChange','Woche\nΔ'),
-        col('weaknessPhase','Schwäche-\nphase',v=>v?'ja':'nein'),
-        col('rrgExitLabel','RRG-\nExit'),
+        ...rrgCols(),
         col('exitHint','Exit-\nHinweis'),
         ...(trailNum(cur.trail)>0?[
           {...col('trailPeak','Hoch\n(Wo.-Schl.)',v=>fmt(v,2)),title:'Höchster Wochenschluss seit Kauf (mind. Kaufkurs), nicht Intraday-Hoch'},
           col('trailStop',`Stop\n−${trailNum(cur.trail)} %`,v=>fmt(v,2)),
           {key:'trailDistPct',label:'Fallhöhe\nbis Stop',html:true,fmt:(v,r)=>Number.isFinite(v)?`<span style="color:${r.trailHit?'#ff5555':(v<5?'#ffa028':'inherit')}" title="${esc(r.trailNote||`(Wochenschluss − Stop) / Wochenschluss · Wochenschluss ${fmt(r.trailClose,2)} · Hoch (Wochenschluss) am ${r.trailPeakDate||'—'}`)}">${v.toFixed(2)} %${r.trailNote?' *':''}</span>`:'—'},
         ]:[]),
-        col('rrgExit','Modus'),
-        {key:'_v',label:'Aktion',html:true,left:true,fmt:(_,r)=>`<button type="button" data-h-edit="${esc(r.id)}">Bearbeiten</button> <button type="button" data-h-sell="${esc(r.id)}">Verkaufen</button> <button type="button" data-h-del="${esc(r.id)}">Löschen</button>`},
+        {key:'_v',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-h-edit',r.id,'✎','Bearbeiten')}${iconBtn('data-h-sell',r.id,'⏏','Verkaufen (auch Teilverkauf)')}${iconBtn('data-h-del',r.id,'✕','Löschen','del')}</span>`},
       ]);
       const byId=new Map(pos.map(p=>[p.id,p]));
       const editBox=html('<div></div>');
@@ -804,7 +807,7 @@ async function rsl(ctx) {
     }
     if(sold.length) {
       const soldTable=table(sold,[col('symbol','Ticker'),uniCol,col('buyDate','Kauf'),col('closedDate','Verkauf'),col('buyPrice','Kauf-\nkurs',px),col('sellPrice','Verkaufs-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('closed'),col('note','Notiz'),
-        {key:'_c',label:'Aktion',html:true,left:true,fmt:(_,r)=>`<button type="button" data-c-re="${esc(r.id)}">Wieder öffnen</button> <button type="button" data-c-del="${esc(r.id)}">Löschen</button>`}]);
+        {key:'_c',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-c-re',r.id,'↺','Wieder öffnen')}${iconBtn('data-c-del',r.id,'✕','Löschen','del')}</span>`}]);
       soldTable.addEventListener('click',e=>{
         const b=e.target.closest('button[data-c-re],button[data-c-del]');if(!b)return;
         e.stopImmediatePropagation();
@@ -937,7 +940,7 @@ async function rsl(ctx) {
       ...(rankingVal(d.ranking)==='MOM52_4'?[{key:'score',label:'Mom\n12-1 %',html:true,fmt:v=>Number.isFinite(v)?`<b title="Rendite Wochenschluss vor 52 Wo. → vor 4 Wo. (Rangkriterium)">${(100*v).toFixed(2).replace('.',',')} %</b>`:'—'}]
         :rankingVal(d.ranking)==='RSL39'?[{key:'score',label:'RSL39',html:true,fmt:v=>Number.isFinite(v)?`<b title="Wochenschluss / SMA 39 Wochenschlüsse (Rangkriterium)">${fmt(v,4)}</b>`:'—'}]:[]),
       col('rsl',rankingVal(d.ranking)==='RSL26'?'RSL\n(1 = Ø)':'RSL26\n(RS-Exit)',v=>fmt(v,4)),col('asOf','Stand'),
-      {key:'_a',label:'Aktion',html:true,left:true,fmt:(_,r)=>`<button type="button" data-rsl-kauf="${esc(r.ticker)}">Kauf</button> <button type="button" data-rsl-verk="${esc(r.ticker)}">Verkauf</button>`},
+      {key:'_a',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-rsl-kauf',r.ticker,'+','Kaufen (Position anlegen)')}${iconBtn('data-rsl-verk',r.ticker,'⏏','Verkaufen')}</span>`},
     ],{onRow:r=>ctx.go(`${r.ticker} GP`)});
     rankTable.querySelectorAll('tbody tr[data-i]').forEach(tr=>{
       const r=rankRows[+tr.dataset.i];if(!r)return;const t=String(r.ticker).toUpperCase();
