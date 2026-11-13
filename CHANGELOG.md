@@ -6,6 +6,7 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ### RSL26
 - **GP und DES je Zeile der Rangliste:** Chart (`<Ticker> GP`) und Beschreibung (`<Ticker> DES`) mit einem Klick, neben + Kaufen und ⏏ Verkaufen.
+- **GP auch in den Holdings** (offene Positionen), vor ✎ ⏏ ✕.
 
 ### Einstellungen
 - **Börsenuhren oben rechts** wählbar (SETTINGS › Market clocks, bis zu 8, in der Reihenfolge des Anhakens): NY, Toronto, São Paulo, London, Xetra, Paris, Amsterdam, Zürich, Mailand, Indien, Shanghai, Hongkong, Seoul, Tokio, Sydney. Je Börse Ortszeit und ein Punkt für die Sitzung: grün = Handel, amber = erweiterte Handelszeit (Pre-Market/After Hours, Auktionen, Tradegate 8–22 Uhr bei Xetra), grau = geschlossen (auch Mittagspausen, Wochenende). Tooltip mit Handelszeiten. Börsenfeiertage werden nicht berücksichtigt. Standard bleibt NY, LDN, TKY.

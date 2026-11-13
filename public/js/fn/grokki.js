@@ -773,11 +773,13 @@ async function rsl(ctx) {
           col('trailStop',`Stop\n−${trailNum(cur.trail)} %`,v=>fmt(v,2)),
           {key:'trailDistPct',label:'Fallhöhe\nbis Stop',html:true,fmt:(v,r)=>Number.isFinite(v)?`<span style="color:${r.trailHit?'#ff5555':(v<5?'#ffa028':'inherit')}" title="${esc(r.trailNote||`(Wochenschluss − Stop) / Wochenschluss · Wochenschluss ${fmt(r.trailClose,2)} · Hoch (Wochenschluss) am ${r.trailPeakDate||'—'}`)}">${v.toFixed(2)} %${r.trailNote?' *':''}</span>`:'—'},
         ]:[]),
-        {key:'_v',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-h-edit',r.id,'✎','Bearbeiten')}${iconBtn('data-h-sell',r.id,'⏏','Verkaufen (auch Teilverkauf)')}${iconBtn('data-h-del',r.id,'✕','Löschen','del')}</span>`},
+        {key:'_v',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-h-go',`${r.symbol} GP`,'GP',`Chart: ${r.symbol} GP`,'txt')}${iconBtn('data-h-edit',r.id,'✎','Bearbeiten')}${iconBtn('data-h-sell',r.id,'⏏','Verkaufen (auch Teilverkauf)')}${iconBtn('data-h-del',r.id,'✕','Löschen','del')}</span>`},
       ]);
       const byId=new Map(pos.map(p=>[p.id,p]));
       const editBox=html('<div></div>');
       posTable.addEventListener('click',e=>{
+        const go=e.target.closest('button[data-h-go]');
+        if(go){e.stopImmediatePropagation();ctx.go(go.dataset.hGo);return;}
         const b=e.target.closest('button[data-h-edit],button[data-h-sell],button[data-h-del]');
         if(!b) return;
         e.stopImmediatePropagation();
