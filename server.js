@@ -22,6 +22,7 @@ import * as bbg from "./lib/bloomberg-fields.js";
 import { yahooQuotes } from "./lib/fn/board.js";
 import * as rslWatch from "./lib/rsl-watchlist.js";
 import * as updater from "./lib/updater.js";
+import { windowWatch } from "./lib/window-watch.js";
 import { registerIndicator } from "./public/lib/indicators.js";
 import { conditionFn } from "./public/lib/backtest.js";
 import { relaunchForProxy, proxyNote } from "./lib/proxy.js";
@@ -180,6 +181,14 @@ function broadcast(type, payload) {
 }
 alerts.onFire((e) => broadcast("alert", e));
 let updateStatus = null;
+// Closing the app window quits: see lib/window-watch.js (AMBER_CLOSE_GRACE_MS, default 20 s).
+const windows = windowWatch({
+  graceMs: Number(process.env.AMBER_CLOSE_GRACE_MS) || 20e3,
+  onIdle: () => {
+    console.log("\n  Last window closed: stopping.");
+    process.exit(0);
+  },
+});
 setInterval(() => {
   for (const res of clients) res.write(": keep-alive\n\n");
 }, 25000).unref();
@@ -364,7 +373,14 @@ async function handle(req, res) {
       });
       res.write("retry: 3000\n\n");
       clients.add(res);
-      req.on("close", () => clients.delete(res));
+      windows.connect({ app: q.app === "1" });
+      // A comment line every 15 s: proxies keep the stream open, and a vanished window is noticed.
+      const ping = setInterval(() => res.write(": ping\n\n"), 15e3);
+      req.on("close", () => {
+        clearInterval(ping);
+        clients.delete(res);
+        windows.disconnect();
+      });
       return;
     }
     if (p === "/api/alerts") {
@@ -543,7 +559,12 @@ function openBrowser(url) {
   }
 }
 
+// Ports that browsers and Node's fetch refuse to connect to (Fetch spec "bad ports" above 1023):
+// a server there would run but nobody could open it, so they are skipped.
+const BAD_PORTS = new Set([1719, 1720, 1723, 2049, 3659, 4045, 4190, 5060, 5061, 6000, 6566, 6665, 6666, 6667, 6668, 6669, 6679, 6697, 10080]);
+
 export function start(port = START_PORT, tries = 20) {
+  if (port && BAD_PORTS.has(port)) return start(port + 1, tries);
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       handle(req, res).catch((e) => {

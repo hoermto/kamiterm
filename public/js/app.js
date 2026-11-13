@@ -339,7 +339,7 @@ function renderKeys() {
   });
   $("#keys").innerHTML =
     [...yellow, ...fns].join("") +
-    `<span style="flex:1"></span><button class="key fn" data-k="SETTINGS" title="Settings: colours, name, top-bar apps">⚙</button><button class="key fn" data-l="1">1</button><button class="key fn" data-l="2">2</button><button class="key fn" data-l="4">4</button>`;
+    `<span style="flex:1"></span><button class="key fn" data-k="SETTINGS" title="Settings: colours, name, top-bar apps">⚙</button><button class="key fn quit" data-q="1" title="Quit: stop Amber Terminal and close the window">⏻</button><button class="key fn" data-l="1">1</button><button class="key fn" data-l="2">2</button><button class="key fn" data-l="4">4</button>`;
 }
 renderKeys();
 // Re-rank only when the bar's settings change, not on every launch (keys would jump under the mouse);
@@ -352,6 +352,7 @@ onPrefs((p) => {
 $("#keys").onclick = (e) => {
   const b = e.target.closest("button");
   if (!b) return;
+  if (b.dataset.q) return quitApp();
   if (b.dataset.l) return setLayout(+b.dataset.l);
   const k = b.dataset.k;
   if (b.classList.contains("fn")) panels[state.active].run(k);
@@ -360,6 +361,17 @@ $("#keys").onclick = (e) => {
     gInput.focus();
   }
 };
+
+// Quit (⏻): stop the server, then close the window. A browser tab that may not be closed by script
+// shows a "stopped" page instead.
+async function quitApp() {
+  if (!window.confirm("Quit Amber Terminal?\n\nThe server stops; alerts don't fire until you start it again with start.bat.")) return;
+  try { window.amberEvents?.close(); } catch {}
+  try { await api.post("/api/shutdown"); } catch {}
+  document.title = "Amber Terminal stopped";
+  document.body.innerHTML = `<div class="stopped"><b>${esc($(".brand .logo")?.textContent || "AMBER")} TERMINAL</b> stopped.<br><span class="hint">You can close this window. Start it again with start.bat.</span></div>`;
+  setTimeout(() => window.close(), 300);
+}
 
 function clocks() {
   const z = [
@@ -412,7 +424,9 @@ setInterval(tape, 60e3);
 // Alerts fire on the server (ALRT); the event stream brings them here as a toast and a desktop notification.
 function listenForAlerts() {
   if (!window.EventSource) return;
-  const es = new EventSource("/api/events");
+  // ?app=1: this is the app window from start.bat; closing the last window then stops the server.
+  const isApp = new URLSearchParams(location.search).get("app") === "1";
+  const es = (window.amberEvents = new EventSource(`/api/events${isApp ? "?app=1" : ""}`));
   es.addEventListener("update", (e) => {
     try { showUpdate(JSON.parse(e.data)); } catch {}
   });
