@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
+## [Unreleased 1.3]
+
+### Holdings
+- **Schmalere Tabelle:** RRG-Quadranten abgekürzt (Lead, Weak, Lag, Impr; voller Name als Tooltip), Spalte „RRG Δ Wo.“ statt „Woche Δ“. „RRG-Exit seit“ zeigt nur noch das Datum; die doppelte Spalte „Schwächephase“ (ja/nein) entfällt, ein Datum heißt ja. Gilt auch für die Backtest-Holdings.
+- Spalte **„Modus“** entfällt: Der RRG-Exit-Modus ist eine globale Einstellung (Exit-Abschnitt) und war in jeder Zeile gleich.
+- **Aktionen als Symbole:** ✎ Bearbeiten, ⏏ Verkaufen, ✕ Löschen, bei geschlossenen Positionen ↺ Wieder öffnen; Text als Tooltip.
+
 ## [Unreleased]
 
 ### Einstellungen (`SETTINGS`, ⚙ in der Tastenleiste)
