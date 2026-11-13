@@ -4,6 +4,9 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ## [1.4.0] – in Arbeit
 
+### RSL26
+- **GP und DES je Zeile der Rangliste:** Chart (`<Ticker> GP`) und Beschreibung (`<Ticker> DES`) mit einem Klick, neben + Kaufen und ⏏ Verkaufen.
+
 ### Einstellungen
 - **Börsenuhren oben rechts** wählbar (SETTINGS › Market clocks, bis zu 8, in der Reihenfolge des Anhakens): NY, Toronto, São Paulo, London, Xetra, Paris, Amsterdam, Zürich, Mailand, Indien, Shanghai, Hongkong, Seoul, Tokio, Sydney. Je Börse Ortszeit und ein Punkt für die Sitzung: grün = Handel, amber = erweiterte Handelszeit (Pre-Market/After Hours, Auktionen, Tradegate 8–22 Uhr bei Xetra), grau = geschlossen (auch Mittagspausen, Wochenende). Tooltip mit Handelszeiten. Börsenfeiertage werden nicht berücksichtigt. Standard bleibt NY, LDN, TKY.
 - **Laufband (Tickerzeile unten)**: Scroll (Standard), Follow Windows oder Off. Bisher stand es still, sobald Windows weniger Animationen verlangt, was in Remote-Desktop-Sitzungen automatisch passiert oder wenn unter Einstellungen › Barrierefreiheit › Visuelle Effekte die Animationseffekte aus sind. SETTINGS zeigt an, was Windows gerade meldet.

@@ -754,3 +754,7 @@ button.ibtn.del:hover {
   background: var(--down);
   border-color: var(--down);
 }
+button.ibtn.txt {
+  font-size: 11px;
+  padding: 0 3px;
+}
