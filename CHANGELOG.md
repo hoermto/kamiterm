@@ -15,6 +15,8 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 - **`start.bat`** prüft Node.js (≥ 22.13) und Git und lädt bei Bedarf portable Versionen nach `.runtime` (ohne Admin-Rechte, Prüfsummen geprüft). Allein in einen leeren Ordner kopiert, installiert er die App per `git clone`.
 - **Automatisches Update beim Start** aus dem Git-Repo (Standard: LAN-Origin, Branch `master`), nur als Fast-Forward. Lokale Änderungen oder lokale Commits blockieren das Update, ohne etwas zu verändern. `data\` bleibt unberührt. Eine laufende alte Version wird vorher beendet.
 - **Eigenes App-Fenster** (Edge/Chrome App-Modus) statt Browser-Tab; `APP_WINDOW=0` schaltet das ab.
+- **Fenster schließen beendet das Terminal:** Ist 20 s lang kein Fenster und kein Tab mehr verbunden, stoppt der Server (ein Neuladen zählt nicht). `EXIT_ON_CLOSE=0` lässt ihn weiterlaufen. Neue Taste **⏻** in der Tastenleiste beendet sofort (mit Rückfrage).
+- **Läuft schon:** `start.bat` öffnet nur das Fenster erneut, ohne Download- und Update-Prüfung.
 - **Tägliche Update-Prüfung** im laufenden Terminal: Badge **⚠ UPDATE** neben der Versionsnummer, Tooltip mit den neuen Commits, Klick prüft sofort. Einstellungen je Rechner in `data\launcher.cfg`.
 - Server überspringt Ports, die Browser blockieren (z. B. 4190). `stop.js` und `launch.js` warten länger auf einen beschäftigten Server.
 

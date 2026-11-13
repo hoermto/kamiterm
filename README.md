@@ -26,16 +26,21 @@ There's no `npm install` step. Next time, double-click `start.command` (Mac) or 
 2. checks the git repo for a newer version on the release branch and installs it automatically. Only a clean fast-forward happens: a folder with local edits or local commits is never changed, only reported. `data\` (settings, holdings, caches) is never touched;
 3. starts the terminal in its own app window (Edge or Chrome app mode: no tabs, no address bar), or a browser tab if neither is installed.
 
-To install on a new PC, copy only `start.bat` into an empty folder and run it. It clones the app into `.\amber-terminal` first. The defaults are at the top of `start.bat` (`AMBER_REPO_URL`, `AMBER_BRANCH=master`, `AMBER_APP_WINDOW=1`). Per machine, `data\launcher.cfg` overrides them and survives updates:
+If the terminal is already running from this folder, `start.bat` skips all of that and just opens the window again.
+
+**Quitting.** Closing the app window stops the terminal. Once no window or tab has been connected for 20 seconds, the server shuts down (a reload doesn't count). The **⏻** key in the top bar quits at once. Alerts only fire while the terminal runs. Opened in a normal browser tab (`APP_WINDOW=0`, or `node scripts/launch.js`), it keeps running until ⏻ or `node scripts/stop.js`.
+
+To install on a new PC, copy only `start.bat` into an empty folder and run it. It clones the app into `.\amber-terminal` first. The defaults are at the top of `start.bat` (`AMBER_REPO_URL`, `AMBER_BRANCH=master`, `AMBER_APP_WINDOW=1`). A `launcher.cfg` next to `start.bat`, or `data\launcher.cfg` inside the app (survives updates, wins), overrides them per machine:
 
 ```ini
 REPO_URL=http://host/path/amber-terminal.git
 BRANCH=master
 APP_WINDOW=0          # browser tab instead of an app window
+EXIT_ON_CLOSE=0       # keep running when the window is closed
 UPDATE_CHECK_HOURS=24
 ```
 
-While it runs, the terminal checks the repo once a day. If a newer version exists, a yellow **⚠ UPDATE** badge appears next to the version (tooltip: the new commits; click it to check again). Close the terminal and run `start.bat` to install. `node scripts/update.js` reports the same from the command line, and `AMBER_UPDATE_CHECK=0` turns the daily check off.
+While it runs, the terminal checks the repo once a day. If a newer version exists, a yellow **⚠ UPDATE** badge appears next to the version (tooltip: the new commits; click it to check again). Quit the terminal (⏻ or close the window) and run `start.bat` to install. `node scripts/update.js` reports the same from the command line, and `AMBER_UPDATE_CHECK=0` turns the daily check off.
 
 Releases are developed on `rel-<version>` branches and merged into `master`, so installs following `master` only get finished releases.
 
