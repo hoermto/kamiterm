@@ -675,8 +675,6 @@ async function rsl(ctx) {
   const btBtn=document.createElement('button');btBtn.type='button';btBtn.textContent='Zum Backtest';
   btBtn.title='Öffnet RSL-BT mit den aktuellen Parametern. Der Backtest startet erst dort auf Knopfdruck.';
   gAct.append(btBtn);
-  const watchBtn=document.createElement('button');watchBtn.type='button';watchBtn.textContent='Holdings';
-  watchBtn.onclick=()=>holdingsHost?.scrollIntoView({behavior:'smooth',block:'start'});gAct.append(watchBtn);
   const resetBtn=document.createElement('button');resetBtn.type='button';resetBtn.textContent='Zurücksetzen';
   resetBtn.title='Gespeicherte RSL26-Einstellungen löschen und Standard laden: Favorit RSL26 Trail20 (RANK N5 RT25 RS-Exit, TRAIL 20 %, Sperre 4 Wo.). Profile bleiben.';
   resetBtn.onclick=()=>ctx.go('RSL26 RESET');gAct.append(resetBtn);
