@@ -8,8 +8,11 @@ rem      (fast-forward only: local changes are never overwritten, data\ is never
 rem   3. Starts the terminal in its own app window (Edge/Chrome app mode).
 rem  Copied alone into an empty folder, it first downloads the app (git clone)
 rem  into .\amber-terminal.
-rem  Per-machine overrides, kept across updates: data\launcher.cfg
+rem  Per-machine overrides: launcher.cfg next to this file, or data\launcher.cfg
+rem  (kept across updates, wins over launcher.cfg):
 rem    REPO_URL=...   BRANCH=...   APP_WINDOW=0 (browser tab)   UPDATE_CHECK_HOURS=24
+rem    EXIT_ON_CLOSE=0 (keep running when the window is closed)
+rem  Already running from this folder: just opens the window again.
 rem ===========================================================================
 setlocal
 rem --- default config --------------------------------------------------------
@@ -71,6 +74,50 @@ function Get-Zip($url, $dest, $sha256) {
 
 Write-Host ''
 Write-Host '  AMBER TERMINAL - starter' -ForegroundColor Yellow
+$baseCfg = Read-Cfg (Join-Path $Base 'launcher.cfg')
+if ($baseCfg.REPO_URL) { $env:AMBER_REPO_URL = $baseCfg.REPO_URL }
+if ($baseCfg.BRANCH) { $env:AMBER_BRANCH = $baseCfg.BRANCH }
+
+# ---- 0. Already running from this folder? Then just open the window (no update, no downloads) ----
+# Health check on the terminal's ports; only a copy whose folder matches counts.
+function Find-Running($dir) {
+  $first = if ($env:PORT) { [int]$env:PORT } else { 3787 }
+  $want = [IO.Path]::GetFullPath($dir).TrimEnd('\').ToLower()
+  for ($p = $first; $p -lt $first + 21; $p++) {
+    $tcp = New-Object Net.Sockets.TcpClient
+    try {
+      $ar = $tcp.BeginConnect('127.0.0.1', $p, $null, $null)
+      if (-not ($ar.AsyncWaitHandle.WaitOne(300) -and $tcp.Connected)) { continue }
+    } catch { continue } finally { $tcp.Close() }
+    try {
+      $rq = [Net.HttpWebRequest]::Create("http://127.0.0.1:$p/api/health")
+      $rq.Proxy = $null; $rq.Timeout = 4000
+      $rs = $rq.GetResponse()
+      $h = (New-Object IO.StreamReader($rs.GetResponseStream())).ReadToEnd() | ConvertFrom-Json
+      $rs.Close()
+      if ($h.app -eq 'amber-terminal' -and [IO.Path]::GetFullPath($h.root).TrimEnd('\').ToLower() -eq $want) { return $p }
+    } catch { }
+  }
+  $null
+}
+$known = @($Base, (Join-Path $Base 'amber-terminal')) | Where-Object { Test-Path (Join-Path $_ 'server.js') } | Select-Object -First 1
+if ($known) {
+  $port = Find-Running $known
+  if ($port) {
+    $qn = @((Join-Path $Runtime 'node\node.exe'), (Get-Command node.exe -ErrorAction SilentlyContinue).Source) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    if ($qn) {
+      Say "Already running on port $port - opening the window (updates are installed on the next fresh start)."
+      Set-Location $known
+      $cfg = Read-Cfg (Join-Path $known 'data\launcher.cfg')
+      if ($cfg.APP_WINDOW) { $env:AMBER_APP_WINDOW = $cfg.APP_WINDOW }
+      if ($cfg.EXIT_ON_CLOSE) { $env:AMBER_EXIT_ON_CLOSE = $cfg.EXIT_ON_CLOSE }
+      $env:PORT = "$port"
+      & $qn scripts\launch.js
+      Start-Sleep -Seconds 2
+      exit 0
+    }
+  }
+}
 
 # ---- 1. Node.js ----
 $node = $null
@@ -120,9 +167,8 @@ $App = $Base
 if (-not (Test-Path (Join-Path $App 'server.js'))) {
   $App = Join-Path $Base 'amber-terminal'
   if (-not (Test-Path (Join-Path $App 'server.js'))) {
-    $cfg = Read-Cfg (Join-Path $Base 'launcher.cfg')
-    $url = if ($cfg.REPO_URL) { $cfg.REPO_URL } else { $env:AMBER_REPO_URL }
-    $branch = if ($cfg.BRANCH) { $cfg.BRANCH } else { $env:AMBER_BRANCH }
+    $url = $env:AMBER_REPO_URL
+    $branch = $env:AMBER_BRANCH
     if (-not $url) { Fail 'No app next to start.bat and no repo to install from. Set AMBER_REPO_URL at the top of start.bat (or REPO_URL= in launcher.cfg next to it).' }
     Say "Installing Amber Terminal from $url ($branch) ..."
     & $git clone --quiet --branch $branch $url $App
@@ -132,6 +178,7 @@ if (-not (Test-Path (Join-Path $App 'server.js'))) {
 Set-Location $App
 $cfg = Read-Cfg (Join-Path $App 'data\launcher.cfg')
 if ($cfg.APP_WINDOW) { $env:AMBER_APP_WINDOW = $cfg.APP_WINDOW }
+if ($cfg.EXIT_ON_CLOSE) { $env:AMBER_EXIT_ON_CLOSE = $cfg.EXIT_ON_CLOSE }
 
 # ---- 4. Update (never blocks the start) ----
 & $node scripts\update.js --apply
