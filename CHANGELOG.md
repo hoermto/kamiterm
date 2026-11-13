@@ -2,7 +2,7 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
-## [Unreleased 1.3]
+## [1.3.0] – in Arbeit
 
 ### Holdings
 - **Schmalere Tabelle:** RRG-Quadranten abgekürzt (Lead, Weak, Lag, Impr; voller Name als Tooltip), Spalte „RRG Δ Wo.“ statt „Woche Δ“. „RRG-Exit seit“ zeigt nur noch das Datum; die doppelte Spalte „Schwächephase“ (ja/nein) entfällt, ein Datum heißt ja. Gilt auch für die Backtest-Holdings.
@@ -10,7 +10,7 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 - **Aktionen als Symbole:** ✎ Bearbeiten, ⏏ Verkaufen, ✕ Löschen, bei geschlossenen Positionen ↺ Wieder öffnen, in der Rangliste + Kaufen und ⏏ Verkaufen; Text als Tooltip.
 - Schaltfläche **„Holdings“** (Sprung zur Tabelle) im Scanner-Formular entfällt.
 
-## [Unreleased]
+## [1.2.0] – in Arbeit
 
 ### Einstellungen (`SETTINGS`, ⚙ in der Tastenleiste)
 - **Farbschema**: Amber (Standard), Grey, White, Green, Red. Gilt sofort für Akzentfarbe, Titelzeilen, Tasten und Charts; wird beim Start ohne Aufblitzen des Amber-Schemas angewendet.
