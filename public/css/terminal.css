@@ -685,3 +685,29 @@ table.t td.wrap {
   color: var(--amber);
   font: 14px/1.8 var(--mono);
 }
+
+/* row action icon buttons (holdings: edit, sell, delete) */
+.ibtns {
+  display: inline-flex;
+  gap: 3px;
+  white-space: nowrap;
+}
+button.ibtn {
+  min-width: 22px;
+  padding: 0 4px;
+  line-height: 18px;
+  text-align: center;
+  color: var(--amber);
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-dim);
+  border-radius: 2px;
+}
+button.ibtn:hover {
+  color: #000;
+  background: var(--amber);
+}
+button.ibtn.del:hover {
+  color: #fff;
+  background: var(--down);
+  border-color: var(--down);
+}
