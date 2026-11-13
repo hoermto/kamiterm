@@ -462,12 +462,12 @@ function showUpdate(st) {
   const how = st.state === "blocked"
     ? `Not installed automatically: ${st.reason}.`
     : "Close the terminal and run start.bat to install it.";
-  b.title = `${st.behind} new commit(s) on ${st.branch}. ${how}\n${list}\nChecked ${new Date(st.checkedAt).toLocaleString()} · click to check again`;
+  b.title = `${st.behind == null ? "Newer version" : `${st.behind} new commit(s)`} on ${st.branch}. ${how}\n${list}\nChecked ${new Date(st.checkedAt).toLocaleString()} · click to check again`;
   try {
     const seen = sessionStorage.getItem("amber.updSeen");
     if (seen !== st.remote) {
       sessionStorage.setItem("amber.updSeen", st.remote || "1");
-      toast(`Update available${v} (${st.behind} commit(s)). ${how}`, false, 12e3);
+      toast(`Update available${v}${st.behind == null ? "" : ` (${st.behind} commit(s))`}. ${how}`, false, 12e3);
     }
   } catch {}
 }
