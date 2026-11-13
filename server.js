@@ -22,6 +22,7 @@ import * as bbg from "./lib/bloomberg-fields.js";
 import { yahooQuotes } from "./lib/fn/board.js";
 import * as rslWatch from "./lib/rsl-watchlist.js";
 import * as updater from "./lib/updater.js";
+import { windowWatch } from "./lib/window-watch.js";
 import { registerIndicator } from "./public/lib/indicators.js";
 import { conditionFn } from "./public/lib/backtest.js";
 import { relaunchForProxy, proxyNote } from "./lib/proxy.js";
@@ -180,6 +181,14 @@ function broadcast(type, payload) {
 }
 alerts.onFire((e) => broadcast("alert", e));
 let updateStatus = null;
+// Closing the app window quits: see lib/window-watch.js (AMBER_CLOSE_GRACE_MS, default 20 s).
+const windows = windowWatch({
+  graceMs: Number(process.env.AMBER_CLOSE_GRACE_MS) || 20e3,
+  onIdle: () => {
+    console.log("\n  Last window closed: stopping.");
+    process.exit(0);
+  },
+});
 setInterval(() => {
   for (const res of clients) res.write(": keep-alive\n\n");
 }, 25000).unref();
@@ -364,7 +373,14 @@ async function handle(req, res) {
       });
       res.write("retry: 3000\n\n");
       clients.add(res);
-      req.on("close", () => clients.delete(res));
+      windows.connect({ app: q.app === "1" });
+      // A comment line every 15 s: proxies keep the stream open, and a vanished window is noticed.
+      const ping = setInterval(() => res.write(": ping\n\n"), 15e3);
+      req.on("close", () => {
+        clearInterval(ping);
+        clients.delete(res);
+        windows.disconnect();
+      });
       return;
     }
     if (p === "/api/alerts") {

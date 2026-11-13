@@ -412,7 +412,9 @@ setInterval(tape, 60e3);
 // Alerts fire on the server (ALRT); the event stream brings them here as a toast and a desktop notification.
 function listenForAlerts() {
   if (!window.EventSource) return;
-  const es = new EventSource("/api/events");
+  // ?app=1: this is the app window from start.bat; closing the last window then stops the server.
+  const isApp = new URLSearchParams(location.search).get("app") === "1";
+  const es = (window.amberEvents = new EventSource(`/api/events${isApp ? "?app=1" : ""}`));
   es.addEventListener("update", (e) => {
     try { showUpdate(JSON.parse(e.data)); } catch {}
   });

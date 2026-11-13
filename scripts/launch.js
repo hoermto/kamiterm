@@ -68,6 +68,8 @@ if (!port) {
 const url = `http://localhost:${port}`;
 const appPref = process.env.APP_WINDOW ?? process.env.AMBER_APP_WINDOW; // AMBER_APP_WINDOW: set by start.bat / data/launcher.cfg
 const wantApp = !process.argv.includes('--browser') && appPref !== '0' && (process.argv.includes('--app') || appPref === '1');
-if (!process.argv.includes('--no-open') && process.env.QT_NO_OPEN !== '1') { if (!(wantApp && openAppWindow(url))) openBrowser(url); }
+// ?app=1 marks the app window: closing it (the last window) stops the server. EXIT_ON_CLOSE=0 keeps it running.
+const appUrl = process.env.AMBER_EXIT_ON_CLOSE === '0' ? url : `${url}/?app=1`;
+if (!process.argv.includes('--no-open') && process.env.QT_NO_OPEN !== '1') { if (!(wantApp && openAppWindow(appUrl))) openBrowser(url); }
 console.log(`Amber Terminal is running at ${url}\nStop it any time with: node scripts/stop.js`);
 process.exit(0);
