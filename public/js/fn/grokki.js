@@ -1,5 +1,5 @@
 import {api,esc,px,big} from '../api.js';
-import {table,kv,sect,tabs,html,lineChart,downloadText} from '../ui.js';
+import {table,kv,sect,tabs,html,lineChart,equityChart,downloadText} from '../ui.js';
 import {topXVal,buySlotCandidates} from './rsl-slots.js';
 import {pnlRow,pnlTotals} from './rsl-pnl.js';
 const fmt=(v,d=2)=>Number.isFinite(v)?v.toFixed(d):'—';
@@ -485,10 +485,10 @@ function renderBacktestResults(ctx,d) {
       }
     }
     if(b.equity?.length) {
-      const host=html('<div style="height:260px;position:relative"></div>');ctx.el.append(host);
+      const host=html('<div data-rsl-bt-equity></div>');ctx.el.append(host);
       const series=[{title:`Strategy (Start ${money(s.startCapital??b.startCapital)})`,color:'#ffa028',data:b.equity}];
       if(b.benchmarkEquity?.length) series.push({title:`Benchmark ${d.benchmark?.ticker||''} B&H`,color:'#63a9ff',data:b.benchmarkEquity});
-      const chart=lineChart(host,series);ctx.onCleanup(()=>chart.remove());
+      const chart=equityChart(host,series,{storeKey:'rslbt'});ctx.onCleanup(()=>chart.remove());
     }
   }
 }
