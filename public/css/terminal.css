@@ -673,3 +673,15 @@ table.t td.wrap {
   color: var(--yellow);
   border: 1px solid var(--yellow);
 }
+
+/* quit key and the page left after quitting */
+.key.fn.quit:hover {
+  color: var(--down);
+}
+.stopped {
+  margin: 20vh auto 0;
+  max-width: 480px;
+  text-align: center;
+  color: var(--amber);
+  font: 14px/1.8 var(--mono);
+}
