@@ -1,6 +1,6 @@
 # Grokki extensions · Amber Terminal MVP
 
-**Version 1.1.0** (11.11.2026) — Änderungen siehe [CHANGELOG.md](CHANGELOG.md). Versionsquelle: `package.json` (Server/MCP) und `public/js/version.js` (UI-Kopfzeile, HELP), Test `test/version.test.js`.
+**Version 1.2.0** (in Arbeit) — Änderungen siehe [CHANGELOG.md](CHANGELOG.md). Versionsquelle: `package.json` (Server/MCP) und `public/js/version.js` (UI-Kopfzeile, HELP), Test `test/version.test.js`.
 
 Installed **only on the bot's shared box**, not on the user's offline computer.
 Folder: `/workspace/thoBox/Grokki/amber-terminal`.

@@ -2,7 +2,7 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
-## [Unreleased]
+## [1.2.0] – in Arbeit
 
 ### Einstellungen (`SETTINGS`, ⚙ in der Tastenleiste)
 - **Farbschema**: Amber (Standard), Grey, White, Green, Red. Gilt sofort für Akzentfarbe, Titelzeilen, Tasten und Charts; wird beim Start ohne Aufblitzen des Amber-Schemas angewendet.
