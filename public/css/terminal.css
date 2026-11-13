@@ -640,3 +640,20 @@ table.t td.wrap {
   margin-right: 5px;
   vertical-align: -1px;
 }
+
+/* SETTINGS */
+.set-theme i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border: 1px solid #000;
+}
+.set-bar .xbtn {
+  margin-right: 2px;
+}
+.set-bar .xbtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
