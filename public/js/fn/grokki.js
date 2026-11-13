@@ -942,7 +942,7 @@ async function rsl(ctx) {
       ...(rankingVal(d.ranking)==='MOM52_4'?[{key:'score',label:'Mom\n12-1 %',html:true,fmt:v=>Number.isFinite(v)?`<b title="Rendite Wochenschluss vor 52 Wo. → vor 4 Wo. (Rangkriterium)">${(100*v).toFixed(2).replace('.',',')} %</b>`:'—'}]
         :rankingVal(d.ranking)==='RSL39'?[{key:'score',label:'RSL39',html:true,fmt:v=>Number.isFinite(v)?`<b title="Wochenschluss / SMA 39 Wochenschlüsse (Rangkriterium)">${fmt(v,4)}</b>`:'—'}]:[]),
       col('rsl',rankingVal(d.ranking)==='RSL26'?'RSL\n(1 = Ø)':'RSL26\n(RS-Exit)',v=>fmt(v,4)),col('asOf','Stand'),
-      {key:'_a',label:'Aktion',html:true,left:true,fmt:(_,r)=>`<button type="button" data-rsl-kauf="${esc(r.ticker)}">Kauf</button> <button type="button" data-rsl-verk="${esc(r.ticker)}">Verkauf</button>`},
+      {key:'_a',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-rsl-kauf',r.ticker,'+','Kaufen (Position anlegen)')}${iconBtn('data-rsl-verk',r.ticker,'⏏','Verkaufen')}</span>`},
     ],{onRow:r=>ctx.go(`${r.ticker} GP`)});
     rankTable.querySelectorAll('tbody tr[data-i]').forEach(tr=>{
       const r=rankRows[+tr.dataset.i];if(!r)return;const t=String(r.ticker).toUpperCase();
