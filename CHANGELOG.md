@@ -4,6 +4,16 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ## [Unreleased]
 
+### Einstellungen (`SETTINGS`, ⚙ in der Tastenleiste)
+- **Farbschema**: Amber (Standard), Grey, White, Green, Red. Gilt sofort für Akzentfarbe, Titelzeilen, Tasten und Charts; wird beim Start ohne Aufblitzen des Amber-Schemas angewendet.
+- **Name oben links** frei wählbar (statt „AMBER“, max. 16 Zeichen), auch im Browser-Titel.
+- **Apps in der Tastenleiste**: Umschalter **Auto** (meistgenutzte Apps links, Anzahl Tasten einstellbar, nie genutzte füllen aus der Standardleiste auf) oder **Konfigurieren** (eigene Auswahl und Reihenfolge: hinzufügen, ↑/↓, entfernen; „Auto-Reihenfolge übernehmen“, „Standardliste“). Die gelben Sektor-Tasten (GOVT … CRNCY) bleiben fest links.
+- **App-Nutzung** wird je Funktionscode gezählt (Wiederherstellen der Panels beim Start und „Zurück“ zählen nicht); Tabelle mit Anteil und **Zurücksetzen**. Die Auto-Rangfolge wird beim Start bzw. bei Änderung der Einstellungen neu sortiert, nicht nach jedem Klick.
+- Gespeichert in `data/state.json` (`amberPrefs`, `amberUsage`).
+
+### Charts
+- **Equity-Charts in RSLBT und RSL26-Holdings**: Umschalter Kurve (Y-Achse **linear / log**) oder **P&L je Jahr / Monat** als Balken (Betrag oder %), Strategie neben Benchmark; bei Holdings ohne Einzahlungen. 10-Jahres-Kurven werden jetzt vollständig angezeigt (vorher nur die letzten ~5 Jahre).
+
 ### Holdings
 - **„Fallhöhe bis Stop“** ersetzt „Abstand Stop“: (Wochenschluss − Stop) / Wochenschluss, also wie viel % der Kurs bis zum Trailing-Stop noch fallen darf (max. TRAIL %, negativ = unter Stop). Vorher Close / Stop − 1 (bis 25 % bei TRAIL 20).
 - **Zweizeilige Spaltenköpfe** in Holdings, geschlossenen Positionen, Rangliste und Backtest-Holdings (z. B. „Kauf-/datum“, „Fallhöhe/bis Stop“); voller Name als Tooltip, CSV-Export einzeilig. Tabellen werden deutlich schmaler.
