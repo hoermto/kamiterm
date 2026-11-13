@@ -1,0 +1,11 @@
+# Seafile ignore patterns (library root = Grokki)
+# Amber Terminal OHLCV SQLite cache (local only)
+data/cache/
+data/alerts.json
+data/settings.json
+.git
+.vscode
+.venv
+*/*.log
+# Temporaere Box-Snapshot-Dateien
+*.box-store-snap-*

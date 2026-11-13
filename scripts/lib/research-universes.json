@@ -1,0 +1,9099 @@
+{
+ "generated": "2026-11-10",
+ "sources": {
+  "HDAX": "iShares DAX/MDAX/TecDAX UCITS ETF (DE) latest-holdings.csv – Fondsposition per,\"06.Nov.2026\" / Fondsposition per,\"09.Nov.2026\" / Fondsposition per,\"06.Nov.2026\"",
+  "SXXP": "iShares STOXX Europe 600 UCITS ETF latest-holdings.csv (UK professionals, 349428) – Fund Holdings as of,\"06/Nov/2026\"; Yahoo-Suffix nach Börse; KESK0BU0.HE ohne Yahoo-Daten entfernt"
+ },
+ "FX": {
+  "GBP": "EURGBP=X",
+  "CHF": "EURCHF=X",
+  "DKK": "EURDKK=X",
+  "SEK": "EURSEK=X",
+  "NOK": "EURNOK=X",
+  "PLN": "EURPLN=X",
+  "USD": "EURUSD=X"
+ },
+ "universes": {
+  "HDAX": {
+   "bench": "^GDAXI",
+   "label": "HDAX-Nachbau (DAX+MDAX+TecDAX, iShares-Holdings Nov 2026)",
+   "members": [
+    {
+     "t": "SAP.DE",
+     "name": "SAP",
+     "idx": [
+      "DAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 210.75
+    },
+    {
+     "t": "SIE.DE",
+     "name": "SIEMENS N AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 263.65
+    },
+    {
+     "t": "ALV.DE",
+     "name": "ALLIANZ",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 451.1
+    },
+    {
+     "t": "AIR.DE",
+     "name": "AIRBUS",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 196.36
+    },
+    {
+     "t": "ENR.DE",
+     "name": "SIEMENS ENERGY N AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 118.1
+    },
+    {
+     "t": "DTE.DE",
+     "name": "DEUTSCHE TELEKOM N AG",
+     "idx": [
+      "DAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 25.91
+    },
+    {
+     "t": "MUV2.DE",
+     "name": "MUENCHENER RUECKVERSICHERUNGS-GESE",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 569.2
+    },
+    {
+     "t": "DBK.DE",
+     "name": "DEUTSCHE BANK AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 31.56
+    },
+    {
+     "t": "IFX.DE",
+     "name": "INFINEON TECHNOLOGIES AG",
+     "idx": [
+      "DAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 45.76
+    },
+    {
+     "t": "DB1.DE",
+     "name": "DEUTSCHE BOERSE AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 320
+    },
+    {
+     "t": "DHL.DE",
+     "name": "DHL AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 58.02
+    },
+    {
+     "t": "BAYN.DE",
+     "name": "BAYER AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 55.58
+    },
+    {
+     "t": "BAS.DE",
+     "name": "BASF N",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 54.28
+    },
+    {
+     "t": "EOAN.DE",
+     "name": "E.ON N",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 19.09
+    },
+    {
+     "t": "RWE.DE",
+     "name": "RWE AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 57.64
+    },
+    {
+     "t": "RHM.DE",
+     "name": "RHEINMETALL AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 812.7
+    },
+    {
+     "t": "ADS.DE",
+     "name": "ADIDAS N AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 174.55
+    },
+    {
+     "t": "MBG.DE",
+     "name": "MERCEDES-BENZ GROUP N AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 41.56
+    },
+    {
+     "t": "HEI.DE",
+     "name": "HEIDELBERG MATERIALS AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 173.8
+    },
+    {
+     "t": "FRE.DE",
+     "name": "FRESENIUS N",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 52.48
+    },
+    {
+     "t": "DTG.DE",
+     "name": "DAIMLER TRUCK HOLDING E AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 40.49
+    },
+    {
+     "t": "BMW.DE",
+     "name": "BMW",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 59.36
+    },
+    {
+     "t": "MRK.DE",
+     "name": "MERCK",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 148.75
+    },
+    {
+     "t": "MTX.DE",
+     "name": "MTU AERO ENGINES HOLDING AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 346.7
+    },
+    {
+     "t": "HNR1.DE",
+     "name": "HANNOVER RUECK",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 293
+    },
+    {
+     "t": "SHL.DE",
+     "name": "SIEMENS HEALTHINEERS AG",
+     "idx": [
+      "DAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 44.66
+    },
+    {
+     "t": "CBK.DE",
+     "name": "COMMERZBANK AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 38.21
+    },
+    {
+     "t": "VOW3.DE",
+     "name": "VOLKSWAGEN NON-VOTING PREF AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 69.84
+    },
+    {
+     "t": "SY1.DE",
+     "name": "SYMRISE AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 96.34
+    },
+    {
+     "t": "HEN3.DE",
+     "name": "HENKEL & KGAA PREF AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 83.22
+    },
+    {
+     "t": "VNA.DE",
+     "name": "VONOVIA SE",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 16.9
+    },
+    {
+     "t": "G1A.DE",
+     "name": "GEA GROUP AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 69.35
+    },
+    {
+     "t": "QIA.DE",
+     "name": "QIAGEN",
+     "idx": [
+      "DAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 45.2
+    },
+    {
+     "t": "FME.DE",
+     "name": "FRESENIUS MEDICAL CARE AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 42.23
+    },
+    {
+     "t": "CON.DE",
+     "name": "CONTINENTAL AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 70.34
+    },
+    {
+     "t": "BEI.DE",
+     "name": "BEIERSDORF AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 85.26
+    },
+    {
+     "t": "BNR.DE",
+     "name": "BRENNTAG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 61.9
+    },
+    {
+     "t": "HOT.DE",
+     "name": "HOCHTIEF AG",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 365.6
+    },
+    {
+     "t": "ZAL.DE",
+     "name": "ZALANDO",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 27.72
+    },
+    {
+     "t": "G24.DE",
+     "name": "SCOUT24 N",
+     "idx": [
+      "DAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 89.1
+    },
+    {
+     "t": "LHA.DE",
+     "name": "DEUTSCHE LUFTHANSA AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 8.69
+    },
+    {
+     "t": "TLX.DE",
+     "name": "TALANX AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 129.5
+    },
+    {
+     "t": "SRT3.DE",
+     "name": "SARTORIUS PREF AG",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 293.3
+    },
+    {
+     "t": "KBX.DE",
+     "name": "KNORR BREMSE AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 95.15
+    },
+    {
+     "t": "TKA.DE",
+     "name": "THYSSENKRUPP AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 12.32
+    },
+    {
+     "t": "EVK.DE",
+     "name": "EVONIK INDUSTRIES AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 20.9
+    },
+    {
+     "t": "NDX1.DE",
+     "name": "NORDEX",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 42.96
+    },
+    {
+     "t": "P911.DE",
+     "name": "DR ING HC F PORSCHE PRF AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 46.38
+    },
+    {
+     "t": "HAG.DE",
+     "name": "HENSOLDT AG",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 82.8
+    },
+    {
+     "t": "PAH3.DE",
+     "name": "PORSCHE AUTOMOBIL HOLDING PREF",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 26.13
+    },
+    {
+     "t": "NEM.DE",
+     "name": "NEMETSCHEK",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 65.6
+    },
+    {
+     "t": "LEG.DE",
+     "name": "LEG IMMOBILIEN N",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 51
+    },
+    {
+     "t": "DHER.DE",
+     "name": "DELIVERY HERO",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 37.07
+    },
+    {
+     "t": "EVD.DE",
+     "name": "CTS EVENTIM AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 62.05
+    },
+    {
+     "t": "AIXA.DE",
+     "name": "AIXTRON",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 31.74
+    },
+    {
+     "t": "TUI1.DE",
+     "name": "TUI N AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 7.7
+    },
+    {
+     "t": "R3NK.DE",
+     "name": "RENK GROUP AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 35.78
+    },
+    {
+     "t": "RAA.DE",
+     "name": "RATIONAL AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 630
+    },
+    {
+     "t": "NDA.DE",
+     "name": "AURUBIS AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 142
+    },
+    {
+     "t": "PUM.DE",
+     "name": "PUMA",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 26.96
+    },
+    {
+     "t": "FPE3.DE",
+     "name": "FUCHS PREF",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 43.06
+    },
+    {
+     "t": "FNTN.DE",
+     "name": "FREENET AG",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 23.44
+    },
+    {
+     "t": "BC8.DE",
+     "name": "BECHTLE AG",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 33.16
+    },
+    {
+     "t": "FRA.DE",
+     "name": "FRAPORT AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 70.2
+    },
+    {
+     "t": "KGX.DE",
+     "name": "KION GROUP AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 35.28
+    },
+    {
+     "t": "AG1.DE",
+     "name": "AUTO1 GROUP",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 17.2
+    },
+    {
+     "t": "TEG.DE",
+     "name": "TAG IMMOBILIEN AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 11.96
+    },
+    {
+     "t": "SDF.DE",
+     "name": "K+S N AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 13.44
+    },
+    {
+     "t": "8TRA.DE",
+     "name": "TRATON",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 34.52
+    },
+    {
+     "t": "GBF.DE",
+     "name": "BILFINGER",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 63.05
+    },
+    {
+     "t": "DWS.DE",
+     "name": "DWS GROUP & GMBH CO KGAA",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 66.85
+    },
+    {
+     "t": "FTK.DE",
+     "name": "FLATEXDEGIRO N",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 22.94
+    },
+    {
+     "t": "TKMS.DE",
+     "name": "TKMS AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 81.8
+    },
+    {
+     "t": "UTDI.DE",
+     "name": "UNITED INTERNET AG",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 24.82
+    },
+    {
+     "t": "JEN.DE",
+     "name": "JENOPTIK N AG",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 37.3
+    },
+    {
+     "t": "IOS.DE",
+     "name": "IONOS GROUP N",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 34.78
+    },
+    {
+     "t": "AMV0.DE",
+     "name": "AUMOVIO N",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 31.45
+    },
+    {
+     "t": "SZG.DE",
+     "name": "SALZGITTER AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 51.1
+    },
+    {
+     "t": "WCH.DE",
+     "name": "WACKER CHEMIE AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 79.7
+    },
+    {
+     "t": "DEZ.DE",
+     "name": "DEUTZ AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 9.86
+    },
+    {
+     "t": "KRN.DE",
+     "name": "KRONES AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 110.2
+    },
+    {
+     "t": "HLE.DE",
+     "name": "HELLA GMBH & CO KGAA",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 66.4
+    },
+    {
+     "t": "RRTL.DE",
+     "name": "RTL GROUP SA",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 32.85
+    },
+    {
+     "t": "AT1.DE",
+     "name": "AROUNDTOWN SA",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 1.71
+    },
+    {
+     "t": "SAX.DE",
+     "name": "STROEER SE",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 38.76
+    },
+    {
+     "t": "WAF.DE",
+     "name": "SILTRONIC N AG",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 52.6
+    },
+    {
+     "t": "ELG.DE",
+     "name": "ELMOS SEMICONDUCTOR",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 120.6
+    },
+    {
+     "t": "LXS.DE",
+     "name": "LANXESS AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 12.81
+    },
+    {
+     "t": "SHA0.DE",
+     "name": "SCHAEFFLER N AG",
+     "idx": [
+      "MDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 5.56
+    },
+    {
+     "t": "SMHN.DE",
+     "name": "SUSS MICROTEC N",
+     "idx": [
+      "MDAX",
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 45.5
+    },
+    {
+     "t": "AFX.DE",
+     "name": "CARL ZEISS MEDITEC AG",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 34.96
+    },
+    {
+     "t": "S92.DE",
+     "name": "SMA SOLAR TECHNOLOGY AG",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 51.15
+    },
+    {
+     "t": "DRW3.DE",
+     "name": "DRAEGERWERK PREF AG",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 103.2
+    },
+    {
+     "t": "TMV.DE",
+     "name": "TEAMVIEWER",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 5.05
+    },
+    {
+     "t": "AOF.DE",
+     "name": "ATOSS SOFTWARE",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 88.9
+    },
+    {
+     "t": "OHB.DE",
+     "name": "OHB",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 191.2
+    },
+    {
+     "t": "KTN.DE",
+     "name": "KONTRON AG",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 18.73
+    },
+    {
+     "t": "EUZ.DE",
+     "name": "ECKERT & ZIEGLER",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 13.8
+    },
+    {
+     "t": "TPE.DE",
+     "name": "PVA TEPLA AG",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 27.28
+    },
+    {
+     "t": "EVT.DE",
+     "name": "EVOTEC",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 3.16
+    },
+    {
+     "t": "OBCK.DE",
+     "name": "OTTOBOCK",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 46.85
+    },
+    {
+     "t": "VBK.DE",
+     "name": "VERBIO",
+     "idx": [
+      "TECDAX"
+     ],
+     "cur": "EUR",
+     "ishEUR": 26.12
+    }
+   ]
+  },
+  "SXXP": {
+   "bench": "^STOXX",
+   "label": "STOXX Europe 600 (iShares-Holdings 06.11.2026), alle Kurse in EUR umgerechnet",
+   "members": [
+    {
+     "t": "ASML.AS",
+     "name": "ASML HOLDING",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 3.67,
+     "ishEUR": 1283.6
+    },
+    {
+     "t": "ROP.SW",
+     "name": "ROCHE PS PAR AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 2.21,
+     "ishEUR": 426.91
+    },
+    {
+     "t": "NOVN.SW",
+     "name": "NOVARTIS AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 2.03,
+     "ishEUR": 145.56
+    },
+    {
+     "t": "HSBA.L",
+     "name": "HSBC HOLDINGS PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 1.98,
+     "ishEUR": 15.64
+    },
+    {
+     "t": "AZN.L",
+     "name": "ASTRAZENECA PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 1.91,
+     "ishEUR": 166.98
+    },
+    {
+     "t": "SHELL.AS",
+     "name": "SHELL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "United Kingdom",
+     "w": 1.83,
+     "ishEUR": 44.74
+    },
+    {
+     "t": "NESN.SW",
+     "name": "NESTLE SA",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 1.78,
+     "ishEUR": 93.9
+    },
+    {
+     "t": "SAP.DE",
+     "name": "SAP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 1.56,
+     "ishEUR": 210.75
+    },
+    {
+     "t": "SIE.DE",
+     "name": "SIEMENS N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 1.43,
+     "ishEUR": 263.65
+    },
+    {
+     "t": "TTE.PA",
+     "name": "TOTALENERGIES",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 1.35,
+     "ishEUR": 79.73
+    },
+    {
+     "t": "ALV.DE",
+     "name": "ALLIANZ",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 1.26,
+     "ishEUR": 451.1
+    },
+    {
+     "t": "SAN.MC",
+     "name": "BANCO SANTANDER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 1.19,
+     "ishEUR": 10.7
+    },
+    {
+     "t": "IBE.MC",
+     "name": "IBERDROLA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 1.04,
+     "ishEUR": 22.65
+    },
+    {
+     "t": "SU.PA",
+     "name": "SCHNEIDER ELECTRIC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.98,
+     "ishEUR": 228.65
+    },
+    {
+     "t": "UBSG.SW",
+     "name": "UBS GROUP AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.97,
+     "ishEUR": 43.25
+    },
+    {
+     "t": "ULVR.L",
+     "name": "UNILEVER PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.95,
+     "ishEUR": 59.1
+    },
+    {
+     "t": "BBVA.MC",
+     "name": "BANCO BILBAO VIZCAYA ARGENTARIA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.94,
+     "ishEUR": 22.73
+    },
+    {
+     "t": "RR.L",
+     "name": "ROLLS-ROYCE HOLDINGS PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.93,
+     "ishEUR": 15.12
+    },
+    {
+     "t": "AI.PA",
+     "name": "LAIR LIQUIDE SOCIETE ANONYME POUR",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.88,
+     "ishEUR": 187.78
+    },
+    {
+     "t": "BATS.L",
+     "name": "BRITISH AMERICAN TOBACCO",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.87,
+     "ishEUR": 54.75
+    },
+    {
+     "t": "UCG.MI",
+     "name": "UNICREDIT",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.86,
+     "ishEUR": 76.8
+    },
+    {
+     "t": "NOVO-B.CO",
+     "name": "NOVO NORDISK CLASS B",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.86,
+     "ishEUR": 36.05
+    },
+    {
+     "t": "AIR.PA",
+     "name": "AIRBUS GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.86,
+     "ishEUR": 196.4
+    },
+    {
+     "t": "ABBN.SW",
+     "name": "ABB LTD",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.84,
+     "ishEUR": 73.26
+    },
+    {
+     "t": "BP.L",
+     "name": "BP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.82,
+     "ishEUR": 6.71
+    },
+    {
+     "t": "SAF.PA",
+     "name": "SAFRAN SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.8,
+     "ishEUR": 295.5
+    },
+    {
+     "t": "OR.PA",
+     "name": "LOREAL SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.8,
+     "ishEUR": 449.8
+    },
+    {
+     "t": "ZURN.SW",
+     "name": "ZURICH INSURANCE GROUP AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.76,
+     "ishEUR": 689.31
+    },
+    {
+     "t": "MC.PA",
+     "name": "LVMH",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.74,
+     "ishEUR": 408.75
+    },
+    {
+     "t": "CFR.SW",
+     "name": "COMPAGNIE FINANCIERE RICHEMONT SA",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.73,
+     "ishEUR": 185.56
+    },
+    {
+     "t": "ENR.DE",
+     "name": "SIEMENS ENERGY N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.71,
+     "ishEUR": 118.1
+    },
+    {
+     "t": "BNP.PA",
+     "name": "BNP PARIBAS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.71,
+     "ishEUR": 91.93
+    },
+    {
+     "t": "ISP.MI",
+     "name": "INTESA SANPAOLO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.7,
+     "ishEUR": 6.18
+    },
+    {
+     "t": "SAN.PA",
+     "name": "SANOFI SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.7,
+     "ishEUR": 83.74
+    },
+    {
+     "t": "GSK.L",
+     "name": "GLAXOSMITHKLINE",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.68,
+     "ishEUR": 22.66
+    },
+    {
+     "t": "DTE.DE",
+     "name": "DEUTSCHE TELEKOM N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.66,
+     "ishEUR": 25.91
+    },
+    {
+     "t": "INGA.AS",
+     "name": "ING GROEP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.61,
+     "ishEUR": 28.72
+    },
+    {
+     "t": "RIO.L",
+     "name": "RIO TINTO",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.6,
+     "ishEUR": 75.29
+    },
+    {
+     "t": "ABI.BR",
+     "name": "ANHEUSER-BUSCH INBEV SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.58,
+     "ishEUR": 75.7
+    },
+    {
+     "t": "CS.PA",
+     "name": "AXA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.58,
+     "ishEUR": 44.68
+    },
+    {
+     "t": "NG.L",
+     "name": "NATIONAL GRID PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.58,
+     "ishEUR": 14.98
+    },
+    {
+     "t": "ENEL.MI",
+     "name": "ENEL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.55,
+     "ishEUR": 9.69
+    },
+    {
+     "t": "MUV2.DE",
+     "name": "MUENCHENER RUECKVERSICHERUNGS-GESE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.53,
+     "ishEUR": 569.2
+    },
+    {
+     "t": "INVE-B.ST",
+     "name": "INVESTOR CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.52,
+     "ishEUR": 38.88
+    },
+    {
+     "t": "BA.L",
+     "name": "BAE SYSTEMS PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.52,
+     "ishEUR": 22.13
+    },
+    {
+     "t": "BARC.L",
+     "name": "BARCLAYS PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.5,
+     "ishEUR": 5.04
+    },
+    {
+     "t": "LLOY.L",
+     "name": "LLOYDS BANKING GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.5,
+     "ishEUR": 1.15
+    },
+    {
+     "t": "REL.L",
+     "name": "RELX PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.49,
+     "ishEUR": 36.15
+    },
+    {
+     "t": "ITX.MC",
+     "name": "INDUSTRIA DE DISENO TEXTIL SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.48,
+     "ishEUR": 59.04
+    },
+    {
+     "t": "DG.PA",
+     "name": "VINCI SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.46,
+     "ishEUR": 111.6
+    },
+    {
+     "t": "EL.PA",
+     "name": "ESSILORLUXOTTICA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.45,
+     "ishEUR": 193.8
+    },
+    {
+     "t": "DBK.DE",
+     "name": "DEUTSCHE BANK AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.44,
+     "ishEUR": 31.56
+    },
+    {
+     "t": "IFX.DE",
+     "name": "INFINEON TECHNOLOGIES AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.44,
+     "ishEUR": 45.76
+    },
+    {
+     "t": "DB1.DE",
+     "name": "DEUTSCHE BOERSE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.44,
+     "ishEUR": 320
+    },
+    {
+     "t": "NWG.L",
+     "name": "NATWEST GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.42,
+     "ishEUR": 7.04
+    },
+    {
+     "t": "GLEN.L",
+     "name": "GLENCORE PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.42,
+     "ishEUR": 5.94
+    },
+    {
+     "t": "NDA-FI.HE",
+     "name": "NORDEA BANK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.41,
+     "ishEUR": 16.36
+    },
+    {
+     "t": "DHL.DE",
+     "name": "DHL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.4,
+     "ishEUR": 58.02
+    },
+    {
+     "t": "BAYN.DE",
+     "name": "BAYER AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.4,
+     "ishEUR": 55.58
+    },
+    {
+     "t": "LSEG.L",
+     "name": "LONDON STOCK EXCHANGE GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.4,
+     "ishEUR": 113.42
+    },
+    {
+     "t": "CPG.L",
+     "name": "COMPASS GROUP PLC",
+     "cur": "USD",
+     "pence": false,
+     "country": "United Kingdom",
+     "w": 0.39,
+     "ishEUR": 29.81
+    },
+    {
+     "t": "ARGX.BR",
+     "name": "ARGENX",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.38,
+     "ishEUR": 815.8
+    },
+    {
+     "t": "LONN.SW",
+     "name": "LONZA GROUP AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.38,
+     "ishEUR": 725.62
+    },
+    {
+     "t": "ENI.MI",
+     "name": "ENI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.38,
+     "ishEUR": 25.05
+    },
+    {
+     "t": "DGE.L",
+     "name": "DIAGEO PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.37,
+     "ishEUR": 22.57
+    },
+    {
+     "t": "AAL.L",
+     "name": "ANGLO AMERICAN PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.36,
+     "ishEUR": 44.36
+    },
+    {
+     "t": "GLE.PA",
+     "name": "SOCIETE GENERALE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.36,
+     "ishEUR": 64.41
+    },
+    {
+     "t": "BAS.DE",
+     "name": "BASF N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.36,
+     "ishEUR": 54.28
+    },
+    {
+     "t": "PRX.AS",
+     "name": "PROSUS NV CLASS N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.35,
+     "ishEUR": 37.56
+    },
+    {
+     "t": "ENGI.PA",
+     "name": "ENGIE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.35,
+     "ishEUR": 24.2
+    },
+    {
+     "t": "G.MI",
+     "name": "ASSICURAZIONI GENERALI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.35,
+     "ishEUR": 43.73
+    },
+    {
+     "t": "RMS.PA",
+     "name": "HERMES INTERNATIONAL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.35,
+     "ishEUR": 1362.5
+    },
+    {
+     "t": "RACE.MI",
+     "name": "FERRARI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.34,
+     "ishEUR": 373.85
+    },
+    {
+     "t": "STAN.L",
+     "name": "STANDARD CHARTERED PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.33,
+     "ishEUR": 25.09
+    },
+    {
+     "t": "VOLV-B.ST",
+     "name": "VOLVO CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.33,
+     "ishEUR": 28.4
+    },
+    {
+     "t": "ATCO-A.ST",
+     "name": "ATLAS COPCO CLASS A",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.32,
+     "ishEUR": 16.72
+    },
+    {
+     "t": "BN.PA",
+     "name": "DANONE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.32,
+     "ishEUR": 67.12
+    },
+    {
+     "t": "EOAN.DE",
+     "name": "E.ON N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.32,
+     "ishEUR": 19.09
+    },
+    {
+     "t": "RKT.L",
+     "name": "RECKITT BENCKISER GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.31,
+     "ishEUR": 67.01
+    },
+    {
+     "t": "HOLN.SW",
+     "name": "HOLCIM LTD AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.31,
+     "ishEUR": 80.13
+    },
+    {
+     "t": "TSCO.L",
+     "name": "TESCO PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.31,
+     "ishEUR": 6.64
+    },
+    {
+     "t": "CABK.MC",
+     "name": "CAIXABANK SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.31,
+     "ishEUR": 11.76
+    },
+    {
+     "t": "RWE.DE",
+     "name": "RWE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.3,
+     "ishEUR": 57.64
+    },
+    {
+     "t": "SDZ.SW",
+     "name": "SANDOZ GROUP AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.3,
+     "ishEUR": 91.64
+    },
+    {
+     "t": "GALD.SW",
+     "name": "GALDERMA GROUP N AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.29,
+     "ishEUR": 209.73
+    },
+    {
+     "t": "SSE.L",
+     "name": "SSE PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.28,
+     "ishEUR": 31.75
+    },
+    {
+     "t": "DSV.CO",
+     "name": "DSV",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.28,
+     "ishEUR": 196.65
+    },
+    {
+     "t": "NOKIA.HE",
+     "name": "NOKIA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.28,
+     "ishEUR": 6.98
+    },
+    {
+     "t": "RHM.DE",
+     "name": "RHEINMETALL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.28,
+     "ishEUR": 812.7
+    },
+    {
+     "t": "SGO.PA",
+     "name": "COMPAGNIE DE SAINT GOBAIN SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.28,
+     "ishEUR": 74.1
+    },
+    {
+     "t": "HLN.L",
+     "name": "HALEON PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.27,
+     "ishEUR": 4.06
+    },
+    {
+     "t": "UCB.BR",
+     "name": "UCB SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.27,
+     "ishEUR": 290.9
+    },
+    {
+     "t": "ASSA-B.ST",
+     "name": "ASSA ABLOY B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.26,
+     "ishEUR": 35.83
+    },
+    {
+     "t": "SAND.ST",
+     "name": "SANDVIK",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.26,
+     "ishEUR": 32.45
+    },
+    {
+     "t": "LR.PA",
+     "name": "LEGRAND SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.25,
+     "ishEUR": 129.65
+    },
+    {
+     "t": "EBS.VI",
+     "name": "ERSTE GROUP BANK AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.25,
+     "ishEUR": 111.5
+    },
+    {
+     "t": "SWED-A.ST",
+     "name": "SWEDBANK",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.25,
+     "ishEUR": 36.48
+    },
+    {
+     "t": "ALC.SW",
+     "name": "ALCON AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.25,
+     "ishEUR": 67.05
+    },
+    {
+     "t": "REP.MC",
+     "name": "REPSOL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.24,
+     "ishEUR": 29.9
+    },
+    {
+     "t": "SREN.SW",
+     "name": "SWISS RE AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.24,
+     "ishEUR": 166.2
+    },
+    {
+     "t": "EXPN.L",
+     "name": "EXPERIAN PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.24,
+     "ishEUR": 36.73
+    },
+    {
+     "t": "ASM.AS",
+     "name": "ASM INTERNATIONAL NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.24,
+     "ishEUR": 651
+    },
+    {
+     "t": "VOD.L",
+     "name": "VODAFONE GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.24,
+     "ishEUR": 1.4
+    },
+    {
+     "t": "SIKA.SW",
+     "name": "SIKA AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.24,
+     "ishEUR": 202.63
+    },
+    {
+     "t": "ADS.DE",
+     "name": "ADIDAS N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.23,
+     "ishEUR": 174.55
+    },
+    {
+     "t": "ORA.PA",
+     "name": "ORANGE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.23,
+     "ishEUR": 15.11
+    },
+    {
+     "t": "DANSKE.CO",
+     "name": "DANSKE BANK",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.23,
+     "ishEUR": 47.79
+    },
+    {
+     "t": "GIVN.SW",
+     "name": "GIVAUDAN SA",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.23,
+     "ishEUR": 4434.24
+    },
+    {
+     "t": "AD.AS",
+     "name": "KONINKLIJKE AHOLD DELHAIZE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.23,
+     "ishEUR": 34.22
+    },
+    {
+     "t": "PRY.MI",
+     "name": "PRYSMIAN",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.22,
+     "ishEUR": 101
+    },
+    {
+     "t": "SEB-A.ST",
+     "name": "SKANDINAVISKA ENSKILDA BANKEN",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.22,
+     "ishEUR": 19.5
+    },
+    {
+     "t": "MBG.DE",
+     "name": "MERCEDES-BENZ GROUP N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.22,
+     "ishEUR": 41.56
+    },
+    {
+     "t": "III.L",
+     "name": "3I GROUP FUND PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.22,
+     "ishEUR": 30.27
+    },
+    {
+     "t": "GMAB.CO",
+     "name": "GENMAB",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.21,
+     "ishEUR": 471.83
+    },
+    {
+     "t": "SLHN.SW",
+     "name": "SWISS LIFE HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.21,
+     "ishEUR": 1062.29
+    },
+    {
+     "t": "VWS.CO",
+     "name": "VESTAS WIND SYSTEMS",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.21,
+     "ishEUR": 28.08
+    },
+    {
+     "t": "ADYEN.AS",
+     "name": "ADYEN",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.21,
+     "ishEUR": 901.2
+    },
+    {
+     "t": "PRU.L",
+     "name": "PRUDENTIAL PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.21,
+     "ishEUR": 11.06
+    },
+    {
+     "t": "ERIC-B.ST",
+     "name": "ERICSSON B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.2,
+     "ishEUR": 9.28
+    },
+    {
+     "t": "AV.L",
+     "name": "AVIVA PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.2,
+     "ishEUR": 8.8
+    },
+    {
+     "t": "ABN.AS",
+     "name": "ABN AMRO BANK NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.2,
+     "ishEUR": 41
+    },
+    {
+     "t": "IMB.L",
+     "name": "IMPERIAL BRANDS PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.19,
+     "ishEUR": 35.64
+    },
+    {
+     "t": "AMS.MC",
+     "name": "AMADEUS IT GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.19,
+     "ishEUR": 60.52
+    },
+    {
+     "t": "KBC.BR",
+     "name": "KBC GROEP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.19,
+     "ishEUR": 117.4
+    },
+    {
+     "t": "FER.MC",
+     "name": "FERROVIAL NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.19,
+     "ishEUR": 52.78
+    },
+    {
+     "t": "DNB.OL",
+     "name": "DNB BANK",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.19,
+     "ishEUR": 30.58
+    },
+    {
+     "t": "EQNR.OL",
+     "name": "EQUINOR",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.19,
+     "ishEUR": 37.52
+    },
+    {
+     "t": "STMMI.MI",
+     "name": "STMICROELECTRONICS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.18,
+     "ishEUR": 37.63
+    },
+    {
+     "t": "BMPS.MI",
+     "name": "BANCA MONTE DEI PASCHI DI SIENA SP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.18,
+     "ishEUR": 11.25
+    },
+    {
+     "t": "SAMPO.HE",
+     "name": "SAMPO CLASS A",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.18,
+     "ishEUR": 9.78
+    },
+    {
+     "t": "PUB.PA",
+     "name": "PUBLICIS GROUPE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.18,
+     "ishEUR": 102.95
+    },
+    {
+     "t": "EQT.ST",
+     "name": "EQT",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.18,
+     "ishEUR": 27.87
+    },
+    {
+     "t": "MT.AS",
+     "name": "ARCELORMITTAL SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.18,
+     "ishEUR": 54.82
+    },
+    {
+     "t": "IHG.L",
+     "name": "INTERCONTINENTAL HOTELS GROUP PLC",
+     "cur": "USD",
+     "pence": false,
+     "country": "United Kingdom",
+     "w": 0.17,
+     "ishEUR": 159.7
+    },
+    {
+     "t": "KNEBV.HE",
+     "name": "KONE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.17,
+     "ishEUR": 58.24
+    },
+    {
+     "t": "HEIA.AS",
+     "name": "HEINEKEN NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.17,
+     "ishEUR": 83.58
+    },
+    {
+     "t": "ML.PA",
+     "name": "MICHELIN",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.17,
+     "ishEUR": 33.2
+    },
+    {
+     "t": "SHB-A.ST",
+     "name": "SVENSKA HANDELSBANKEN-A SHS",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.17,
+     "ishEUR": 14.51
+    },
+    {
+     "t": "VIE.PA",
+     "name": "VEOLIA ENVIRON. SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.17,
+     "ishEUR": 33.78
+    },
+    {
+     "t": "PKO.WA",
+     "name": "POWSZECHNA KASA OSZCZEDNOSCI BANK",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.16,
+     "ishEUR": 26.08
+    },
+    {
+     "t": "HEI.DE",
+     "name": "HEIDELBERG MATERIALS AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.16,
+     "ishEUR": 173.8
+    },
+    {
+     "t": "GEBN.SW",
+     "name": "GEBERIT AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.16,
+     "ishEUR": 634.4
+    },
+    {
+     "t": "FRE.DE",
+     "name": "FRESENIUS N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.16,
+     "ishEUR": 52.48
+    },
+    {
+     "t": "CAP.PA",
+     "name": "CAPGEMINI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.16,
+     "ishEUR": 126.9
+    },
+    {
+     "t": "RYA.IR",
+     "name": "RYANAIR HOLDINGS PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.16,
+     "ishEUR": 25.69
+    },
+    {
+     "t": "HO.PA",
+     "name": "THALES SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.16,
+     "ishEUR": 221.7
+    },
+    {
+     "t": "NSIS-B.CO",
+     "name": "NOVOZYMES B",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.16,
+     "ishEUR": 61.54
+    },
+    {
+     "t": "PHIA.AS",
+     "name": "KONINKLIJKE PHILIPS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.16,
+     "ishEUR": 27.33
+    },
+    {
+     "t": "DTG.DE",
+     "name": "DAIMLER TRUCK HOLDING E AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.16,
+     "ishEUR": 40.49
+    },
+    {
+     "t": "NXT.L",
+     "name": "NEXT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.16,
+     "ishEUR": 185.62
+    },
+    {
+     "t": "WKL.AS",
+     "name": "WOLTERS KLUWER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.15,
+     "ishEUR": 90.08
+    },
+    {
+     "t": "AENA.MC",
+     "name": "AENA SME SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.15,
+     "ishEUR": 28.28
+    },
+    {
+     "t": "HEXA-B.ST",
+     "name": "HEXAGON CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.15,
+     "ishEUR": 9.74
+    },
+    {
+     "t": "NN.AS",
+     "name": "NN GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.15,
+     "ishEUR": 79.18
+    },
+    {
+     "t": "SCMN.SW",
+     "name": "SWISSCOM AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.15,
+     "ishEUR": 787.53
+    },
+    {
+     "t": "BMW.DE",
+     "name": "BMW",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.15,
+     "ishEUR": 59.36
+    },
+    {
+     "t": "LGEN.L",
+     "name": "LEGAL AND GENERAL GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.15,
+     "ishEUR": 3.65
+    },
+    {
+     "t": "BPE.MI",
+     "name": "BPER BANCA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.15,
+     "ishEUR": 12.91
+    },
+    {
+     "t": "LDO.MI",
+     "name": "LEONARDO FINMECCANICA SPA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.14,
+     "ishEUR": 48.07
+    },
+    {
+     "t": "MTX.DE",
+     "name": "MTU AERO ENGINES HOLDING AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.14,
+     "ishEUR": 346.7
+    },
+    {
+     "t": "PST.MI",
+     "name": "POSTE ITALIANE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.14,
+     "ishEUR": 24.52
+    },
+    {
+     "t": "MRK.DE",
+     "name": "MERCK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.14,
+     "ishEUR": 148.75
+    },
+    {
+     "t": "DSY.PA",
+     "name": "DASSAULT SYSTEMES",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.14,
+     "ishEUR": 25.95
+    },
+    {
+     "t": "UMG.AS",
+     "name": "UNIVERSAL MUSIC GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.14,
+     "ishEUR": 17.09
+    },
+    {
+     "t": "SGSN.SW",
+     "name": "SGS SA",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.14,
+     "ishEUR": 111.51
+    },
+    {
+     "t": "HBAN.SW",
+     "name": "HELVETIA BALOISE HOLDING N AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.14,
+     "ishEUR": 242.82
+    },
+    {
+     "t": "DSFIR.AS",
+     "name": "DSM FIRMENICH AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.14,
+     "ishEUR": 109.8
+    },
+    {
+     "t": "SAAB-B.ST",
+     "name": "SAAB CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.13,
+     "ishEUR": 54.93
+    },
+    {
+     "t": "BIRG.IR",
+     "name": "BANK OF IRELAND GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.13,
+     "ishEUR": 18.93
+    },
+    {
+     "t": "ACS.MC",
+     "name": "ACS ACTIVIDADES DE CONSTRUCCION Y",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.13,
+     "ishEUR": 87
+    },
+    {
+     "t": "HNR1.DE",
+     "name": "HANNOVER RUECK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.13,
+     "ishEUR": 293
+    },
+    {
+     "t": "ACA.PA",
+     "name": "CREDIT AGRICOLE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.13,
+     "ishEUR": 15.84
+    },
+    {
+     "t": "SAB.MC",
+     "name": "BANCO DE SABADELL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.13,
+     "ishEUR": 3.6
+    },
+    {
+     "t": "PKN.WA",
+     "name": "ORLEN",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.13,
+     "ishEUR": 29.62
+    },
+    {
+     "t": "KPN.AS",
+     "name": "KONINKLIJKE KPN NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.12,
+     "ishEUR": 4.4
+    },
+    {
+     "t": "SREN.SW",
+     "name": "SWISS RE AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.12,
+     "ishEUR": 166.2
+    },
+    {
+     "t": "SHL.DE",
+     "name": "SIEMENS HEALTHINEERS AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.12,
+     "ishEUR": 44.66
+    },
+    {
+     "t": "BT-A.L",
+     "name": "BT GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.12,
+     "ishEUR": 2.6
+    },
+    {
+     "t": "PGHN.SW",
+     "name": "PARTNERS GROUP HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.12,
+     "ishEUR": 733.72
+    },
+    {
+     "t": "SOON.SW",
+     "name": "SONOVA HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.12,
+     "ishEUR": 315.01
+    },
+    {
+     "t": "KRZ.IR",
+     "name": "KERRY GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.12,
+     "ishEUR": 98
+    },
+    {
+     "t": "ESSITY-B.ST",
+     "name": "ESSITY CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.11,
+     "ishEUR": 26.31
+    },
+    {
+     "t": "CBK.DE",
+     "name": "COMMERZBANK AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.11,
+     "ishEUR": 38.21
+    },
+    {
+     "t": "HLMA.L",
+     "name": "HALMA PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.11,
+     "ishEUR": 40.18
+    },
+    {
+     "t": "BAER.SW",
+     "name": "JULIUS BAER GRUPPE AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.11,
+     "ishEUR": 74.27
+    },
+    {
+     "t": "A5G.IR",
+     "name": "AIB GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.11,
+     "ishEUR": 11.2
+    },
+    {
+     "t": "EDP.LS",
+     "name": "EDP ENERGIAS DE PORTUGAL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.11,
+     "ishEUR": 5
+    },
+    {
+     "t": "NTGY.MC",
+     "name": "NATURGY ENERGY GROUP SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.11,
+     "ishEUR": 29.54
+    },
+    {
+     "t": "VACN.SW",
+     "name": "VAT GROUP AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.11,
+     "ishEUR": 565.05
+    },
+    {
+     "t": "KRX.IR",
+     "name": "KINGSPAN GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.11,
+     "ishEUR": 95.15
+    },
+    {
+     "t": "ANTO.L",
+     "name": "ANTOFAGASTA PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.11,
+     "ishEUR": 37.32
+    },
+    {
+     "t": "VOW3.DE",
+     "name": "VOLKSWAGEN NON-VOTING PREF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.11,
+     "ishEUR": 69.84
+    },
+    {
+     "t": "KNIN.SW",
+     "name": "KUEHNE UND NAGEL INTERNATIONAL AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.11,
+     "ishEUR": 257.59
+    },
+    {
+     "t": "ALFA.ST",
+     "name": "ALFA LAVAL",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.1,
+     "ishEUR": 48.31
+    },
+    {
+     "t": "RI.PA",
+     "name": "PERNOD RICARD SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.1,
+     "ishEUR": 71.14
+    },
+    {
+     "t": "KOG.OL",
+     "name": "KONGSBERG GRUPPEN",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.1,
+     "ishEUR": 31.87
+    },
+    {
+     "t": "ALE.WA",
+     "name": "ALLEGRO SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.1,
+     "ishEUR": 13.61
+    },
+    {
+     "t": "ELE.MC",
+     "name": "ENDESA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.1,
+     "ishEUR": 44.2
+    },
+    {
+     "t": "EPI-A.ST",
+     "name": "EPIROC CLASS A",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.1,
+     "ishEUR": 22.1
+    },
+    {
+     "t": "SCHP.SW",
+     "name": "SCHINDLER HOLDING PAR AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.1,
+     "ishEUR": 335.14
+    },
+    {
+     "t": "ENX.PA",
+     "name": "EURONEXT NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.1,
+     "ishEUR": 170
+    },
+    {
+     "t": "TRN.MI",
+     "name": "TERNA RETE ELETTRICA NAZIONALE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.1,
+     "ishEUR": 9.77
+    },
+    {
+     "t": "ETE.AT",
+     "name": "NATIONAL BANK OF GREECE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.1,
+     "ishEUR": 16.28
+    },
+    {
+     "t": "FBK.MI",
+     "name": "FINECOBANK BANCA FINECO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.1,
+     "ishEUR": 22.38
+    },
+    {
+     "t": "SGRO.L",
+     "name": "SEGRO REIT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.1,
+     "ishEUR": 10.95
+    },
+    {
+     "t": "TEF.MC",
+     "name": "TELEFONICA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.1,
+     "ishEUR": 3.38
+    },
+    {
+     "t": "STMN.SW",
+     "name": "STRAUMANN HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.1,
+     "ishEUR": 114.3
+    },
+    {
+     "t": "KER.PA",
+     "name": "KERING SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.1,
+     "ishEUR": 187.2
+    },
+    {
+     "t": "BAMI.MI",
+     "name": "BANCO BPM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.1,
+     "ishEUR": 13.45
+    },
+    {
+     "t": "SGE.L",
+     "name": "THE SAGE GROUP",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.1,
+     "ishEUR": 13.97
+    },
+    {
+     "t": "CLNX.MC",
+     "name": "CELLNEX TELECOM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.1,
+     "ishEUR": 26.68
+    },
+    {
+     "t": "BOL.ST",
+     "name": "BOLIDEN",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.1,
+     "ishEUR": 45.71
+    },
+    {
+     "t": "INF.L",
+     "name": "INFORMA PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.1,
+     "ishEUR": 10.03
+    },
+    {
+     "t": "SRG.MI",
+     "name": "SNAM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.09,
+     "ishEUR": 6.2
+    },
+    {
+     "t": "SY1.DE",
+     "name": "SYMRISE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.09,
+     "ishEUR": 96.34
+    },
+    {
+     "t": "HEN3.DE",
+     "name": "HENKEL & KGAA PREF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.09,
+     "ishEUR": 83.22
+    },
+    {
+     "t": "UU.L",
+     "name": "UNITED UTILITIES GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.09,
+     "ishEUR": 18.5
+    },
+    {
+     "t": "CARL-B.CO",
+     "name": "CARLSBERG AS CL B",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.09,
+     "ishEUR": 137.26
+    },
+    {
+     "t": "ADM.L",
+     "name": "ADMIRAL GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.09,
+     "ishEUR": 47.16
+    },
+    {
+     "t": "WRT1V.HE",
+     "name": "WARTSILA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.09,
+     "ishEUR": 25.81
+    },
+    {
+     "t": "BG.VI",
+     "name": "BAWAG GROUP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.09,
+     "ishEUR": 162.7
+    },
+    {
+     "t": "IAG.L",
+     "name": "INTERNATIONAL AIRLINES GROUP",
+     "cur": "GBP",
+     "pence": true,
+     "country": "Spain",
+     "w": 0.09,
+     "ishEUR": 5.2
+    },
+    {
+     "t": "VNA.DE",
+     "name": "VONOVIA SE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.09,
+     "ishEUR": 16.9
+    },
+    {
+     "t": "SN.L",
+     "name": "SMITH AND NEPHEW PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.09,
+     "ishEUR": 13.92
+    },
+    {
+     "t": "LOTB.BR",
+     "name": "LOTUS BAKERIES NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.09,
+     "ishEUR": 14060
+    },
+    {
+     "t": "LOGN.SW",
+     "name": "LOGITECH INTERNATIONAL",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.09,
+     "ishEUR": 86.32
+    },
+    {
+     "t": "UNI.MI",
+     "name": "UNIPOL ASSICURAZIONI SPA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.09,
+     "ishEUR": 25.27
+    },
+    {
+     "t": "AGS.BR",
+     "name": "AGEAS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.09,
+     "ishEUR": 77.5
+    },
+    {
+     "t": "EN.PA",
+     "name": "BOUYGUES SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.09,
+     "ishEUR": 42.29
+    },
+    {
+     "t": "NESTE.HE",
+     "name": "NESTE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.09,
+     "ishEUR": 27.45
+    },
+    {
+     "t": "SPSN.SW",
+     "name": "SWISS PRIME SITE AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.09,
+     "ishEUR": 144.71
+    },
+    {
+     "t": "MAERSK-B.CO",
+     "name": "A P MOLLER MAERSK B",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.09,
+     "ishEUR": 2715.68
+    },
+    {
+     "t": "ASRNL.AS",
+     "name": "ASR NEDERLAND",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.08,
+     "ishEUR": 77.26
+    },
+    {
+     "t": "DPLM.L",
+     "name": "DIPLOMA PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.08,
+     "ishEUR": 83.79
+    },
+    {
+     "t": "BNZL.L",
+     "name": "BUNZL",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.08,
+     "ishEUR": 34.31
+    },
+    {
+     "t": "PEO.WA",
+     "name": "BANK PEKAO SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.08,
+     "ishEUR": 59.29
+    },
+    {
+     "t": "ORNBV.HE",
+     "name": "ORION CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.08,
+     "ishEUR": 102
+    },
+    {
+     "t": "METSO.HE",
+     "name": "METSO CORPORATION",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.08,
+     "ishEUR": 16.99
+    },
+    {
+     "t": "ITRK.L",
+     "name": "INTERTEK GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.08,
+     "ishEUR": 71.26
+    },
+    {
+     "t": "EUROB.AT",
+     "name": "EUROBANK SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.08,
+     "ishEUR": 4.48
+    },
+    {
+     "t": "BESI.AS",
+     "name": "BE SEMICONDUCTOR INDUSTRIES NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.08,
+     "ishEUR": 143.4
+    },
+    {
+     "t": "MKS.L",
+     "name": "MARKS AND SPENCER GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.08,
+     "ishEUR": 5.19
+    },
+    {
+     "t": "AKZA.AS",
+     "name": "AKZO NOBEL NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.08,
+     "ishEUR": 62.9
+    },
+    {
+     "t": "CCH.L",
+     "name": "COCA COLA HBC AG",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.08,
+     "ishEUR": 50.2
+    },
+    {
+     "t": "RTO.L",
+     "name": "RENTOKIL INITIAL PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.08,
+     "ishEUR": 4.22
+    },
+    {
+     "t": "EDV.L",
+     "name": "ENDEAVOUR MINING",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.08,
+     "ishEUR": 49.08
+    },
+    {
+     "t": "SOBI.ST",
+     "name": "SWEDISH ORPHAN BIOVITRUM",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.08,
+     "ishEUR": 45.24
+    },
+    {
+     "t": "SVT.L",
+     "name": "SEVERN TRENT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.08,
+     "ishEUR": 39.63
+    },
+    {
+     "t": "COLO-B.CO",
+     "name": "COLOPLAST B",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.08,
+     "ishEUR": 67.99
+    },
+    {
+     "t": "BVI.PA",
+     "name": "BUREAU VERITAS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 29.95
+    },
+    {
+     "t": "ERF.PA",
+     "name": "EUROFINS SCIENTIFIC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 88.64
+    },
+    {
+     "t": "TELIA.ST",
+     "name": "TELIA COMPANY",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.08,
+     "ishEUR": 4.46
+    },
+    {
+     "t": "FGR.PA",
+     "name": "EIFFAGE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 106
+    },
+    {
+     "t": "AC.PA",
+     "name": "ACCOR SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 50
+    },
+    {
+     "t": "TPEIR.AT",
+     "name": "PIRAEUS BANK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.08,
+     "ishEUR": 9.63
+    },
+    {
+     "t": "MONC.MI",
+     "name": "MONCLER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.08,
+     "ishEUR": 45.37
+    },
+    {
+     "t": "OMV.VI",
+     "name": "OMV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.08,
+     "ishEUR": 71.75
+    },
+    {
+     "t": "FORTUM.HE",
+     "name": "FORTUM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.08,
+     "ishEUR": 23.19
+    },
+    {
+     "t": "URW.PA",
+     "name": "UNIBAIL RODAMCO WE STAPLED UNITS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 94.16
+    },
+    {
+     "t": "G1A.DE",
+     "name": "GEA GROUP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.07,
+     "ishEUR": 69.35
+    },
+    {
+     "t": "PSON.L",
+     "name": "PEARSON PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.07,
+     "ishEUR": 15.52
+    },
+    {
+     "t": "UPM.HE",
+     "name": "UPM-KYMMENE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.07,
+     "ishEUR": 22.46
+    },
+    {
+     "t": "BCP.LS",
+     "name": "BANCO COMERCIAL PORTUGUES SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.07,
+     "ishEUR": 1.08
+    },
+    {
+     "t": "PZU.WA",
+     "name": "PZU SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.07,
+     "ishEUR": 16.61
+    },
+    {
+     "t": "HEIO.AS",
+     "name": "HEINEKEN HOLDING NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.07,
+     "ishEUR": 79.35
+    },
+    {
+     "t": "SKA-B.ST",
+     "name": "SKANSKA B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.07,
+     "ishEUR": 26.2
+    },
+    {
+     "t": "QIA.DE",
+     "name": "QIAGEN",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.07,
+     "ishEUR": 45.2
+    },
+    {
+     "t": "MOWI.OL",
+     "name": "MOWI",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.07,
+     "ishEUR": 20.71
+    },
+    {
+     "t": "BKT.MC",
+     "name": "BANKINTER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.07,
+     "ishEUR": 14.41
+    },
+    {
+     "t": "AGN.AS",
+     "name": "AEGON",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.07,
+     "ishEUR": 7.53
+    },
+    {
+     "t": "AKRBP.OL",
+     "name": "AKER BP",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.07,
+     "ishEUR": 30.1
+    },
+    {
+     "t": "ORSTED.CO",
+     "name": "ORSTED A/S",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.07,
+     "ishEUR": 19.89
+    },
+    {
+     "t": "PNDORA.CO",
+     "name": "PANDORA",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.07,
+     "ishEUR": 120.61
+    },
+    {
+     "t": "SMIN.L",
+     "name": "SMITHS GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.07,
+     "ishEUR": 30.84
+    },
+    {
+     "t": "MICC.AS",
+     "name": "MAGNUM ICE CREAM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.06,
+     "ishEUR": 17.6
+    },
+    {
+     "t": "IMI.L",
+     "name": "IMI PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.06,
+     "ishEUR": 33.59
+    },
+    {
+     "t": "CA.PA",
+     "name": "CARREFOUR SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.06,
+     "ishEUR": 13.65
+    },
+    {
+     "t": "KGH.WA",
+     "name": "KGHM POLSKA MIEDZ SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.06,
+     "ishEUR": 63
+    },
+    {
+     "t": "TEN.MI",
+     "name": "TENARIS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.06,
+     "ishEUR": 26.64
+    },
+    {
+     "t": "WISE.L",
+     "name": "WISE PLC CLASS A",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.06,
+     "ishEUR": 10.05
+    },
+    {
+     "t": "NHY.OL",
+     "name": "NORSK HYDRO",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.06,
+     "ishEUR": 6.5
+    },
+    {
+     "t": "SDLF.L",
+     "name": "STANDARD LIFE PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.06,
+     "ishEUR": 11.12
+    },
+    {
+     "t": "MNG.L",
+     "name": "M&G PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.06,
+     "ishEUR": 3.84
+    },
+    {
+     "t": "CNA.L",
+     "name": "CENTRICA PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.06,
+     "ishEUR": 1.82
+    },
+    {
+     "t": "SKF-B.ST",
+     "name": "SKF B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.06,
+     "ishEUR": 24.63
+    },
+    {
+     "t": "STB.OL",
+     "name": "STOREBRAND",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.06,
+     "ishEUR": 19
+    },
+    {
+     "t": "TREL-B.ST",
+     "name": "TRELLEBORG B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.06,
+     "ishEUR": 41.19
+    },
+    {
+     "t": "STLAM.MI",
+     "name": "STELLANTIS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.06,
+     "ishEUR": 4.02
+    },
+    {
+     "t": "LI.PA",
+     "name": "KLEPIERRE REIT SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.06,
+     "ishEUR": 36.8
+    },
+    {
+     "t": "TEL2-B.ST",
+     "name": "TELE2 B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.06,
+     "ishEUR": 14.61
+    },
+    {
+     "t": "INDU-C.ST",
+     "name": "INDUSTRIVARDEN SERIES",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.06,
+     "ishEUR": 47.91
+    },
+    {
+     "t": "TEL.OL",
+     "name": "TELENOR",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.06,
+     "ishEUR": 12.78
+    },
+    {
+     "t": "LISP.SW",
+     "name": "CHOCOLADEFABRIKEN LINDT & SPRUENGL",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.06,
+     "ishEUR": 9444.9
+    },
+    {
+     "t": "EVO.ST",
+     "name": "EVOLUTION",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.06,
+     "ishEUR": 76.96
+    },
+    {
+     "t": "FME.DE",
+     "name": "FRESENIUS MEDICAL CARE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 42.23
+    },
+    {
+     "t": "A5G.IR",
+     "name": "AIB GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.06,
+     "ishEUR": 11.2
+    },
+    {
+     "t": "GALP.LS",
+     "name": "GALP ENERGIA SGPS SA CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.06,
+     "ishEUR": 19.08
+    },
+    {
+     "t": "RXL.PA",
+     "name": "REXEL SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.06,
+     "ishEUR": 34.45
+    },
+    {
+     "t": "TLX.DE",
+     "name": "TALANX AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 129.9
+    },
+    {
+     "t": "BEI.DE",
+     "name": "BEIERSDORF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 85.26
+    },
+    {
+     "t": "PSPN.SW",
+     "name": "PSP SWISS PROPERTY AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.06,
+     "ishEUR": 169.98
+    },
+    {
+     "t": "HSX.L",
+     "name": "HISCOX LTD",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.06,
+     "ishEUR": 22.93
+    },
+    {
+     "t": "CON.DE",
+     "name": "CONTINENTAL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 70.34
+    },
+    {
+     "t": "SPIE.PA",
+     "name": "SPIE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.06,
+     "ishEUR": 44.54
+    },
+    {
+     "t": "SBRY.L",
+     "name": "SAINSBURY(J) PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.06,
+     "ishEUR": 4.25
+    },
+    {
+     "t": "HM-B.ST",
+     "name": "HENNES & MAURITZ",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.06,
+     "ishEUR": 16.23
+    },
+    {
+     "t": "BEAN.SW",
+     "name": "BELIMO N AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.06,
+     "ishEUR": 795.19
+    },
+    {
+     "t": "KGF.L",
+     "name": "KINGFISHER PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.06,
+     "ishEUR": 4.49
+    },
+    {
+     "t": "ELI.BR",
+     "name": "ELIA GROUP SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.06,
+     "ishEUR": 134
+    },
+    {
+     "t": "EBP.WA",
+     "name": "ERSTE BANK POLSKA SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.06,
+     "ishEUR": 177.71
+    },
+    {
+     "t": "ADDT-B.ST",
+     "name": "ADDTECH CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.06,
+     "ishEUR": 28.53
+    },
+    {
+     "t": "SRT3.DE",
+     "name": "SARTORIUS PREF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 290
+    },
+    {
+     "t": "ORK.OL",
+     "name": "ORKLA",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.06,
+     "ishEUR": 9.75
+    },
+    {
+     "t": "RBI.VI",
+     "name": "RAIFFEISEN BANK INTERNATIONAL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.05,
+     "ishEUR": 58.55
+    },
+    {
+     "t": "WEIR.L",
+     "name": "WEIR PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 28.27
+    },
+    {
+     "t": "SECU-B.ST",
+     "name": "SECURITAS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.05,
+     "ishEUR": 14.32
+    },
+    {
+     "t": "HOT.DE",
+     "name": "HOCHTIEF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 365.6
+    },
+    {
+     "t": "BNR.DE",
+     "name": "BRENNTAG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 61.9
+    },
+    {
+     "t": "ALPHA.AT",
+     "name": "ALPHA BANK SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.05,
+     "ishEUR": 4.53
+    },
+    {
+     "t": "KESKOB.HE",
+     "name": "KESKO CORP CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.05,
+     "ishEUR": 25.66
+    },
+    {
+     "t": "ABF.L",
+     "name": "ASSOCIATED BRITISH FOODS PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 23.85
+    },
+    {
+     "t": "MRO.L",
+     "name": "MELROSE INDUSTRIES PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 5.58
+    },
+    {
+     "t": "TRYG.CO",
+     "name": "TRYG",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.05,
+     "ishEUR": 21.9
+    },
+    {
+     "t": "PPC.AT",
+     "name": "PUBLIC POWER CORPORATION SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.05,
+     "ishEUR": 23.14
+    },
+    {
+     "t": "ICG.L",
+     "name": "ICG PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 22.78
+    },
+    {
+     "t": "STJ.L",
+     "name": "ST JAMESS PLACE PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 13.47
+    },
+    {
+     "t": "EXO.AS",
+     "name": "EXOR NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.05,
+     "ishEUR": 73.35
+    },
+    {
+     "t": "DCC.L",
+     "name": "DCC ENERGY PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 77.32
+    },
+    {
+     "t": "DHER.DE",
+     "name": "DELIVERY HERO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 37
+    },
+    {
+     "t": "ZAL.DE",
+     "name": "ZALANDO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 27.72
+    },
+    {
+     "t": "SUBC.OL",
+     "name": "SUBSEA",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.05,
+     "ishEUR": 28.96
+    },
+    {
+     "t": "ACLN.SW",
+     "name": "ACCELLERON N AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.05,
+     "ishEUR": 69.4
+    },
+    {
+     "t": "GAW.L",
+     "name": "GAMES WORKSHOP GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 192.75
+    },
+    {
+     "t": "SPX.L",
+     "name": "SPIRAX GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 87.51
+    },
+    {
+     "t": "DIM.PA",
+     "name": "SARTORIUS STEDIM BIOTECH SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.05,
+     "ishEUR": 225.8
+    },
+    {
+     "t": "GTT.PA",
+     "name": "GAZTRANSPORT & TECHNIGAZ SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.05,
+     "ishEUR": 181.3
+    },
+    {
+     "t": "LTMC.MI",
+     "name": "LOTTOMATICA GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.05,
+     "ishEUR": 27.57
+    },
+    {
+     "t": "INDT.ST",
+     "name": "INDUTRADE",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.05,
+     "ishEUR": 24.26
+    },
+    {
+     "t": "ALSYDB.CO",
+     "name": "AL SYDBANK",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.05,
+     "ishEUR": 97.39
+    },
+    {
+     "t": "G24.DE",
+     "name": "SCOUT24 N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 89.1
+    },
+    {
+     "t": "AED.BR",
+     "name": "AEDIFICA NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.05,
+     "ishEUR": 65.65
+    },
+    {
+     "t": "CTEC.L",
+     "name": "CONVATEC GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 3
+    },
+    {
+     "t": "YAR.OL",
+     "name": "YARA INTERNATIONAL",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.05,
+     "ishEUR": 38.1
+    },
+    {
+     "t": "KBX.DE",
+     "name": "KNORR BREMSE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 94.45
+    },
+    {
+     "t": "LAND.L",
+     "name": "LAND SECURITIES GROUP REIT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 8.13
+    },
+    {
+     "t": "NKT.CO",
+     "name": "NKT",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.05,
+     "ishEUR": 112.37
+    },
+    {
+     "t": "SCA-B.ST",
+     "name": "SVENSKA CELLULOSA B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.05,
+     "ishEUR": 11.15
+    },
+    {
+     "t": "RILBA.CO",
+     "name": "RINGKJOBING LANDBOBANK",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.05,
+     "ishEUR": 239.19
+    },
+    {
+     "t": "BAB.L",
+     "name": "BABCOCK INTERNATIONAL GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.05,
+     "ishEUR": 12.07
+    },
+    {
+     "t": "AMUN.PA",
+     "name": "AMUNDI SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.05,
+     "ishEUR": 93.95
+    },
+    {
+     "t": "JYSK.CO",
+     "name": "JYSKE BANK",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.05,
+     "ishEUR": 148.36
+    },
+    {
+     "t": "BFT.WA",
+     "name": "BENEFIT SYSTEMS",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.04,
+     "ishEUR": 1400.85
+    },
+    {
+     "t": "NIBE-B.ST",
+     "name": "NIBE INDUSTRIER CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.04,
+     "ishEUR": 4.08
+    },
+    {
+     "t": "RNO.PA",
+     "name": "RENAULT SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 28.9
+    },
+    {
+     "t": "KCR.HE",
+     "name": "KONECRANES",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.04,
+     "ishEUR": 28.02
+    },
+    {
+     "t": "STERV.HE",
+     "name": "STORA ENSO CLASS R",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.04,
+     "ishEUR": 9.65
+    },
+    {
+     "t": "GBLB.BR",
+     "name": "GROUPE BRUXELLES LAMBERT NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.04,
+     "ishEUR": 79.05
+    },
+    {
+     "t": "AM.PA",
+     "name": "DASSAULT AVIATION SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 301
+    },
+    {
+     "t": "TKA.DE",
+     "name": "THYSSENKRUPP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 11.94
+    },
+    {
+     "t": "IG.MI",
+     "name": "ITALGAS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.04,
+     "ishEUR": 9.12
+    },
+    {
+     "t": "ELISA.HE",
+     "name": "ELISA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.04,
+     "ishEUR": 34
+    },
+    {
+     "t": "LIFCO-B.ST",
+     "name": "LIFCO CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.04,
+     "ishEUR": 25.71
+    },
+    {
+     "t": "BARN.SW",
+     "name": "BARRY CALLEBAUT AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.04,
+     "ishEUR": 1356.3
+    },
+    {
+     "t": "BEIJ-B.ST",
+     "name": "BEIJER REF CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.04,
+     "ishEUR": 14.19
+    },
+    {
+     "t": "ISS.CO",
+     "name": "ISS A S",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.04,
+     "ishEUR": 39.73
+    },
+    {
+     "t": "UHR.SW",
+     "name": "THE SWATCH GROUP AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.04,
+     "ishEUR": 198.41
+    },
+    {
+     "t": "WTB.L",
+     "name": "WHITBREAD PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 33.89
+    },
+    {
+     "t": "BTRW.L",
+     "name": "BARRATT REDROW PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 3.99
+    },
+    {
+     "t": "FRO.OL",
+     "name": "FRONTLINE PLC",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.04,
+     "ishEUR": 40.35
+    },
+    {
+     "t": "IMCD.AS",
+     "name": "IMCD NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.04,
+     "ishEUR": 102.75
+    },
+    {
+     "t": "IPN.PA",
+     "name": "IPSEN SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 158.7
+    },
+    {
+     "t": "AUTO.L",
+     "name": "AUTOTRADER GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 6.66
+    },
+    {
+     "t": "CRDA.L",
+     "name": "CRODA INTERNATIONAL PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 43.95
+    },
+    {
+     "t": "SPM.MI",
+     "name": "SAIPEM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.04,
+     "ishEUR": 4.24
+    },
+    {
+     "t": "SCR.PA",
+     "name": "SCOR",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 34.68
+    },
+    {
+     "t": "ANA.MC",
+     "name": "ACCIONA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.04,
+     "ishEUR": 218
+    },
+    {
+     "t": "HWDN.L",
+     "name": "HOWDEN JOINERY GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 10.15
+    },
+    {
+     "t": "FRES.L",
+     "name": "FRESNILLO PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 30.12
+    },
+    {
+     "t": "EMSN.SW",
+     "name": "EMS-CHEMIE HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.04,
+     "ishEUR": 928.08
+    },
+    {
+     "t": "GETI-B.ST",
+     "name": "GETINGE B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.04,
+     "ishEUR": 25.22
+    },
+    {
+     "t": "EDEN.PA",
+     "name": "EDENRED",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 24.6
+    },
+    {
+     "t": "BGEO.L",
+     "name": "LION FINANCE GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 153.32
+    },
+    {
+     "t": "ACKB.BR",
+     "name": "ACKERMANS & VAN HAAREN NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.04,
+     "ishEUR": 268
+    },
+    {
+     "t": "WPP.L",
+     "name": "WPP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 4.9
+    },
+    {
+     "t": "SYENS.BR",
+     "name": "SYENSQO NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.04,
+     "ishEUR": 76.7
+    },
+    {
+     "t": "JMT.LS",
+     "name": "JERONIMO MARTINS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.04,
+     "ishEUR": 19.33
+    },
+    {
+     "t": "MBK.WA",
+     "name": "MBANK SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.04,
+     "ishEUR": 371.89
+    },
+    {
+     "t": "AVOL.SW",
+     "name": "AVOLTA AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.04,
+     "ishEUR": 52.35
+    },
+    {
+     "t": "NDX1.DE",
+     "name": "NORDEX",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 42.98
+    },
+    {
+     "t": "LPP.WA",
+     "name": "LPP SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.04,
+     "ishEUR": 6254.34
+    },
+    {
+     "t": "SAVE.ST",
+     "name": "NORDNET",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.04,
+     "ishEUR": 31.22
+    },
+    {
+     "t": "EVK.DE",
+     "name": "EVONIK INDUSTRIES AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 21.12
+    },
+    {
+     "t": "SB1NO.OL",
+     "name": "SPAREBANK SR-NORGE",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.04,
+     "ishEUR": 22.09
+    },
+    {
+     "t": "ANDR.VI",
+     "name": "ANDRITZ AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.04,
+     "ishEUR": 81.8
+    },
+    {
+     "t": "BLND.L",
+     "name": "BRITISH LAND REIT",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 5.16
+    },
+    {
+     "t": "P911.DE",
+     "name": "DR ING HC F PORSCHE PRF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 47.06
+    },
+    {
+     "t": "RMV.L",
+     "name": "RIGHTMOVE PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 6.66
+    },
+    {
+     "t": "RED.MC",
+     "name": "REDEIA CORPORACION SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.04,
+     "ishEUR": 15.66
+    },
+    {
+     "t": "BMED.MI",
+     "name": "BANCA MEDIOLANUM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.04,
+     "ishEUR": 23.06
+    },
+    {
+     "t": "MRL.MC",
+     "name": "MERLIN PROPERTIES REIT",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.04,
+     "ishEUR": 11.6
+    },
+    {
+     "t": "LHA.DE",
+     "name": "DEUTSCHE LUFTHANSA AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 8.44
+    },
+    {
+     "t": "GET.PA",
+     "name": "GETLINK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 20.22
+    },
+    {
+     "t": "SSAB-B.ST",
+     "name": "SSAB CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.04,
+     "ishEUR": 8.33
+    },
+    {
+     "t": "BBY.L",
+     "name": "BALFOUR BEATTY PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 10.21
+    },
+    {
+     "t": "PSN.L",
+     "name": "PERSIMMON PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 15.64
+    },
+    {
+     "t": "ABVX.PA",
+     "name": "ABIVAX SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 77.15
+    },
+    {
+     "t": "SIGN.SW",
+     "name": "SIG GROUP N AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.04,
+     "ishEUR": 16.52
+    },
+    {
+     "t": "ABDN.L",
+     "name": "ABERDEEN GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 2.68
+    },
+    {
+     "t": "SW.PA",
+     "name": "SODEXO SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 60.4
+    },
+    {
+     "t": "LMP.L",
+     "name": "LONDONMETRIC PROPERTY REIT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 2.25
+    },
+    {
+     "t": "IDR.MC",
+     "name": "INDRA SISTEMAS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.04,
+     "ishEUR": 56.76
+    },
+    {
+     "t": "ROR.L",
+     "name": "ROTORK PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 5.91
+    },
+    {
+     "t": "GJF.OL",
+     "name": "GJENSIDIGE FORSIKRING",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.04,
+     "ishEUR": 25.98
+    },
+    {
+     "t": "BRBY.L",
+     "name": "BURBERRY GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.04,
+     "ishEUR": 13.28
+    },
+    {
+     "t": "TUB.BR",
+     "name": "FINANCIERE DE TUBIZE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.04,
+     "ishEUR": 240
+    },
+    {
+     "t": "VER.VI",
+     "name": "VERBUND AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.04,
+     "ishEUR": 72.7
+    },
+    {
+     "t": "GALE.SW",
+     "name": "GALENICA AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.04,
+     "ishEUR": 97.84
+    },
+    {
+     "t": "GF.SW",
+     "name": "GEORG FISCHER AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.04,
+     "ishEUR": 61.47
+    },
+    {
+     "t": "DEMANT.CO",
+     "name": "DEMANT",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.03,
+     "ishEUR": 50.46
+    },
+    {
+     "t": "HAG.DE",
+     "name": "HENSOLDT AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 77.44
+    },
+    {
+     "t": "BIM.PA",
+     "name": "BIOMERIEUX SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 93.3
+    },
+    {
+     "t": "RS1.L",
+     "name": "RS GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 9.46
+    },
+    {
+     "t": "FHZN.SW",
+     "name": "FLUGHAFEN ZUERICH AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.03,
+     "ishEUR": 231.01
+    },
+    {
+     "t": "VOE.VI",
+     "name": "VOESTALPINE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.03,
+     "ishEUR": 40.14
+    },
+    {
+     "t": "EDPR.LS",
+     "name": "EDP RENEWABLES SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.03,
+     "ishEUR": 14.49
+    },
+    {
+     "t": "RAND.AS",
+     "name": "RANDSTAD HOLDING",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.03,
+     "ishEUR": 41.24
+    },
+    {
+     "t": "MTLN.AT",
+     "name": "METLEN ENERGY & METALS PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.03,
+     "ishEUR": 45.2
+    },
+    {
+     "t": "TE.PA",
+     "name": "TECHNIP ENERGIES",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 34.12
+    },
+    {
+     "t": "SECT-B.ST",
+     "name": "SECTRA CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.03,
+     "ishEUR": 29.75
+    },
+    {
+     "t": "NEX.PA",
+     "name": "NEXANS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 123.5
+    },
+    {
+     "t": "VAR.OL",
+     "name": "VAR ENERGI",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.03,
+     "ishEUR": 4.71
+    },
+    {
+     "t": "ALK-B.CO",
+     "name": "ALK-ABELLO CLASS B",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.03,
+     "ishEUR": 32.48
+    },
+    {
+     "t": "TEMN.SW",
+     "name": "TEMENOS AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.03,
+     "ishEUR": 86.57
+    },
+    {
+     "t": "SQN.SW",
+     "name": "SWISSQUOTE GROUP HOLDING SA",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.03,
+     "ishEUR": 36.97
+    },
+    {
+     "t": "BCVN.SW",
+     "name": "BC VAUD N",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.03,
+     "ishEUR": 149.63
+    },
+    {
+     "t": "UMI.BR",
+     "name": "UMICORE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 18.47
+    },
+    {
+     "t": "VK.PA",
+     "name": "VALLOUREC SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 18.91
+    },
+    {
+     "t": "VALMT.HE",
+     "name": "VALMET CORP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.03,
+     "ishEUR": 28.88
+    },
+    {
+     "t": "AZA.ST",
+     "name": "AVANZA BANK HOLDING",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.03,
+     "ishEUR": 33.46
+    },
+    {
+     "t": "BKG.L",
+     "name": "BERKELEY GROUP HOLDINGS (THE)",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 43.95
+    },
+    {
+     "t": "DIE.BR",
+     "name": "DIETEREN (D) SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 178.6
+    },
+    {
+     "t": "ELIS.PA",
+     "name": "ELIS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 24.12
+    },
+    {
+     "t": "CDR.WA",
+     "name": "CD PROJEKT RED",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.03,
+     "ishEUR": 60.75
+    },
+    {
+     "t": "ADEN.SW",
+     "name": "ADECCO GROUP AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.03,
+     "ishEUR": 24.81
+    },
+    {
+     "t": "SBMO.AS",
+     "name": "SBM OFFSHORE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.03,
+     "ishEUR": 32.38
+    },
+    {
+     "t": "INVP.L",
+     "name": "INVESTEC PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 7.37
+    },
+    {
+     "t": "EMG.L",
+     "name": "MAN GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 3.56
+    },
+    {
+     "t": "DNP.WA",
+     "name": "DINO POLSKA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.03,
+     "ishEUR": 8.51
+    },
+    {
+     "t": "LAGR-B.ST",
+     "name": "LAGERCRANTZ GROUP CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.03,
+     "ishEUR": 20.54
+    },
+    {
+     "t": "CPR.MI",
+     "name": "DAVIDE CAMPARI MILANO NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 6.64
+    },
+    {
+     "t": "SALM.OL",
+     "name": "SALMAR",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.03,
+     "ishEUR": 54.39
+    },
+    {
+     "t": "SOF.BR",
+     "name": "SOFINA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 267.6
+    },
+    {
+     "t": "AZM.MI",
+     "name": "AZIMUT HOLDING",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 35.82
+    },
+    {
+     "t": "TEP.PA",
+     "name": "TELEPERFORMANCE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 68.44
+    },
+    {
+     "t": "NEM.DE",
+     "name": "NEMETSCHEK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 64.75
+    },
+    {
+     "t": "OCTV-SDB.ST",
+     "name": "OCTAVE INTELLIGENCE SDR PLC",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.03,
+     "ishEUR": 18.71
+    },
+    {
+     "t": "PAH3.DE",
+     "name": "PORSCHE AUTOMOBIL HOLDING PREF",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 26.13
+    },
+    {
+     "t": "BBOX.L",
+     "name": "TRITAX BIG BOX REIT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 1.75
+    },
+    {
+     "t": "LUND-B.ST",
+     "name": "LUNDBERGFORETAGEN CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.03,
+     "ishEUR": 54.8
+    },
+    {
+     "t": "VEND.OL",
+     "name": "VEND MARKETPLACES ASA",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.03,
+     "ishEUR": 21.89
+    },
+    {
+     "t": "MAP.MC",
+     "name": "MAPFRE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.03,
+     "ishEUR": 4.13
+    },
+    {
+     "t": "GL9.IR",
+     "name": "GLANBIA PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.03,
+     "ishEUR": 19.42
+    },
+    {
+     "t": "CAST.ST",
+     "name": "CASTELLUM",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.03,
+     "ishEUR": 12.28
+    },
+    {
+     "t": "LEG.DE",
+     "name": "LEG IMMOBILIEN N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 50.9
+    },
+    {
+     "t": "A2A.MI",
+     "name": "A2A",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 2.43
+    },
+    {
+     "t": "MOH.AT",
+     "name": "MOTOR OIL (HELLAS) CORINTH REFINER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.03,
+     "ishEUR": 60
+    },
+    {
+     "t": "SAGA-B.ST",
+     "name": "SAGAX CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.03,
+     "ishEUR": 16.83
+    },
+    {
+     "t": "MNDI.L",
+     "name": "MONDI PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 9.49
+    },
+    {
+     "t": "MYCR.ST",
+     "name": "MYCRONIC",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.03,
+     "ishEUR": 25.32
+    },
+    {
+     "t": "SUN.SW",
+     "name": "SULZER AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.03,
+     "ishEUR": 195.35
+    },
+    {
+     "t": "IGG.L",
+     "name": "IG GROUP HOLDINGS PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 11.22
+    },
+    {
+     "t": "UNI.MC",
+     "name": "UNICAJA BANCO SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.03,
+     "ishEUR": 3.31
+    },
+    {
+     "t": "ZEG.L",
+     "name": "ZEGONA COMMUNICATIONS PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 20.57
+    },
+    {
+     "t": "AKE.PA",
+     "name": "ARKEMA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 57.65
+    },
+    {
+     "t": "TPRO.MI",
+     "name": "TECHNOPROBE SPA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 20.74
+    },
+    {
+     "t": "CVC.AS",
+     "name": "CVC CAPITAL PARTNERS PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.03,
+     "ishEUR": 14.46
+    },
+    {
+     "t": "ALO.PA",
+     "name": "ALSTOM SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 10.72
+    },
+    {
+     "t": "AALB.AS",
+     "name": "AALBERTS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.03,
+     "ishEUR": 40.18
+    },
+    {
+     "t": "EVD.DE",
+     "name": "CTS EVENTIM AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 62
+    },
+    {
+     "t": "KBCA.BR",
+     "name": "KBC ANCORA NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 94.2
+    },
+    {
+     "t": "TW.L",
+     "name": "TAYLOR WIMPEY PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 1
+    },
+    {
+     "t": "ING.WA",
+     "name": "ING BANK SLASKI SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.03,
+     "ishEUR": 107.65
+    },
+    {
+     "t": "BPT.L",
+     "name": "BRIDGEPOINT GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 4.72
+    },
+    {
+     "t": "JMAT.L",
+     "name": "JOHNSON MATTHEY PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 28.77
+    },
+    {
+     "t": "WDP.BR",
+     "name": "WAREHOUSES DE PAUW NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 19.4
+    },
+    {
+     "t": "BGN.MI",
+     "name": "BANCA GENERALI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 60.45
+    },
+    {
+     "t": "TECN.SW",
+     "name": "TECAN GROUP AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.03,
+     "ishEUR": 281.76
+    },
+    {
+     "t": "CWK.L",
+     "name": "CRANSWICK PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 65.57
+    },
+    {
+     "t": "CCC.L",
+     "name": "COMPUTACENTER PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 55.07
+    },
+    {
+     "t": "MOBN.SW",
+     "name": "MOBIMO HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.03,
+     "ishEUR": 380.09
+    },
+    {
+     "t": "DRX.L",
+     "name": "DRAX GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 10.26
+    },
+    {
+     "t": "ACX.MC",
+     "name": "ACERINOX",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.03,
+     "ishEUR": 14.94
+    },
+    {
+     "t": "TUI1.DE",
+     "name": "TUI N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 7.57
+    },
+    {
+     "t": "NDA.DE",
+     "name": "AURUBIS AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 137.5
+    },
+    {
+     "t": "BALD-B.ST",
+     "name": "FASTIGHETS BALDER CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.03,
+     "ishEUR": 4.81
+    },
+    {
+     "t": "SRP.L",
+     "name": "SERCO GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 3.37
+    },
+    {
+     "t": "AYV.PA",
+     "name": "AYVENS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 9.62
+    },
+    {
+     "t": "AIXA.DE",
+     "name": "AIXTRON",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 30.41
+    },
+    {
+     "t": "ENT.L",
+     "name": "ENTAIN PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 5.64
+    },
+    {
+     "t": "ENG.MC",
+     "name": "ENAGAS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.03,
+     "ishEUR": 17.8
+    },
+    {
+     "t": "MTO.L",
+     "name": "MITIE GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 2.51
+    },
+    {
+     "t": "GEKTERNA.AT",
+     "name": "GEK TERNA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.03,
+     "ishEUR": 39.26
+    },
+    {
+     "t": "ADP.PA",
+     "name": "AEROPORTS DE PARIS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 117.1
+    },
+    {
+     "t": "BME.L",
+     "name": "B&M EUROPEAN VALUE RETAIL PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 3.36
+    },
+    {
+     "t": "VSURE.ST",
+     "name": "VERISURE PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.02,
+     "ishEUR": 10.8
+    },
+    {
+     "t": "BAMNB.AS",
+     "name": "BAM GROEP KONINKLIJKE NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 12.61
+    },
+    {
+     "t": "BWY.L",
+     "name": "BELLWAY PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 27.45
+    },
+    {
+     "t": "BZU.MI",
+     "name": "BUZZI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 42.39
+    },
+    {
+     "t": "SUNN.SW",
+     "name": "SUNRISE N CLASS A LTD",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 48.24
+    },
+    {
+     "t": "DLG.MI",
+     "name": "DELONGHI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 45.32
+    },
+    {
+     "t": "ALLN.SW",
+     "name": "ALLREAL HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 210.88
+    },
+    {
+     "t": "NEXI.MI",
+     "name": "NEXI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 4.5
+    },
+    {
+     "t": "HIK.L",
+     "name": "HIKMA PHARMACEUTICALS PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 19.78
+    },
+    {
+     "t": "MIL.WA",
+     "name": "BANK MILLENNIUM SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.02,
+     "ishEUR": 5.17
+    },
+    {
+     "t": "IP.MI",
+     "name": "INTERPUMP GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 38.24
+    },
+    {
+     "t": "RAA.DE",
+     "name": "RATIONAL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 623.5
+    },
+    {
+     "t": "EZJ.L",
+     "name": "EASYJET",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 8.2
+    },
+    {
+     "t": "LATO-B.ST",
+     "name": "LATOUR INVESTMENT CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.02,
+     "ishEUR": 21.3
+    },
+    {
+     "t": "ITV.L",
+     "name": "ITV PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 0.79
+    },
+    {
+     "t": "PHP.L",
+     "name": "PRIMARY HEALTH PROPERTIES REIT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 1.17
+    },
+    {
+     "t": "GFC.PA",
+     "name": "GECINA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 65.95
+    },
+    {
+     "t": "GRF.MC",
+     "name": "GRIFOLS CLASS A",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.02,
+     "ishEUR": 11.24
+    },
+    {
+     "t": "BELA.AT",
+     "name": "JUMBO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.02,
+     "ishEUR": 27.46
+    },
+    {
+     "t": "HER.MI",
+     "name": "HERA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 3.74
+    },
+    {
+     "t": "REY.MI",
+     "name": "REPLY",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 130.6
+    },
+    {
+     "t": "ARCAD.AS",
+     "name": "ARCADIS NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 46.2
+    },
+    {
+     "t": "PIRC.MI",
+     "name": "PIRELLI & C",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 6.8
+    },
+    {
+     "t": "LOOMIS.ST",
+     "name": "LOOMIS CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.02,
+     "ishEUR": 45.95
+    },
+    {
+     "t": "SFZN.SW",
+     "name": "SIEGFRIED HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 78.75
+    },
+    {
+     "t": "AAK.ST",
+     "name": "AAK",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.02,
+     "ishEUR": 16.58
+    },
+    {
+     "t": "COTN.SW",
+     "name": "COMET HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 325.95
+    },
+    {
+     "t": "FLS.CO",
+     "name": "FLSMIDTH AND CO CLASS B",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.02,
+     "ishEUR": 74.65
+    },
+    {
+     "t": "SOP.PA",
+     "name": "SOPRA STERIA GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 196.9
+    },
+    {
+     "t": "SFSN.SW",
+     "name": "SFS GROUP AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 153.57
+    },
+    {
+     "t": "NOD.OL",
+     "name": "NORDIC SEMICONDUCTOR",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.02,
+     "ishEUR": 16.11
+    },
+    {
+     "t": "DKSH.SW",
+     "name": "DKSH HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 83.89
+    },
+    {
+     "t": "VPK.AS",
+     "name": "KONINKLIJKE VOPAK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 53
+    },
+    {
+     "t": "R3NK.DE",
+     "name": "RENK GROUP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 34.2
+    },
+    {
+     "t": "QLT.L",
+     "name": "QUILTER PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 2.25
+    },
+    {
+     "t": "BC.MI",
+     "name": "BRUNELLO CUCINELLI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 86.62
+    },
+    {
+     "t": "PUM.DE",
+     "name": "PUMA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 26.82
+    },
+    {
+     "t": "PNN.L",
+     "name": "PENNON GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 4.1
+    },
+    {
+     "t": "KTY.WA",
+     "name": "GRUPA KETY",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.02,
+     "ishEUR": 284.72
+    },
+    {
+     "t": "TCAP.L",
+     "name": "TP ICAP GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 3.75
+    },
+    {
+     "t": "QQ.L",
+     "name": "QINETIQ GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 6.15
+    },
+    {
+     "t": "ALLFG.AS",
+     "name": "ALLFUNDS GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 9.91
+    },
+    {
+     "t": "AXFO.ST",
+     "name": "AXFOOD",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.02,
+     "ishEUR": 25.77
+    },
+    {
+     "t": "SBNOR.OL",
+     "name": "SPAREBANKEN NORGE",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.02,
+     "ishEUR": 19.22
+    },
+    {
+     "t": "FPE3.DE",
+     "name": "FUCHS PREF",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 42.72
+    },
+    {
+     "t": "INCH.L",
+     "name": "INCHCAPE PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 7.66
+    },
+    {
+     "t": "PLUS.L",
+     "name": "PLUS500",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 39.53
+    },
+    {
+     "t": "FNTN.DE",
+     "name": "FREENET AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 23.34
+    },
+    {
+     "t": "CMBN.SW",
+     "name": "CEMBRA MONEY BANK AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 92.1
+    },
+    {
+     "t": "ROCK-B.CO",
+     "name": "ROCKWOOL CLASS B",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.02,
+     "ishEUR": 28.01
+    },
+    {
+     "t": "BKW.SW",
+     "name": "BKW N AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 137.38
+    },
+    {
+     "t": "PUIG.MC",
+     "name": "PUIG BRANDS SA CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.02,
+     "ishEUR": 19.84
+    },
+    {
+     "t": "VZN.SW",
+     "name": "VZ HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 182.44
+    },
+    {
+     "t": "ACP.WA",
+     "name": "ASSECO POLAND SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.02,
+     "ishEUR": 52.07
+    },
+    {
+     "t": "SWEC-B.ST",
+     "name": "SWECO CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.02,
+     "ishEUR": 12.96
+    },
+    {
+     "t": "BC8.DE",
+     "name": "BECHTLE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 33.42
+    },
+    {
+     "t": "SHC.L",
+     "name": "SHAFTESBURY CAPITAL REIT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 1.78
+    },
+    {
+     "t": "VONN.SW",
+     "name": "VONTOBEL HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 99.1
+    },
+    {
+     "t": "TBCG.L",
+     "name": "TBC BANK GROUP PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 58.21
+    },
+    {
+     "t": "SOI.PA",
+     "name": "SOITEC SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 94.34
+    },
+    {
+     "t": "MANTA.HE",
+     "name": "MANDATUM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.02,
+     "ishEUR": 5.9
+    },
+    {
+     "t": "RUI.PA",
+     "name": "RUBIS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 35.4
+    },
+    {
+     "t": "ATS.VI",
+     "name": "AT & S AUSTRIA TECHNOLOGIE & SYSTE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.02,
+     "ishEUR": 105.8
+    },
+    {
+     "t": "HTO.AT",
+     "name": "HELLENIC TELECOMMUNICATIONS ORGANI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.02,
+     "ishEUR": 18.78
+    },
+    {
+     "t": "AAF.L",
+     "name": "AIRTEL AFRICA PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 3.33
+    },
+    {
+     "t": "IFCN.SW",
+     "name": "INFICON HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 164.73
+    },
+    {
+     "t": "UTG.L",
+     "name": "UNITE GROUP REIT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 5.91
+    },
+    {
+     "t": "HUH1V.HE",
+     "name": "HUHTAMAKI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.02,
+     "ishEUR": 26.68
+    },
+    {
+     "t": "FDJU.PA",
+     "name": "FDJ UNITED",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 21.68
+    },
+    {
+     "t": "BOL.PA",
+     "name": "BOLLORE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 3.76
+    },
+    {
+     "t": "HUBN.SW",
+     "name": "HUBER & SUHNER AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 168.66
+    },
+    {
+     "t": "RBREW.CO",
+     "name": "ROYAL UNIBREW",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.02,
+     "ishEUR": 60.73
+    },
+    {
+     "t": "DLN.L",
+     "name": "DERWENT LONDON REIT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 23.3
+    },
+    {
+     "t": "COV.PA",
+     "name": "COVIVIO SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 45.42
+    },
+    {
+     "t": "SCT.L",
+     "name": "SOFTCAT PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 18.78
+    },
+    {
+     "t": "VATN.SW",
+     "name": "VALIANT HOLDING AG",
+     "cur": "CHF",
+     "pence": false,
+     "country": "Switzerland",
+     "w": 0.02,
+     "ishEUR": 165.38
+    },
+    {
+     "t": "AG1.DE",
+     "name": "AUTO1 GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 17.45
+    },
+    {
+     "t": "SCYR.MC",
+     "name": "SACYR",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.02,
+     "ishEUR": 4.05
+    },
+    {
+     "t": "FR.PA",
+     "name": "VALEO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 10.96
+    },
+    {
+     "t": "PAF.L",
+     "name": "PAN AFRICAN RESOURCES PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 1.39
+    },
+    {
+     "t": "TGS.OL",
+     "name": "TGS NOPEC GEOPHYSICAL",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.02,
+     "ishEUR": 12.25
+    },
+    {
+     "t": "KGX.DE",
+     "name": "KION GROUP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 34.32
+    },
+    {
+     "t": "AKER.OL",
+     "name": "AKER",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.02,
+     "ishEUR": 102.04
+    },
+    {
+     "t": "IVG.MI",
+     "name": "IVECO GROUP NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 14.35
+    },
+    {
+     "t": "XTB.WA",
+     "name": "XTB",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.02,
+     "ishEUR": 30.17
+    },
+    {
+     "t": "TOM.OL",
+     "name": "TOMRA SYSTEMS",
+     "cur": "NOK",
+     "pence": false,
+     "country": "Norway",
+     "w": 0.02,
+     "ishEUR": 9.46
+    },
+    {
+     "t": "TEG.DE",
+     "name": "TAG IMMOBILIEN AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 11.77
+    },
+    {
+     "t": "SDF.DE",
+     "name": "K+S N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 13.36
+    },
+    {
+     "t": "ROSE.L",
+     "name": "ROSEBANK INDUSTRIES PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.02,
+     "ishEUR": 3.74
+    },
+    {
+     "t": "HOLM-B.ST",
+     "name": "HOLMEN CLASS B",
+     "cur": "SEK",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.02,
+     "ishEUR": 27.82
+    },
+    {
+     "t": "ZEAL.CO",
+     "name": "ZEALAND PHARMA",
+     "cur": "DKK",
+     "pence": false,
+     "country": "Denmark",
+     "w": 0.02,
+     "ishEUR": 31.16
+    },
+    {
+     "t": "GBF.DE",
+     "name": "BILFINGER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 61.4
+    },
+    {
+     "t": "CSG.AS",
+     "name": "CSG CLASS A NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 13.03
+    },
+    {
+     "t": "FTK.DE",
+     "name": "FLATEXDEGIRO N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 22.5
+    },
+    {
+     "t": "HOC.L",
+     "name": "HOCHSCHILD MINING PLC",
+     "cur": "GBP",
+     "pence": true,
+     "country": "United Kingdom",
+     "w": 0.01,
+     "ishEUR": 5.84
+    },
+    {
+     "t": "HIAB.HE",
+     "name": "HIAB CORPORATION CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.01,
+     "ishEUR": 48.66
+    },
+    {
+     "t": "ZAB.WA",
+     "name": "ZABKA GROUP SOCIETE ANONYME SA",
+     "cur": "PLN",
+     "pence": false,
+     "country": "Poland",
+     "w": 0.01,
+     "ishEUR": 7.23
+    },
+    {
+     "t": "WISA.HE",
+     "name": "WISA GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0,
+     "ishEUR": 0.56
+    }
+   ]
+  },
+  "SXXP_EZ": {
+   "bench": "^STOXX",
+   "label": "STOXX Europe 600 – nur EUR-notierte Titel (Eurozone, ohne FX)",
+   "members": [
+    {
+     "t": "ASML.AS",
+     "name": "ASML HOLDING",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 3.67,
+     "ishEUR": 1283.6
+    },
+    {
+     "t": "SHELL.AS",
+     "name": "SHELL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "United Kingdom",
+     "w": 1.83,
+     "ishEUR": 44.74
+    },
+    {
+     "t": "SAP.DE",
+     "name": "SAP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 1.56,
+     "ishEUR": 210.75
+    },
+    {
+     "t": "SIE.DE",
+     "name": "SIEMENS N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 1.43,
+     "ishEUR": 263.65
+    },
+    {
+     "t": "TTE.PA",
+     "name": "TOTALENERGIES",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 1.35,
+     "ishEUR": 79.73
+    },
+    {
+     "t": "ALV.DE",
+     "name": "ALLIANZ",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 1.26,
+     "ishEUR": 451.1
+    },
+    {
+     "t": "SAN.MC",
+     "name": "BANCO SANTANDER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 1.19,
+     "ishEUR": 10.7
+    },
+    {
+     "t": "IBE.MC",
+     "name": "IBERDROLA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 1.04,
+     "ishEUR": 22.65
+    },
+    {
+     "t": "SU.PA",
+     "name": "SCHNEIDER ELECTRIC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.98,
+     "ishEUR": 228.65
+    },
+    {
+     "t": "BBVA.MC",
+     "name": "BANCO BILBAO VIZCAYA ARGENTARIA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.94,
+     "ishEUR": 22.73
+    },
+    {
+     "t": "AI.PA",
+     "name": "LAIR LIQUIDE SOCIETE ANONYME POUR",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.88,
+     "ishEUR": 187.78
+    },
+    {
+     "t": "UCG.MI",
+     "name": "UNICREDIT",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.86,
+     "ishEUR": 76.8
+    },
+    {
+     "t": "AIR.PA",
+     "name": "AIRBUS GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.86,
+     "ishEUR": 196.4
+    },
+    {
+     "t": "SAF.PA",
+     "name": "SAFRAN SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.8,
+     "ishEUR": 295.5
+    },
+    {
+     "t": "OR.PA",
+     "name": "LOREAL SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.8,
+     "ishEUR": 449.8
+    },
+    {
+     "t": "MC.PA",
+     "name": "LVMH",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.74,
+     "ishEUR": 408.75
+    },
+    {
+     "t": "ENR.DE",
+     "name": "SIEMENS ENERGY N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.71,
+     "ishEUR": 118.1
+    },
+    {
+     "t": "BNP.PA",
+     "name": "BNP PARIBAS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.71,
+     "ishEUR": 91.93
+    },
+    {
+     "t": "ISP.MI",
+     "name": "INTESA SANPAOLO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.7,
+     "ishEUR": 6.18
+    },
+    {
+     "t": "SAN.PA",
+     "name": "SANOFI SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.7,
+     "ishEUR": 83.74
+    },
+    {
+     "t": "DTE.DE",
+     "name": "DEUTSCHE TELEKOM N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.66,
+     "ishEUR": 25.91
+    },
+    {
+     "t": "INGA.AS",
+     "name": "ING GROEP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.61,
+     "ishEUR": 28.72
+    },
+    {
+     "t": "ABI.BR",
+     "name": "ANHEUSER-BUSCH INBEV SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.58,
+     "ishEUR": 75.7
+    },
+    {
+     "t": "CS.PA",
+     "name": "AXA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.58,
+     "ishEUR": 44.68
+    },
+    {
+     "t": "ENEL.MI",
+     "name": "ENEL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.55,
+     "ishEUR": 9.69
+    },
+    {
+     "t": "MUV2.DE",
+     "name": "MUENCHENER RUECKVERSICHERUNGS-GESE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.53,
+     "ishEUR": 569.2
+    },
+    {
+     "t": "ITX.MC",
+     "name": "INDUSTRIA DE DISENO TEXTIL SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.48,
+     "ishEUR": 59.04
+    },
+    {
+     "t": "DG.PA",
+     "name": "VINCI SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.46,
+     "ishEUR": 111.6
+    },
+    {
+     "t": "EL.PA",
+     "name": "ESSILORLUXOTTICA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.45,
+     "ishEUR": 193.8
+    },
+    {
+     "t": "DBK.DE",
+     "name": "DEUTSCHE BANK AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.44,
+     "ishEUR": 31.56
+    },
+    {
+     "t": "IFX.DE",
+     "name": "INFINEON TECHNOLOGIES AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.44,
+     "ishEUR": 45.76
+    },
+    {
+     "t": "DB1.DE",
+     "name": "DEUTSCHE BOERSE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.44,
+     "ishEUR": 320
+    },
+    {
+     "t": "NDA-FI.HE",
+     "name": "NORDEA BANK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.41,
+     "ishEUR": 16.36
+    },
+    {
+     "t": "DHL.DE",
+     "name": "DHL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.4,
+     "ishEUR": 58.02
+    },
+    {
+     "t": "BAYN.DE",
+     "name": "BAYER AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.4,
+     "ishEUR": 55.58
+    },
+    {
+     "t": "ARGX.BR",
+     "name": "ARGENX",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.38,
+     "ishEUR": 815.8
+    },
+    {
+     "t": "ENI.MI",
+     "name": "ENI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.38,
+     "ishEUR": 25.05
+    },
+    {
+     "t": "GLE.PA",
+     "name": "SOCIETE GENERALE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.36,
+     "ishEUR": 64.41
+    },
+    {
+     "t": "BAS.DE",
+     "name": "BASF N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.36,
+     "ishEUR": 54.28
+    },
+    {
+     "t": "PRX.AS",
+     "name": "PROSUS NV CLASS N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.35,
+     "ishEUR": 37.56
+    },
+    {
+     "t": "ENGI.PA",
+     "name": "ENGIE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.35,
+     "ishEUR": 24.2
+    },
+    {
+     "t": "G.MI",
+     "name": "ASSICURAZIONI GENERALI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.35,
+     "ishEUR": 43.73
+    },
+    {
+     "t": "RMS.PA",
+     "name": "HERMES INTERNATIONAL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.35,
+     "ishEUR": 1362.5
+    },
+    {
+     "t": "RACE.MI",
+     "name": "FERRARI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.34,
+     "ishEUR": 373.85
+    },
+    {
+     "t": "BN.PA",
+     "name": "DANONE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.32,
+     "ishEUR": 67.12
+    },
+    {
+     "t": "EOAN.DE",
+     "name": "E.ON N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.32,
+     "ishEUR": 19.09
+    },
+    {
+     "t": "CABK.MC",
+     "name": "CAIXABANK SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.31,
+     "ishEUR": 11.76
+    },
+    {
+     "t": "RWE.DE",
+     "name": "RWE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.3,
+     "ishEUR": 57.64
+    },
+    {
+     "t": "NOKIA.HE",
+     "name": "NOKIA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.28,
+     "ishEUR": 6.98
+    },
+    {
+     "t": "RHM.DE",
+     "name": "RHEINMETALL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.28,
+     "ishEUR": 812.7
+    },
+    {
+     "t": "SGO.PA",
+     "name": "COMPAGNIE DE SAINT GOBAIN SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.28,
+     "ishEUR": 74.1
+    },
+    {
+     "t": "UCB.BR",
+     "name": "UCB SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.27,
+     "ishEUR": 290.9
+    },
+    {
+     "t": "LR.PA",
+     "name": "LEGRAND SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.25,
+     "ishEUR": 129.65
+    },
+    {
+     "t": "EBS.VI",
+     "name": "ERSTE GROUP BANK AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.25,
+     "ishEUR": 111.5
+    },
+    {
+     "t": "REP.MC",
+     "name": "REPSOL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.24,
+     "ishEUR": 29.9
+    },
+    {
+     "t": "ASM.AS",
+     "name": "ASM INTERNATIONAL NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.24,
+     "ishEUR": 651
+    },
+    {
+     "t": "ADS.DE",
+     "name": "ADIDAS N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.23,
+     "ishEUR": 174.55
+    },
+    {
+     "t": "ORA.PA",
+     "name": "ORANGE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.23,
+     "ishEUR": 15.11
+    },
+    {
+     "t": "AD.AS",
+     "name": "KONINKLIJKE AHOLD DELHAIZE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.23,
+     "ishEUR": 34.22
+    },
+    {
+     "t": "PRY.MI",
+     "name": "PRYSMIAN",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.22,
+     "ishEUR": 101
+    },
+    {
+     "t": "MBG.DE",
+     "name": "MERCEDES-BENZ GROUP N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.22,
+     "ishEUR": 41.56
+    },
+    {
+     "t": "ADYEN.AS",
+     "name": "ADYEN",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.21,
+     "ishEUR": 901.2
+    },
+    {
+     "t": "ABN.AS",
+     "name": "ABN AMRO BANK NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.2,
+     "ishEUR": 41
+    },
+    {
+     "t": "AMS.MC",
+     "name": "AMADEUS IT GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.19,
+     "ishEUR": 60.52
+    },
+    {
+     "t": "KBC.BR",
+     "name": "KBC GROEP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.19,
+     "ishEUR": 117.4
+    },
+    {
+     "t": "FER.MC",
+     "name": "FERROVIAL NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.19,
+     "ishEUR": 52.78
+    },
+    {
+     "t": "STMMI.MI",
+     "name": "STMICROELECTRONICS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.18,
+     "ishEUR": 37.63
+    },
+    {
+     "t": "BMPS.MI",
+     "name": "BANCA MONTE DEI PASCHI DI SIENA SP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.18,
+     "ishEUR": 11.25
+    },
+    {
+     "t": "SAMPO.HE",
+     "name": "SAMPO CLASS A",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.18,
+     "ishEUR": 9.78
+    },
+    {
+     "t": "PUB.PA",
+     "name": "PUBLICIS GROUPE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.18,
+     "ishEUR": 102.95
+    },
+    {
+     "t": "MT.AS",
+     "name": "ARCELORMITTAL SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.18,
+     "ishEUR": 54.82
+    },
+    {
+     "t": "KNEBV.HE",
+     "name": "KONE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.17,
+     "ishEUR": 58.24
+    },
+    {
+     "t": "HEIA.AS",
+     "name": "HEINEKEN NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.17,
+     "ishEUR": 83.58
+    },
+    {
+     "t": "ML.PA",
+     "name": "MICHELIN",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.17,
+     "ishEUR": 33.2
+    },
+    {
+     "t": "VIE.PA",
+     "name": "VEOLIA ENVIRON. SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.17,
+     "ishEUR": 33.78
+    },
+    {
+     "t": "HEI.DE",
+     "name": "HEIDELBERG MATERIALS AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.16,
+     "ishEUR": 173.8
+    },
+    {
+     "t": "FRE.DE",
+     "name": "FRESENIUS N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.16,
+     "ishEUR": 52.48
+    },
+    {
+     "t": "CAP.PA",
+     "name": "CAPGEMINI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.16,
+     "ishEUR": 126.9
+    },
+    {
+     "t": "RYA.IR",
+     "name": "RYANAIR HOLDINGS PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.16,
+     "ishEUR": 25.69
+    },
+    {
+     "t": "HO.PA",
+     "name": "THALES SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.16,
+     "ishEUR": 221.7
+    },
+    {
+     "t": "PHIA.AS",
+     "name": "KONINKLIJKE PHILIPS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.16,
+     "ishEUR": 27.33
+    },
+    {
+     "t": "DTG.DE",
+     "name": "DAIMLER TRUCK HOLDING E AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.16,
+     "ishEUR": 40.49
+    },
+    {
+     "t": "WKL.AS",
+     "name": "WOLTERS KLUWER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.15,
+     "ishEUR": 90.08
+    },
+    {
+     "t": "AENA.MC",
+     "name": "AENA SME SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.15,
+     "ishEUR": 28.28
+    },
+    {
+     "t": "NN.AS",
+     "name": "NN GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.15,
+     "ishEUR": 79.18
+    },
+    {
+     "t": "BMW.DE",
+     "name": "BMW",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.15,
+     "ishEUR": 59.36
+    },
+    {
+     "t": "BPE.MI",
+     "name": "BPER BANCA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.15,
+     "ishEUR": 12.91
+    },
+    {
+     "t": "LDO.MI",
+     "name": "LEONARDO FINMECCANICA SPA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.14,
+     "ishEUR": 48.07
+    },
+    {
+     "t": "MTX.DE",
+     "name": "MTU AERO ENGINES HOLDING AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.14,
+     "ishEUR": 346.7
+    },
+    {
+     "t": "PST.MI",
+     "name": "POSTE ITALIANE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.14,
+     "ishEUR": 24.52
+    },
+    {
+     "t": "MRK.DE",
+     "name": "MERCK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.14,
+     "ishEUR": 148.75
+    },
+    {
+     "t": "DSY.PA",
+     "name": "DASSAULT SYSTEMES",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.14,
+     "ishEUR": 25.95
+    },
+    {
+     "t": "UMG.AS",
+     "name": "UNIVERSAL MUSIC GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.14,
+     "ishEUR": 17.09
+    },
+    {
+     "t": "DSFIR.AS",
+     "name": "DSM FIRMENICH AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.14,
+     "ishEUR": 109.8
+    },
+    {
+     "t": "BIRG.IR",
+     "name": "BANK OF IRELAND GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.13,
+     "ishEUR": 18.93
+    },
+    {
+     "t": "ACS.MC",
+     "name": "ACS ACTIVIDADES DE CONSTRUCCION Y",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.13,
+     "ishEUR": 87
+    },
+    {
+     "t": "HNR1.DE",
+     "name": "HANNOVER RUECK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.13,
+     "ishEUR": 293
+    },
+    {
+     "t": "ACA.PA",
+     "name": "CREDIT AGRICOLE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.13,
+     "ishEUR": 15.84
+    },
+    {
+     "t": "SAB.MC",
+     "name": "BANCO DE SABADELL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.13,
+     "ishEUR": 3.6
+    },
+    {
+     "t": "KPN.AS",
+     "name": "KONINKLIJKE KPN NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.12,
+     "ishEUR": 4.4
+    },
+    {
+     "t": "SHL.DE",
+     "name": "SIEMENS HEALTHINEERS AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.12,
+     "ishEUR": 44.66
+    },
+    {
+     "t": "KRZ.IR",
+     "name": "KERRY GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.12,
+     "ishEUR": 98
+    },
+    {
+     "t": "CBK.DE",
+     "name": "COMMERZBANK AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.11,
+     "ishEUR": 38.21
+    },
+    {
+     "t": "A5G.IR",
+     "name": "AIB GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.11,
+     "ishEUR": 11.2
+    },
+    {
+     "t": "EDP.LS",
+     "name": "EDP ENERGIAS DE PORTUGAL",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.11,
+     "ishEUR": 5
+    },
+    {
+     "t": "NTGY.MC",
+     "name": "NATURGY ENERGY GROUP SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.11,
+     "ishEUR": 29.54
+    },
+    {
+     "t": "KRX.IR",
+     "name": "KINGSPAN GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.11,
+     "ishEUR": 95.15
+    },
+    {
+     "t": "VOW3.DE",
+     "name": "VOLKSWAGEN NON-VOTING PREF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.11,
+     "ishEUR": 69.84
+    },
+    {
+     "t": "RI.PA",
+     "name": "PERNOD RICARD SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.1,
+     "ishEUR": 71.14
+    },
+    {
+     "t": "ELE.MC",
+     "name": "ENDESA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.1,
+     "ishEUR": 44.2
+    },
+    {
+     "t": "ENX.PA",
+     "name": "EURONEXT NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.1,
+     "ishEUR": 170
+    },
+    {
+     "t": "TRN.MI",
+     "name": "TERNA RETE ELETTRICA NAZIONALE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.1,
+     "ishEUR": 9.77
+    },
+    {
+     "t": "ETE.AT",
+     "name": "NATIONAL BANK OF GREECE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.1,
+     "ishEUR": 16.28
+    },
+    {
+     "t": "FBK.MI",
+     "name": "FINECOBANK BANCA FINECO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.1,
+     "ishEUR": 22.38
+    },
+    {
+     "t": "TEF.MC",
+     "name": "TELEFONICA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.1,
+     "ishEUR": 3.38
+    },
+    {
+     "t": "KER.PA",
+     "name": "KERING SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.1,
+     "ishEUR": 187.2
+    },
+    {
+     "t": "BAMI.MI",
+     "name": "BANCO BPM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.1,
+     "ishEUR": 13.45
+    },
+    {
+     "t": "CLNX.MC",
+     "name": "CELLNEX TELECOM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.1,
+     "ishEUR": 26.68
+    },
+    {
+     "t": "SRG.MI",
+     "name": "SNAM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.09,
+     "ishEUR": 6.2
+    },
+    {
+     "t": "SY1.DE",
+     "name": "SYMRISE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.09,
+     "ishEUR": 96.34
+    },
+    {
+     "t": "HEN3.DE",
+     "name": "HENKEL & KGAA PREF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.09,
+     "ishEUR": 83.22
+    },
+    {
+     "t": "WRT1V.HE",
+     "name": "WARTSILA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.09,
+     "ishEUR": 25.81
+    },
+    {
+     "t": "BG.VI",
+     "name": "BAWAG GROUP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.09,
+     "ishEUR": 162.7
+    },
+    {
+     "t": "VNA.DE",
+     "name": "VONOVIA SE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.09,
+     "ishEUR": 16.9
+    },
+    {
+     "t": "LOTB.BR",
+     "name": "LOTUS BAKERIES NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.09,
+     "ishEUR": 14060
+    },
+    {
+     "t": "UNI.MI",
+     "name": "UNIPOL ASSICURAZIONI SPA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.09,
+     "ishEUR": 25.27
+    },
+    {
+     "t": "AGS.BR",
+     "name": "AGEAS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.09,
+     "ishEUR": 77.5
+    },
+    {
+     "t": "EN.PA",
+     "name": "BOUYGUES SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.09,
+     "ishEUR": 42.29
+    },
+    {
+     "t": "NESTE.HE",
+     "name": "NESTE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.09,
+     "ishEUR": 27.45
+    },
+    {
+     "t": "ASRNL.AS",
+     "name": "ASR NEDERLAND",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.08,
+     "ishEUR": 77.26
+    },
+    {
+     "t": "ORNBV.HE",
+     "name": "ORION CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.08,
+     "ishEUR": 102
+    },
+    {
+     "t": "METSO.HE",
+     "name": "METSO CORPORATION",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.08,
+     "ishEUR": 16.99
+    },
+    {
+     "t": "EUROB.AT",
+     "name": "EUROBANK SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.08,
+     "ishEUR": 4.48
+    },
+    {
+     "t": "BESI.AS",
+     "name": "BE SEMICONDUCTOR INDUSTRIES NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.08,
+     "ishEUR": 143.4
+    },
+    {
+     "t": "AKZA.AS",
+     "name": "AKZO NOBEL NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.08,
+     "ishEUR": 62.9
+    },
+    {
+     "t": "BVI.PA",
+     "name": "BUREAU VERITAS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 29.95
+    },
+    {
+     "t": "ERF.PA",
+     "name": "EUROFINS SCIENTIFIC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 88.64
+    },
+    {
+     "t": "FGR.PA",
+     "name": "EIFFAGE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 106
+    },
+    {
+     "t": "AC.PA",
+     "name": "ACCOR SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 50
+    },
+    {
+     "t": "TPEIR.AT",
+     "name": "PIRAEUS BANK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.08,
+     "ishEUR": 9.63
+    },
+    {
+     "t": "MONC.MI",
+     "name": "MONCLER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.08,
+     "ishEUR": 45.37
+    },
+    {
+     "t": "OMV.VI",
+     "name": "OMV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.08,
+     "ishEUR": 71.75
+    },
+    {
+     "t": "FORTUM.HE",
+     "name": "FORTUM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.08,
+     "ishEUR": 23.19
+    },
+    {
+     "t": "URW.PA",
+     "name": "UNIBAIL RODAMCO WE STAPLED UNITS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.08,
+     "ishEUR": 94.16
+    },
+    {
+     "t": "G1A.DE",
+     "name": "GEA GROUP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.07,
+     "ishEUR": 69.35
+    },
+    {
+     "t": "UPM.HE",
+     "name": "UPM-KYMMENE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.07,
+     "ishEUR": 22.46
+    },
+    {
+     "t": "BCP.LS",
+     "name": "BANCO COMERCIAL PORTUGUES SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.07,
+     "ishEUR": 1.08
+    },
+    {
+     "t": "HEIO.AS",
+     "name": "HEINEKEN HOLDING NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.07,
+     "ishEUR": 79.35
+    },
+    {
+     "t": "QIA.DE",
+     "name": "QIAGEN",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.07,
+     "ishEUR": 45.2
+    },
+    {
+     "t": "BKT.MC",
+     "name": "BANKINTER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.07,
+     "ishEUR": 14.41
+    },
+    {
+     "t": "AGN.AS",
+     "name": "AEGON",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.07,
+     "ishEUR": 7.53
+    },
+    {
+     "t": "MICC.AS",
+     "name": "MAGNUM ICE CREAM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.06,
+     "ishEUR": 17.6
+    },
+    {
+     "t": "CA.PA",
+     "name": "CARREFOUR SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.06,
+     "ishEUR": 13.65
+    },
+    {
+     "t": "TEN.MI",
+     "name": "TENARIS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.06,
+     "ishEUR": 26.64
+    },
+    {
+     "t": "STLAM.MI",
+     "name": "STELLANTIS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.06,
+     "ishEUR": 4.02
+    },
+    {
+     "t": "LI.PA",
+     "name": "KLEPIERRE REIT SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.06,
+     "ishEUR": 36.8
+    },
+    {
+     "t": "FME.DE",
+     "name": "FRESENIUS MEDICAL CARE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 42.23
+    },
+    {
+     "t": "A5G.IR",
+     "name": "AIB GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.06,
+     "ishEUR": 11.2
+    },
+    {
+     "t": "GALP.LS",
+     "name": "GALP ENERGIA SGPS SA CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.06,
+     "ishEUR": 19.08
+    },
+    {
+     "t": "RXL.PA",
+     "name": "REXEL SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.06,
+     "ishEUR": 34.45
+    },
+    {
+     "t": "TLX.DE",
+     "name": "TALANX AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 129.9
+    },
+    {
+     "t": "BEI.DE",
+     "name": "BEIERSDORF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 85.26
+    },
+    {
+     "t": "CON.DE",
+     "name": "CONTINENTAL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 70.34
+    },
+    {
+     "t": "SPIE.PA",
+     "name": "SPIE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.06,
+     "ishEUR": 44.54
+    },
+    {
+     "t": "ELI.BR",
+     "name": "ELIA GROUP SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.06,
+     "ishEUR": 134
+    },
+    {
+     "t": "SRT3.DE",
+     "name": "SARTORIUS PREF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.06,
+     "ishEUR": 290
+    },
+    {
+     "t": "RBI.VI",
+     "name": "RAIFFEISEN BANK INTERNATIONAL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.05,
+     "ishEUR": 58.55
+    },
+    {
+     "t": "HOT.DE",
+     "name": "HOCHTIEF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 365.6
+    },
+    {
+     "t": "BNR.DE",
+     "name": "BRENNTAG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 61.9
+    },
+    {
+     "t": "ALPHA.AT",
+     "name": "ALPHA BANK SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.05,
+     "ishEUR": 4.53
+    },
+    {
+     "t": "KESKOB.HE",
+     "name": "KESKO CORP CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.05,
+     "ishEUR": 25.66
+    },
+    {
+     "t": "PPC.AT",
+     "name": "PUBLIC POWER CORPORATION SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.05,
+     "ishEUR": 23.14
+    },
+    {
+     "t": "EXO.AS",
+     "name": "EXOR NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.05,
+     "ishEUR": 73.35
+    },
+    {
+     "t": "DHER.DE",
+     "name": "DELIVERY HERO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 37
+    },
+    {
+     "t": "ZAL.DE",
+     "name": "ZALANDO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 27.72
+    },
+    {
+     "t": "DIM.PA",
+     "name": "SARTORIUS STEDIM BIOTECH SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.05,
+     "ishEUR": 225.8
+    },
+    {
+     "t": "GTT.PA",
+     "name": "GAZTRANSPORT & TECHNIGAZ SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.05,
+     "ishEUR": 181.3
+    },
+    {
+     "t": "LTMC.MI",
+     "name": "LOTTOMATICA GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.05,
+     "ishEUR": 27.57
+    },
+    {
+     "t": "G24.DE",
+     "name": "SCOUT24 N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 89.1
+    },
+    {
+     "t": "AED.BR",
+     "name": "AEDIFICA NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.05,
+     "ishEUR": 65.65
+    },
+    {
+     "t": "KBX.DE",
+     "name": "KNORR BREMSE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.05,
+     "ishEUR": 94.45
+    },
+    {
+     "t": "AMUN.PA",
+     "name": "AMUNDI SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.05,
+     "ishEUR": 93.95
+    },
+    {
+     "t": "RNO.PA",
+     "name": "RENAULT SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 28.9
+    },
+    {
+     "t": "KCR.HE",
+     "name": "KONECRANES",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.04,
+     "ishEUR": 28.02
+    },
+    {
+     "t": "STERV.HE",
+     "name": "STORA ENSO CLASS R",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.04,
+     "ishEUR": 9.65
+    },
+    {
+     "t": "GBLB.BR",
+     "name": "GROUPE BRUXELLES LAMBERT NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.04,
+     "ishEUR": 79.05
+    },
+    {
+     "t": "AM.PA",
+     "name": "DASSAULT AVIATION SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 301
+    },
+    {
+     "t": "TKA.DE",
+     "name": "THYSSENKRUPP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 11.94
+    },
+    {
+     "t": "IG.MI",
+     "name": "ITALGAS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.04,
+     "ishEUR": 9.12
+    },
+    {
+     "t": "ELISA.HE",
+     "name": "ELISA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.04,
+     "ishEUR": 34
+    },
+    {
+     "t": "IMCD.AS",
+     "name": "IMCD NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.04,
+     "ishEUR": 102.75
+    },
+    {
+     "t": "IPN.PA",
+     "name": "IPSEN SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 158.7
+    },
+    {
+     "t": "SPM.MI",
+     "name": "SAIPEM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.04,
+     "ishEUR": 4.24
+    },
+    {
+     "t": "SCR.PA",
+     "name": "SCOR",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 34.68
+    },
+    {
+     "t": "ANA.MC",
+     "name": "ACCIONA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.04,
+     "ishEUR": 218
+    },
+    {
+     "t": "EDEN.PA",
+     "name": "EDENRED",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 24.6
+    },
+    {
+     "t": "ACKB.BR",
+     "name": "ACKERMANS & VAN HAAREN NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.04,
+     "ishEUR": 268
+    },
+    {
+     "t": "SYENS.BR",
+     "name": "SYENSQO NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.04,
+     "ishEUR": 76.7
+    },
+    {
+     "t": "JMT.LS",
+     "name": "JERONIMO MARTINS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.04,
+     "ishEUR": 19.33
+    },
+    {
+     "t": "NDX1.DE",
+     "name": "NORDEX",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 42.98
+    },
+    {
+     "t": "EVK.DE",
+     "name": "EVONIK INDUSTRIES AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 21.12
+    },
+    {
+     "t": "ANDR.VI",
+     "name": "ANDRITZ AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.04,
+     "ishEUR": 81.8
+    },
+    {
+     "t": "P911.DE",
+     "name": "DR ING HC F PORSCHE PRF AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 47.06
+    },
+    {
+     "t": "RED.MC",
+     "name": "REDEIA CORPORACION SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.04,
+     "ishEUR": 15.66
+    },
+    {
+     "t": "BMED.MI",
+     "name": "BANCA MEDIOLANUM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.04,
+     "ishEUR": 23.06
+    },
+    {
+     "t": "MRL.MC",
+     "name": "MERLIN PROPERTIES REIT",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.04,
+     "ishEUR": 11.6
+    },
+    {
+     "t": "LHA.DE",
+     "name": "DEUTSCHE LUFTHANSA AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.04,
+     "ishEUR": 8.44
+    },
+    {
+     "t": "GET.PA",
+     "name": "GETLINK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 20.22
+    },
+    {
+     "t": "ABVX.PA",
+     "name": "ABIVAX SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 77.15
+    },
+    {
+     "t": "SW.PA",
+     "name": "SODEXO SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.04,
+     "ishEUR": 60.4
+    },
+    {
+     "t": "IDR.MC",
+     "name": "INDRA SISTEMAS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.04,
+     "ishEUR": 56.76
+    },
+    {
+     "t": "TUB.BR",
+     "name": "FINANCIERE DE TUBIZE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.04,
+     "ishEUR": 240
+    },
+    {
+     "t": "VER.VI",
+     "name": "VERBUND AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.04,
+     "ishEUR": 72.7
+    },
+    {
+     "t": "HAG.DE",
+     "name": "HENSOLDT AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 77.44
+    },
+    {
+     "t": "BIM.PA",
+     "name": "BIOMERIEUX SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 93.3
+    },
+    {
+     "t": "VOE.VI",
+     "name": "VOESTALPINE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.03,
+     "ishEUR": 40.14
+    },
+    {
+     "t": "EDPR.LS",
+     "name": "EDP RENEWABLES SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Portugal",
+     "w": 0.03,
+     "ishEUR": 14.49
+    },
+    {
+     "t": "RAND.AS",
+     "name": "RANDSTAD HOLDING",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.03,
+     "ishEUR": 41.24
+    },
+    {
+     "t": "MTLN.AT",
+     "name": "METLEN ENERGY & METALS PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.03,
+     "ishEUR": 45.2
+    },
+    {
+     "t": "TE.PA",
+     "name": "TECHNIP ENERGIES",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 34.12
+    },
+    {
+     "t": "NEX.PA",
+     "name": "NEXANS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 123.5
+    },
+    {
+     "t": "UMI.BR",
+     "name": "UMICORE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 18.47
+    },
+    {
+     "t": "VK.PA",
+     "name": "VALLOUREC SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 18.91
+    },
+    {
+     "t": "VALMT.HE",
+     "name": "VALMET CORP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.03,
+     "ishEUR": 28.88
+    },
+    {
+     "t": "DIE.BR",
+     "name": "DIETEREN (D) SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 178.6
+    },
+    {
+     "t": "ELIS.PA",
+     "name": "ELIS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 24.12
+    },
+    {
+     "t": "SBMO.AS",
+     "name": "SBM OFFSHORE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.03,
+     "ishEUR": 32.38
+    },
+    {
+     "t": "CPR.MI",
+     "name": "DAVIDE CAMPARI MILANO NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 6.64
+    },
+    {
+     "t": "SOF.BR",
+     "name": "SOFINA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 267.6
+    },
+    {
+     "t": "AZM.MI",
+     "name": "AZIMUT HOLDING",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 35.82
+    },
+    {
+     "t": "TEP.PA",
+     "name": "TELEPERFORMANCE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 68.44
+    },
+    {
+     "t": "NEM.DE",
+     "name": "NEMETSCHEK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 64.75
+    },
+    {
+     "t": "PAH3.DE",
+     "name": "PORSCHE AUTOMOBIL HOLDING PREF",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 26.13
+    },
+    {
+     "t": "MAP.MC",
+     "name": "MAPFRE SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.03,
+     "ishEUR": 4.13
+    },
+    {
+     "t": "GL9.IR",
+     "name": "GLANBIA PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Ireland",
+     "w": 0.03,
+     "ishEUR": 19.42
+    },
+    {
+     "t": "LEG.DE",
+     "name": "LEG IMMOBILIEN N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 50.9
+    },
+    {
+     "t": "A2A.MI",
+     "name": "A2A",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 2.43
+    },
+    {
+     "t": "MOH.AT",
+     "name": "MOTOR OIL (HELLAS) CORINTH REFINER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.03,
+     "ishEUR": 60
+    },
+    {
+     "t": "UNI.MC",
+     "name": "UNICAJA BANCO SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.03,
+     "ishEUR": 3.31
+    },
+    {
+     "t": "AKE.PA",
+     "name": "ARKEMA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 57.65
+    },
+    {
+     "t": "TPRO.MI",
+     "name": "TECHNOPROBE SPA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 20.74
+    },
+    {
+     "t": "CVC.AS",
+     "name": "CVC CAPITAL PARTNERS PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.03,
+     "ishEUR": 14.46
+    },
+    {
+     "t": "ALO.PA",
+     "name": "ALSTOM SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 10.72
+    },
+    {
+     "t": "AALB.AS",
+     "name": "AALBERTS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.03,
+     "ishEUR": 40.18
+    },
+    {
+     "t": "EVD.DE",
+     "name": "CTS EVENTIM AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 62
+    },
+    {
+     "t": "KBCA.BR",
+     "name": "KBC ANCORA NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 94.2
+    },
+    {
+     "t": "WDP.BR",
+     "name": "WAREHOUSES DE PAUW NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Belgium",
+     "w": 0.03,
+     "ishEUR": 19.4
+    },
+    {
+     "t": "BGN.MI",
+     "name": "BANCA GENERALI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.03,
+     "ishEUR": 60.45
+    },
+    {
+     "t": "ACX.MC",
+     "name": "ACERINOX",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.03,
+     "ishEUR": 14.94
+    },
+    {
+     "t": "TUI1.DE",
+     "name": "TUI N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "United Kingdom",
+     "w": 0.03,
+     "ishEUR": 7.57
+    },
+    {
+     "t": "NDA.DE",
+     "name": "AURUBIS AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 137.5
+    },
+    {
+     "t": "AYV.PA",
+     "name": "AYVENS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 9.62
+    },
+    {
+     "t": "AIXA.DE",
+     "name": "AIXTRON",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.03,
+     "ishEUR": 30.41
+    },
+    {
+     "t": "ENG.MC",
+     "name": "ENAGAS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.03,
+     "ishEUR": 17.8
+    },
+    {
+     "t": "GEKTERNA.AT",
+     "name": "GEK TERNA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.03,
+     "ishEUR": 39.26
+    },
+    {
+     "t": "ADP.PA",
+     "name": "AEROPORTS DE PARIS SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.03,
+     "ishEUR": 117.1
+    },
+    {
+     "t": "VSURE.ST",
+     "name": "VERISURE PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Sweden",
+     "w": 0.02,
+     "ishEUR": 10.8
+    },
+    {
+     "t": "BAMNB.AS",
+     "name": "BAM GROEP KONINKLIJKE NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 12.61
+    },
+    {
+     "t": "BZU.MI",
+     "name": "BUZZI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 42.39
+    },
+    {
+     "t": "DLG.MI",
+     "name": "DELONGHI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 45.32
+    },
+    {
+     "t": "NEXI.MI",
+     "name": "NEXI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 4.5
+    },
+    {
+     "t": "IP.MI",
+     "name": "INTERPUMP GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 38.24
+    },
+    {
+     "t": "RAA.DE",
+     "name": "RATIONAL AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 623.5
+    },
+    {
+     "t": "GFC.PA",
+     "name": "GECINA SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 65.95
+    },
+    {
+     "t": "GRF.MC",
+     "name": "GRIFOLS CLASS A",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.02,
+     "ishEUR": 11.24
+    },
+    {
+     "t": "BELA.AT",
+     "name": "JUMBO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.02,
+     "ishEUR": 27.46
+    },
+    {
+     "t": "HER.MI",
+     "name": "HERA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 3.74
+    },
+    {
+     "t": "REY.MI",
+     "name": "REPLY",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 130.6
+    },
+    {
+     "t": "ARCAD.AS",
+     "name": "ARCADIS NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 46.2
+    },
+    {
+     "t": "PIRC.MI",
+     "name": "PIRELLI & C",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 6.8
+    },
+    {
+     "t": "SOP.PA",
+     "name": "SOPRA STERIA GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 196.9
+    },
+    {
+     "t": "VPK.AS",
+     "name": "KONINKLIJKE VOPAK",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 53
+    },
+    {
+     "t": "R3NK.DE",
+     "name": "RENK GROUP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 34.2
+    },
+    {
+     "t": "BC.MI",
+     "name": "BRUNELLO CUCINELLI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 86.62
+    },
+    {
+     "t": "PUM.DE",
+     "name": "PUMA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 26.82
+    },
+    {
+     "t": "ALLFG.AS",
+     "name": "ALLFUNDS GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 9.91
+    },
+    {
+     "t": "FPE3.DE",
+     "name": "FUCHS PREF",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 42.72
+    },
+    {
+     "t": "FNTN.DE",
+     "name": "FREENET AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 23.34
+    },
+    {
+     "t": "PUIG.MC",
+     "name": "PUIG BRANDS SA CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.02,
+     "ishEUR": 19.84
+    },
+    {
+     "t": "BC8.DE",
+     "name": "BECHTLE AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 33.42
+    },
+    {
+     "t": "SOI.PA",
+     "name": "SOITEC SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 94.34
+    },
+    {
+     "t": "MANTA.HE",
+     "name": "MANDATUM",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.02,
+     "ishEUR": 5.9
+    },
+    {
+     "t": "RUI.PA",
+     "name": "RUBIS",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 35.4
+    },
+    {
+     "t": "ATS.VI",
+     "name": "AT & S AUSTRIA TECHNOLOGIE & SYSTE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Austria",
+     "w": 0.02,
+     "ishEUR": 105.8
+    },
+    {
+     "t": "HTO.AT",
+     "name": "HELLENIC TELECOMMUNICATIONS ORGANI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Greece",
+     "w": 0.02,
+     "ishEUR": 18.78
+    },
+    {
+     "t": "HUH1V.HE",
+     "name": "HUHTAMAKI",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.02,
+     "ishEUR": 26.68
+    },
+    {
+     "t": "FDJU.PA",
+     "name": "FDJ UNITED",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 21.68
+    },
+    {
+     "t": "BOL.PA",
+     "name": "BOLLORE",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 3.76
+    },
+    {
+     "t": "COV.PA",
+     "name": "COVIVIO SA",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 45.42
+    },
+    {
+     "t": "AG1.DE",
+     "name": "AUTO1 GROUP",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 17.45
+    },
+    {
+     "t": "SCYR.MC",
+     "name": "SACYR",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Spain",
+     "w": 0.02,
+     "ishEUR": 4.05
+    },
+    {
+     "t": "FR.PA",
+     "name": "VALEO",
+     "cur": "EUR",
+     "pence": false,
+     "country": "France",
+     "w": 0.02,
+     "ishEUR": 10.96
+    },
+    {
+     "t": "KGX.DE",
+     "name": "KION GROUP AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 34.32
+    },
+    {
+     "t": "IVG.MI",
+     "name": "IVECO GROUP NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Italy",
+     "w": 0.02,
+     "ishEUR": 14.35
+    },
+    {
+     "t": "TEG.DE",
+     "name": "TAG IMMOBILIEN AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 11.77
+    },
+    {
+     "t": "SDF.DE",
+     "name": "K+S N AG",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 13.36
+    },
+    {
+     "t": "GBF.DE",
+     "name": "BILFINGER",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 61.4
+    },
+    {
+     "t": "CSG.AS",
+     "name": "CSG CLASS A NV",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Netherlands",
+     "w": 0.02,
+     "ishEUR": 13.03
+    },
+    {
+     "t": "FTK.DE",
+     "name": "FLATEXDEGIRO N",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Germany",
+     "w": 0.02,
+     "ishEUR": 22.5
+    },
+    {
+     "t": "HIAB.HE",
+     "name": "HIAB CORPORATION CLASS B",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0.01,
+     "ishEUR": 48.66
+    },
+    {
+     "t": "WISA.HE",
+     "name": "WISA GROUP PLC",
+     "cur": "EUR",
+     "pence": false,
+     "country": "Finland",
+     "w": 0,
+     "ishEUR": 0.56
+    }
+   ]
+  }
+ }
+}
