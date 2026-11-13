@@ -5,7 +5,8 @@ import { APP_VERSION } from "./version.js";
 import { api, esc, px, pct, cls } from "./api.js";
 import { parse, defaultFn, suggestions, securityQuery } from "./commands.js";
 import { FUNCS } from "./fn/index.js";
-import { loadPrefs, countApp } from "./prefs.js";
+import { loadPrefs, countApp, onPrefs, getPrefs, getUsage } from "./prefs.js";
+import { barApps, barCandidates } from "./prefs-core.js";
 import { lookupList, bbgCode } from "./securities.js";
 import {
   tableBlocks,
@@ -323,36 +324,31 @@ const fkeyOf = Object.fromEntries([
   ...Object.entries(FKEYS).map(([f, k]) => [k, f]),
   ["HELP", "F1"],
 ]);
-const KEYS = [
-  ["GOVT", "y"],
-  ["EQUITY", "y"],
-  ["CMDTY", "y"],
-  ["INDEX", "y"],
-  ["CRNCY", "y"],
-  ["WEI"],
-  ["TOP"],
-  ["ECO"],
-  ["GC"],
-  ["BTMM"],
-  ["WIRP"],
-  ["FXC"],
-  ["GLCO"],
-  ["CRYPTO"],
-  ["MOST"],
-  ["EQS"],
-  ["W"],
-  ["ALRT"],
-  ["HELP"],
-  ["DATA"],
-];
-$("#keys").innerHTML =
-  KEYS.filter(([k, y]) => y || FUNCS[k])
-    .map(
-      ([k, y]) =>
-        `<button class="key ${y ? "" : "fn"}" data-k="${k}"${fkeyOf[k] ? ` title="${fkeyOf[k]} on the keyboard"` : ""}>${fkeyOf[k] ? `<small>${fkeyOf[k]}</small>` : ""}${k}</button>`,
-    )
-    .join("") +
-  `<span style="flex:1"></span><button class="key fn" data-l="1">1</button><button class="key fn" data-l="2">2</button><button class="key fn" data-l="4">4</button>`;
+// Yellow sector keys stay fixed on the left; the app keys after them come from SETTINGS:
+// auto = most used first, custom = the user's own pick and order.
+const YELLOW = ["GOVT", "EQUITY", "CMDTY", "INDEX", "CRNCY"];
+function renderKeys() {
+  const usage = getUsage();
+  const apps = barApps(getPrefs(), usage, barCandidates(FUNCS));
+  const yellow = YELLOW.map(
+    (k) => `<button class="key" data-k="${k}"${fkeyOf[k] ? ` title="${fkeyOf[k]} on the keyboard"` : ""}>${fkeyOf[k] ? `<small>${fkeyOf[k]}</small>` : ""}${k}</button>`,
+  );
+  const fns = apps.map((k) => {
+    const tip = [FUNCS[k]?.name, fkeyOf[k] ? `${fkeyOf[k]} on the keyboard` : "", usage[k] ? `used ${usage[k]}×` : ""].filter(Boolean).join(" · ");
+    return `<button class="key fn" data-k="${esc(k)}" title="${esc(tip)}">${fkeyOf[k] ? `<small>${fkeyOf[k]}</small>` : ""}${esc(k)}</button>`;
+  });
+  $("#keys").innerHTML =
+    [...yellow, ...fns].join("") +
+    `<span style="flex:1"></span><button class="key fn" data-k="SETTINGS" title="Settings: colours, name, top-bar apps">⚙</button><button class="key fn" data-l="1">1</button><button class="key fn" data-l="2">2</button><button class="key fn" data-l="4">4</button>`;
+}
+renderKeys();
+// Re-rank only when the bar's settings change, not on every launch (keys would jump under the mouse);
+// a new launch count shows on the next start or settings change.
+let barSig = "";
+onPrefs((p) => {
+  const sig = JSON.stringify(p.bar);
+  if (sig !== barSig) { barSig = sig; renderKeys(); }
+});
 $("#keys").onclick = (e) => {
   const b = e.target.closest("button");
   if (!b) return;

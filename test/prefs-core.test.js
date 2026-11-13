@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizePrefs, normalizeUsage, countRun, barApps, DEFAULT_BAR, THEMES } from '../public/js/prefs-core.js';
+import { normalizePrefs, normalizeUsage, countRun, barApps, barCandidates, DEFAULT_BAR, THEMES } from '../public/js/prefs-core.js';
 
 const AVAIL = [...DEFAULT_BAR, 'RSL26', 'RSLBT', 'SETTINGS', 'KEYS'];
 
@@ -38,4 +38,9 @@ test('barApps auto: most used left, ties keep original order, size limit', () =>
 test('barApps custom: user list and order, unknown codes skipped', () => {
   const r = barApps({ bar: { mode: 'custom', apps: ['RSLBT', 'GONE', 'RSL26', 'HELP'] } }, { HELP: 100 }, AVAIL);
   assert.deepEqual(r, ['RSLBT', 'RSL26', 'HELP']);
+});
+
+test('barCandidates: market-wide functions only, SETTINGS has its own key', () => {
+  const funcs = { WEI: { id: 'WEI' }, DES: { id: 'DES', needs: true }, SETTINGS: { id: 'SETTINGS' }, RSL26: { id: 'RSL26' } };
+  assert.deepEqual(barCandidates(funcs), ['WEI', 'RSL26']);
 });

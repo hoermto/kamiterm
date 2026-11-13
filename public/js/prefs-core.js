@@ -62,6 +62,9 @@ export function countRun(usage, code) {
   return { ...usage, [k]: (usage[k] || 0) + 1 };
 }
 
+// Apps that can sit on the bar: functions that run without a security (market-wide), in registry order.
+export const barCandidates = (funcs) => Object.values(funcs || {}).filter((f) => f && !f.needs && f.id !== "SETTINGS").map((f) => f.id);
+
 // Which app codes the top bar shows, left to right.
 //   available: codes that may appear (market-wide functions, in a stable order).
 //   auto:   most used first (ties: DEFAULT_BAR order, then `available` order), filled up with DEFAULT_BAR, `size` keys.
