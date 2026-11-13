@@ -5,7 +5,12 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 ## [1.3.1] – in Arbeit
 
 ### Windows-Starter
+- **Updates ohne git:** Installationen ohne `.git`-Ordner (ZIP-Download) konnten sich nicht aktualisieren. Jetzt fragt der Updater die Web-API des Repo-Servers (Gitea/Forgejo) nach dem neuesten Commit des Branches und installiert ihn als ZIP über den App-Ordner; `data\` bleibt unberührt, nicht mehr enthaltene Dateien werden entfernt. Installierte Version in `data\installed.json`. Eine von Hand heruntergeladene Kopie wird beim ersten Start einmal aufgefrischt.
+- **Neuinstallation** in einen leeren Ordner per ZIP-Download statt `git clone`. Git wird nicht mehr benötigt und nicht mehr heruntergeladen (spart etwa 21 MB); nur ein Git-Checkout (Entwicklung) aktualisiert weiter per git.
 - **Update auch bei laufendem Terminal:** `start.bat` prüft jetzt auch dann auf Updates, wenn das Terminal noch läuft (z. B. Fenster gerade erst geschlossen oder Browser-Tab). Gibt es eins, wird der Server beendet, aktualisiert und auf demselben Port neu gestartet. Vorher öffnete er nur das Fenster und das Update blieb liegen.
+
+### Fenster schließen
+- Die Seite meldet dem Server beim Schließen ab: Edge hielt die Verbindung eines geschlossenen Fensters manchmal offen, dann lief der Server weiter. `data\server.log` protokolliert jetzt, wann ein Fenster verbunden und geschlossen wird.
 
 ## [1.3.0] – in Arbeit
 
