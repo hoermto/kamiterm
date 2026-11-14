@@ -7,6 +7,10 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 ### Datenschutz
 - **SEC-Kontakt-E-Mail in SETTINGS › Data sources** statt fest im Code: SEC EDGAR verlangt von Programmen eine Kontaktadresse im Request-Header. Die Adresse steht jetzt nur in `data/settings.json` auf dem eigenen Rechner und geht nur an sec.gov. Ohne Adresse laufen Filings (CF), Insider (INSD), Dokumentsuche (DS) und der M&A-Check unter dem allgemeinen Amber-Terminal-Namen wie im Original. Gilt für alle SEC-Abfragen (`lib/sec-contact.js`).
 
+### Abhängigkeiten
+- **TradingView Lightweight Charts 5.3.0** (vorher 5.2.1), aus dem offiziellen npm-Paket, Prüfsumme geprüft; API unverändert, Charts (GP, GIP, RSLBT) geprüft.
+- **Node.js 22.13 oder neuer** jetzt auch in `package.json` (`engines`) und `npm run doctor` (vorher 18): der SQLite-Cache braucht `node:sqlite`, das es ohne Flag erst ab 22.13 gibt. Die Starter laden ohnehin das aktuelle LTS (derzeit v26). Sonst hat das Projekt keine Pakete.
+
 ### Dokumentation
 - **Neues README** (KamiTerm): nennt Lewis Jackson als Autor von Amber Terminal und verlinkt die Original-Dokumentation, jetzt **README.original.md** (unverändert im Originalzustand). Dazu eine Übersicht der Erweiterungen: RSL26, RSLBT, weitere Screens, Einstellungen, Starter mit automatischem Update für Windows, Linux und macOS.
 
