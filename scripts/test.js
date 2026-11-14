@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Runs every test/*.test.js except the live-network suite, on Node 18 and up (no glob support needed).
+// Runs every test/*.test.js except the live-network suite, on Node 22.13 and up (no glob support needed).
 // All tests run with QT_DATA_DIR pointing to a fresh temp dir, so the real data/ folder
 // (settings, alerts, data/rsl-watchlist.json, the SQLite OHLCV cache …) is never read or written by the suite.
 import { readdirSync, mkdtempSync, rmSync } from "node:fs";

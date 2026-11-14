@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Amber Terminal server. Node 18+ and nothing else: no npm install, no build step.
+// Amber Terminal server. Node 22.13+ (built-in SQLite) and nothing else: no npm install, no build step.
 //   node server.js            start on http://localhost:3787 (or the next free port)
 //   node server.js --open     start and open your browser
 //   PORT=4000 node server.js  pick a port

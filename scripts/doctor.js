@@ -7,11 +7,13 @@ import { relaunchForProxy, proxyNote } from '../lib/proxy.js';
 const relaunched = relaunchForProxy();
 if (relaunched) process.exit(await relaunched);
 
-const major = Number(process.versions.node.split('.')[0]);
+// 22.13 is the first Node with node:sqlite without a flag (price and event caches in data/cache).
+const [major, minor] = process.versions.node.split('.').map(Number);
+const nodeOk = major > 22 || (major === 22 && minor >= 13);
 const lines = [];
 let ok = true;
-lines.push(`Node.js ${process.version} on ${process.platform} (${process.arch})  ${major >= 18 ? 'OK' : 'TOO OLD: install Node 18 or newer from https://nodejs.org'}`);
-if (major < 18) ok = false;
+lines.push(`Node.js ${process.version} on ${process.platform} (${process.arch})  ${nodeOk ? 'OK' : 'TOO OLD: install Node 22.13 or newer from https://nodejs.org (or use start.bat / start.sh, which download it)'}`);
+if (!nodeOk) ok = false;
 if (proxyNote()) lines.push(proxyNote());
 
 const res = await probeAll();
