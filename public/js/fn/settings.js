@@ -1,6 +1,6 @@
 // SETTINGS: personal settings of this terminal. Colour scheme, name top left, which apps sit in the top bar
 // (auto = most used, or your own pick and order), exchange clocks top right, ticker tape, and the app usage
-// counts behind the ranking.
+// counts behind the ranking, the update source and the SEC contact email.
 // Stored in data/state.json (amberPrefs, amberUsage) via prefs.js.
 import { esc, api } from "../api.js";
 import { table, sect, html } from "../ui.js";
@@ -27,6 +27,43 @@ const row = (...nodes) => {
 // Where updates come from: data/launcher.cfg REPO_URL / BRANCH, read and written by the server.
 const FROM = { settings: "set here", "start.bat": "from start.bat", default: "default" };
 const STATE = { uptodate: "up to date", available: "update available", blocked: "update blocked", error: "error", unknown: "not checked yet" };
+// Contact email for SEC EDGAR (filings, insider trades, M&A check, earnings history). SEC asks automated
+// clients to name one; it is kept in data/settings.json on this computer and sent only to sec.gov.
+async function renderSec(ctx, box, msg = "") {
+  let c;
+  try {
+    c = await api.get("/api/sec/contact");
+  } catch (e) {
+    box.replaceChildren(html(`<p class="para dim">Not available: ${esc(e.message)}</p>`));
+    return;
+  }
+  if (!ctx.live()) return;
+  const form = html(`<form class="wform" autocomplete="off">
+    <label>SEC contact email <input name="contact" type="email" style="width:280px" placeholder="name@example.com" value="${esc(c.contact)}"></label>
+  </form>`);
+  const save = async (contact, done) => {
+    try {
+      await api.put("/api/sec/contact", { contact });
+      renderSec(ctx, box, done);
+    } catch (e) {
+      ctx.toast(`Not saved: ${e.message}`, true);
+    }
+  };
+  form.append(
+    btn("Save", () => form.requestSubmit()),
+    btn("Remove", () => save("", "Removed"), "Remove the address: requests use the generic name again"),
+  );
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    save(new FormData(form).get("contact"), "Saved");
+  };
+  box.replaceChildren(
+    html(`<p class="para dim">SEC EDGAR asks every program that downloads its data to name a contact email. It is saved in data/settings.json on this computer and sent only to sec.gov, in the request header. Without it, filings and insider trades still work under the generic Amber Terminal name, but the earnings history (8-K dates) needs it.</p>`),
+    form,
+    html(`<p class="para">${c.contact ? `Requests name <b>${esc(c.contact)}</b>` : "No address set: generic name"}${msg ? ` · <span class="dim">${esc(msg)}</span>` : ""}</p>`),
+  );
+}
+
 async function renderUpdates(ctx, box, msg = "") {
   let c;
   try {
@@ -251,6 +288,11 @@ function render(ctx) {
   const updBox = html('<div><p class="para dim">Loading…</p></div>');
   ctx.el.append(updBox);
   renderUpdates(ctx, updBox);
+
+  ctx.el.append(sect("Data sources"));
+  const secBox = html('<div><p class="para dim">Loading…</p></div>');
+  ctx.el.append(secBox);
+  renderSec(ctx, secBox);
 
   ctx.el.append(sect("App usage"));
   const used = Object.entries(usage).sort((a, b) => b[1] - a[1]);

@@ -209,8 +209,9 @@ RSL ranking (and annotated in RRG / MPUT when those tickers were checked).
    Role labels when the company itself is the filer: `SC 14D9` / `DEFM14*` /
    `PREM14*` / `SC 13E3` → **target**; `SC TO-T` → **acquirer**; `S-4` →
    **possible-acquirer** (S-4 is often filed by the issuer/acquirer). Soft-fail on
-   network errors (no flag, no crash). User-Agent:
-   `Amber Terminal name@example.com`. Rate ≤ ~5 req/s. Cache:
+   network errors (no flag, no crash). User-Agent: the contact email from
+   SETTINGS → Data sources (SEC asks for one; stored only in `data/settings.json`),
+   or the generic Amber Terminal name when none is set. Rate ≤ ~5 req/s. Cache:
    `data/cache/ma-edgar.json` (Seafile-ignored), refresh when stale > 7 days.
 3. **UI** — `M&A` badge with tooltip (source, form, date, link) on Holdings and the
    RSL ranking; also on RRG / MPUT rows that were checked. The ranking always shows
