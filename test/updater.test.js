@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { check, apply, parseCfg, readConfig, repoEndpoints } from '../lib/updater.js';
+import { check, apply, parseCfg, readConfig, repoEndpoints, saveConfig, validateConfig } from '../lib/updater.js';
 
 // Real git repos in a temp dir: "remote" (bare), "app" (the install) and "dev" (publishes new versions).
 let tmp, remote, app, dev;
@@ -35,7 +35,7 @@ test('parseCfg / readConfig: file beats environment', () => {
   assert.equal(readConfig({ dataDir: d, env: { AMBER_REPO_URL: 'u1', AMBER_BRANCH: 'b1' } }).repoUrl, 'u1');
   fs.writeFileSync(path.join(d, 'launcher.cfg'), 'REPO_URL=u2\nUPDATE_CHECK_HOURS=6\n');
   const c = readConfig({ dataDir: d, env: { AMBER_REPO_URL: 'u1', AMBER_BRANCH: 'b1' } });
-  assert.deepEqual(c, { repoUrl: 'u2', branch: 'b1', checkHours: 6 });
+  assert.deepEqual(c, { repoUrl: 'u2', repoFrom: 'settings', branch: 'b1', branchFrom: 'start.bat', checkHours: 6 });
   fs.rmSync(d, { recursive: true, force: true });
 });
 
@@ -80,13 +80,42 @@ test('check: unreachable repo (git) / repo URL that is not http (no .git)', { sk
   fs.rmSync(plain, { recursive: true, force: true });
 });
 
-test('repoEndpoints: web and API base from the clone URL', () => {
-  assert.deepEqual(repoEndpoints('http://192.168.0.25:4000/home/amber-terminal.git'), {
-    web: 'http://192.168.0.25:4000/home/amber-terminal',
-    api: 'http://192.168.0.25:4000/api/v1/repos/home/amber-terminal',
-  });
+test('repoEndpoints: Gitea and GitHub addresses from the clone URL', () => {
+  const g = repoEndpoints('http://192.168.0.25:4000/home/amber-terminal.git');
+  assert.equal(g.kind, 'gitea');
+  assert.equal(g.web, 'http://192.168.0.25:4000/home/amber-terminal');
+  assert.equal(g.branchUrl('master'), 'http://192.168.0.25:4000/api/v1/repos/home/amber-terminal/branches/master');
+  assert.equal(g.archiveUrl('abc'), 'http://192.168.0.25:4000/home/amber-terminal/archive/abc.zip');
+  assert.equal(g.headOf({ commit: { id: 'x1' } }), 'x1');
   assert.equal(repoEndpoints('https://h.example/git/o/r/').api, 'https://h.example/git/api/v1/repos/o/r');
+  const h = repoEndpoints('https://github.com/hoermto/kamiterm.git');
+  assert.equal(h.kind, 'github');
+  assert.equal(h.branchUrl('master'), 'https://api.github.com/repos/hoermto/kamiterm/branches/master');
+  assert.equal(h.rawUrl('abc', 'package.json'), 'https://raw.githubusercontent.com/hoermto/kamiterm/abc/package.json');
+  assert.equal(h.archiveUrl('abc'), 'https://github.com/hoermto/kamiterm/archive/abc.zip');
+  assert.equal(h.headOf({ commit: { sha: 's1' } }), 's1');
   assert.throws(() => repoEndpoints('file:///c/repos/x.git'));
+});
+
+test('SETTINGS > Updates: saveConfig keeps other lines, empty removes; readConfig says where values come from', () => {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'amber-cfg2-'));
+  const env = { AMBER_REPO_URL: 'https://github.com/a/b.git' };
+  assert.equal(readConfig({ dataDir: d, env: {} }).repoFrom, 'default');
+  assert.equal(readConfig({ dataDir: d, env }).repoFrom, 'start.bat');
+  fs.writeFileSync(path.join(d, 'launcher.cfg'), '# mine\r\nAPP_WINDOW=0\r\n');
+  saveConfig({ repoUrl: 'http://h:4000/o/r.git', branch: 'rel-2' }, { dataDir: d });
+  let c = readConfig({ dataDir: d, env });
+  assert.deepEqual([c.repoUrl, c.repoFrom, c.branch, c.branchFrom], ['http://h:4000/o/r.git', 'settings', 'rel-2', 'settings']);
+  const txt = fs.readFileSync(path.join(d, 'launcher.cfg'), 'utf8');
+  assert.match(txt, /# mine\r\nAPP_WINDOW=0\r\nREPO_URL=http:\/\/h:4000\/o\/r\.git\r\nBRANCH=rel-2\r\n$/);
+  saveConfig({ repoUrl: '', branch: '' }, { dataDir: d });
+  c = readConfig({ dataDir: d, env });
+  assert.deepEqual([c.repoUrl, c.repoFrom, c.branch], ['https://github.com/a/b.git', 'start.bat', 'master']);
+  assert.match(fs.readFileSync(path.join(d, 'launcher.cfg'), 'utf8'), /APP_WINDOW=0/);
+  assert.equal(validateConfig({ repoUrl: 'ftp://x/y/z' }) !== null, true);
+  assert.equal(validateConfig({ branch: 'bad branch' }) !== null, true);
+  assert.equal(validateConfig({ repoUrl: 'https://github.com/hoermto/kamiterm.git', branch: 'master' }), null);
+  fs.rmSync(d, { recursive: true, force: true });
 });
 
 // A Gitea-like web API answered from the "dev" repo: branches, commits, raw files, ZIP archives.

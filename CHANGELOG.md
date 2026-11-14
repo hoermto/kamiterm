@@ -4,6 +4,10 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ## [1.4.1] – in Arbeit
 
+### Updates
+- **Neues Standard-Repo für Updates: https://github.com/hoermto/kamiterm.git** (Branch master). Der Updater spricht jetzt neben Gitea/Forgejo auch die GitHub-API (neueste Commits, ZIP-Download). Gilt nur für die Update-Prüfung; die git-Remotes eines Checkouts bleiben unverändert.
+- **SETTINGS › Updates:** Repo-URL und Branch einstellbar (gespeichert in `data/launcher.cfg`, leer = Wert aus start.bat bzw. Standard), mit Status der letzten Prüfung und „Check now“. Speichern prüft sofort.
+
 ## [1.4.0] – in Arbeit
 
 ### Bedienung

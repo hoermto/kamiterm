@@ -475,6 +475,29 @@ async function handle(req, res) {
       }
       return send(res, 200, updateStatus || updater.loadStatus());
     }
+    // SETTINGS > Updates: where updates come from (data/launcher.cfg REPO_URL / BRANCH). Saving checks at once.
+    if (p === "/api/update/config") {
+      const view = () => {
+        const c = updater.readConfig();
+        return {
+          repoUrl: c.repoUrl, repoFrom: c.repoFrom, branch: c.branch, branchFrom: c.branchFrom,
+          defaultRepoUrl: updater.DEFAULT_REPO_URL, defaultBranch: updater.DEFAULT_BRANCH,
+          gitCheckout: fs.existsSync(path.join(updater.ROOT, ".git")),
+          status: updateStatus || updater.loadStatus(),
+        };
+      };
+      if (req.method === "GET") return send(res, 200, view());
+      if (req.method === "PUT") {
+        const body = await readBody(req, 1e4);
+        const next = { repoUrl: String(body.repoUrl ?? "").trim(), branch: String(body.branch ?? "").trim() };
+        const err = updater.validateConfig(next);
+        if (err) return send(res, 400, { error: err });
+        updater.saveConfig(next);
+        updateStatus = await updater.check();
+        broadcast("update", updateStatus);
+        return send(res, 200, view());
+      }
+    }
     if (p === "/api/shutdown" && req.method === "POST") {
       // Lets the installer stop a running copy before updating it, on any OS.
       send(res, 200, { ok: true });
