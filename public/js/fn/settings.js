@@ -64,6 +64,31 @@ async function renderSec(ctx, box, msg = "") {
   );
 }
 
+// Event cache (dividends, earnings dates): data/cache/events.sqlite, rebuilt from the sources when cleared.
+async function renderEventsCache(ctx, box, msg = "") {
+  let st;
+  try {
+    st = await api.get("/api/events-cache");
+  } catch (e) {
+    box.replaceChildren(html(`<p class="para dim">Event cache not available: ${esc(e.message)}</p>`));
+    return;
+  }
+  if (!ctx.live()) return;
+  const kb = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
+  const r = row(
+    html(`<span>Event cache: <b>${st.symbols}</b> stocks · ${st.dividends} dividends · ${st.earnings} earnings dates · ${kb(st.bytes)}${msg ? ` · <span class="dim">${esc(msg)}</span>` : ""}</span>`),
+    btn("Clear", async () => {
+      try {
+        await api.post("/api/events-cache", { clear: true });
+        renderEventsCache(ctx, box, "Cleared");
+      } catch (e) {
+        ctx.toast(`Not cleared: ${e.message}`, true);
+      }
+    }, "Empty the cache; DMOV and the scanners load the data again from the sources"),
+  );
+  box.replaceChildren(r, html(`<p class="para dim">Past dividends and earnings dates are kept in data/cache/events.sqlite, so they are downloaded only once. Clearing is safe.</p>`));
+}
+
 async function renderUpdates(ctx, box, msg = "") {
   let c;
   try {
@@ -293,6 +318,10 @@ function render(ctx) {
   const secBox = html('<div><p class="para dim">Loading…</p></div>');
   ctx.el.append(secBox);
   renderSec(ctx, secBox);
+
+  const evBox = html('<div></div>');
+  ctx.el.append(evBox);
+  renderEventsCache(ctx, evBox);
 
   ctx.el.append(sect("App usage"));
   const used = Object.entries(usage).sort((a, b) => b[1] - a[1]);
