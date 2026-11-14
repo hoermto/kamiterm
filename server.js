@@ -646,7 +646,7 @@ if (isMain) {
         .map((a) => `http://${a}:${port}`)
         .join("  ")}\n`,
     );
-  if (process.argv.includes("--open") || process.env.QT_OPEN === "1")
+  if ((process.argv.includes("--open") || process.env.QT_OPEN === "1") && process.env.QT_NO_OPEN !== "1")
     openBrowser(url);
   const bye = () => {
     console.log("\n  Stopped.");
