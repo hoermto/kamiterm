@@ -2,6 +2,8 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
+## [1.4.1] – in Arbeit
+
 ## [1.4.0] – in Arbeit
 
 ### Bedienung
