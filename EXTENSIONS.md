@@ -336,6 +336,31 @@ Yahoo-Ticker (`SAP.DE`). Rechnung: `lib/event-moves.js` (rein, getestet), Daten:
 - **Grenze:** Ist die Dividende klein gegen die normalen Tagesbewegungen (Median unter
   0,3 % des Kurses), ist Abschlag ÷ Dividende vor allem Rauschen; der Screen sagt das.
 
+### Buy-write über den Ex-Tag (Abschnitt in DMOV)
+
+`KO DMOV 5Y ENTRY=2 DTE=2-10` (Standard ENTRY=2, DTE=2-10; im Screen änderbar).
+Rechnung: `lib/event-moves.js` (Historie) und `lib/buywrite.js` (Optionen).
+
+- **Trade:** Kauf zum Schluss ENTRY Handelstage vor dem Ex-Tag, Verkauf des ersten
+  Calls über dem Kurs auf dem ersten Verfall am oder nach dem Ex-Tag, der DTE
+  Kalendertage nach dem Einstieg liegt; Dividende behalten, bis zum Verfall halten.
+- **Historie (alle Aktien):** je Ex-Tag Einstieg, Verfall (erster Freitag in der
+  Spanne; Feiertag → letzter Handelstag davor) und Kursbewegung Einstieg → Verfall,
+  ohne/mit Dividende. Historische Optionspreise gibt es nicht frei.
+- **Heute (nur US, CBOE-Kette, ~15 Min. verzögert):** Weeklys = mindestens 3
+  Verfallstermine in den nächsten 35 Tagen; passender Verfall; erster Strike über dem
+  Kurs mit Bid/Ask, Open Interest, Spread. **Prämie:** liegt der Einstieg heute bzw.
+  am nächsten Handelstag, der Bid; liegt er später, eine Schätzung für den
+  Einstiegstag (Black-Scholes mit der heutigen impliziten Vola des Strikes, den Tagen
+  ab Einstieg und Kurs minus Dividende, mal Bid/Modell von heute), weil der Call dann
+  weniger Restlaufzeit hat.
+- **Heutige Konditionen auf die Historie:** je Ex-Tag Rendite = min(Bewegung,
+  Strike-Abstand) + Prämie + Dividende (in % des Einstiegs); Durchschnitt, Median,
+  bester/schlechtester Trade, Gewinnquote, Anteil ausgeübt, „pro Jahr“ (einfach
+  hochgerechnet, vor Kosten).
+- **Frühe Ausübung:** Risiko, wenn der Call im Geld ist und sein Zeitwert unter der
+  Dividende liegt (dann übt der Käufer am Tag vor dem Ex-Tag aus).
+
 ## RRG: JdK-style approximation, not proprietary JdK
 
 Benchmark is **SPX itself (`^GSPC`)**, never the selected sector ETF. Align weekly

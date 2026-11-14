@@ -6,6 +6,7 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ### Neue Funktionen
 - **DMOV – Kursbewegung um den Ex-Dividenden-Tag** (`KO DMOV`, `SAP.DE DMOV 5Y`), US und Europa: Run-up in den 5 Tagen davor, Ex-Tag (Gap und Schluss), Abschlag ÷ Dividende, +1/+2/+3 Wochen ohne und mit Dividende, Erholung bis zum Kurs vor dem Ex-Tag. Je Zeitraum (1Y, 2Y, 3Y, 5Y, ALL) Durchschnitt, Median, bester, schlechtester Wert, 1 SD, Anteil positiv und Durchschnitt in Währung; dazu jeder Ex-Tag einzeln. Nächster Ex-Tag angekündigt (Nasdaq) oder geschätzt. Links aus DVD und DES. Auch über den MCP-Server.
+- **DMOV › Buy-write über den Ex-Tag:** Kauf N Handelstage vorher (Standard 2), erster Call über dem Kurs auf dem ersten Verfall 2–10 Tage nach dem Einstieg (beides einstellbar, `ENTRY=`, `DTE=`). Für alle Aktien die Historie (Kurs Einstieg → Verfall, ohne/mit Dividende); für US-Aktien dazu der heutige Call aus der CBOE-Kette: Weeklys ja/nein, Verfall, Strike, Bid/Ask, Open Interest, Spread, Prämie (bei späterem Einstieg geschätzt für den Einstiegstag), Warnung vor früher Ausübung, und die heutigen Konditionen auf alle vergangenen Ex-Tage angewandt (Rendite je Trade, Gewinnquote, Anteil ausgeübt).
 - **Event-Cache** `data/cache/events.sqlite`: Dividenden, Earnings-Termine und Kalender werden einmal geladen und dann aus dem Cache bedient (Dividenden wöchentlich aufgefrischt); fällt eine Quelle aus, gelten die gespeicherten Daten. Größe und „Clear“ in SETTINGS › Data sources.
 
 ### Starter

@@ -282,7 +282,7 @@ const FN = {
     needs: true,
     arg: "period",
     argHint: "1Y, 2Y (default), 3Y, 5Y or ALL",
-    what: "How a stock moved around its past ex-dividend dates (US and European stocks): run-up before, ex-day drop against the dividend, moves 1 to 3 weeks after, recovery time; period=1Y|2Y|3Y|5Y|ALL",
+    what: "How a stock moved around its past ex-dividend dates (US and European stocks): run-up before, ex-day drop against the dividend, moves 1 to 3 weeks after, recovery time; period=1Y|2Y|3Y|5Y|ALL. Also a buy-write over the ex-date (entry=trading days before, default 2; dtemin/dtemax, default 2-10): stock side from history, and for US stocks today's first call above the price with premium, weekly check and the past events at today's terms",
     source: "Yahoo dividend events and daily prices, Nasdaq for announced ex-dates",
   },
   ERN: {

@@ -46,10 +46,33 @@ test('buyWriteQuote: weekly, expiry, strike, premium, dividend in % of the price
   const r = buyWriteQuote(weeklyChain, { exDate: '2026-11-24', dividend: 0.51, today: '2026-11-14' });
   assert.equal(r.weekly, true); assert.equal(r.entryDate, '2026-11-20'); assert.equal(r.expiry, '2026-11-27'); assert.equal(r.dte, 7);
   assert.equal(r.call.strike, 102.5);
-  near(r.strikePct, (102.5 / 100.4 - 1) * 100); near(r.premiumPct, (0.45 / 100.4) * 100); near(r.dividendPct, (0.51 / 100.4) * 100);
+  near(r.strikePct, (102.5 / 100.4 - 1) * 100); near(r.dividendPct, (0.51 / 100.4) * 100);
+  // Entry in 6 days: premium estimated for 7 days left instead of today's 13 -> below today's bid.
+  assert.equal(r.premiumEstimated, true); assert.equal(r.dteNow, 13);
+  assert.ok(r.premium > 0 && r.premium < 0.45, `estimated ${r.premium}`);
   assert.equal(r.early.risk, false); assert.equal(r.reason, null);
-  // entry date already passed -> today
-  assert.equal(buyWriteQuote(weeklyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-23' }).entryDate, '2026-11-23');
+  // Entering today (the entry day itself): today's bid.
+  const now = buyWriteQuote(weeklyChain, { exDate: '2026-11-24', dividend: 0.51, today: '2026-11-20' });
+  assert.equal(now.premiumEstimated, false); near(now.premiumPct, (0.45 / 100.4) * 100);
+  // entry date already passed -> the next trading day (Sat 11-21 -> Mon 11-23)
+  assert.equal(buyWriteQuote(weeklyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-21' }).entryDate, '2026-11-23');
+  // Today is the ex-date itself: too late.
+  assert.match(buyWriteQuote(weeklyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-24' }).reason, /not ahead/);
   assert.match(buyWriteQuote(monthlyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-14' }).reason, /No expiry 2-10/);
   assert.match(buyWriteQuote(weeklyChain, { exDate: '2026-11-10', dividend: 0.5, today: '2026-11-14' }).reason, /not ahead/);
+});
+
+import { bsCall, premiumAtEntry, tradingDayOnOrAfter } from '../lib/buywrite.js';
+
+test('bsCall: known values; premiumAtEntry shrinks with fewer days and keeps the bid haircut', () => {
+  // S=100, K=100, T=1, sigma=0.2, r=0: 7.9656
+  near(bsCall(100, 100, 1, 0.2), 7.965567, 1e-4);
+  assert.equal(bsCall(110, 100, 0, 0.2), 10);
+  const later = premiumAtEntry({ price: 99.37, strike: 100, iv: 0.1931, bid: 1.85, dividend: 0.53, dteNow: 34, dteEntry: 2 });
+  assert.ok(later > 0 && later < 0.5, `${later}`);
+  const same = premiumAtEntry({ price: 99.37, strike: 100, iv: 0.1931, bid: 1.85, dividend: 0.53, dteNow: 34, dteEntry: 34 });
+  assert.ok(same <= 1.85 + 1e-9 && same > 1.5, `${same}`);
+  assert.equal(premiumAtEntry({ price: 100, strike: 100, iv: null, bid: 1, dteNow: 5, dteEntry: 2 }), null);
+  assert.equal(tradingDayOnOrAfter('2026-11-21'), '2026-11-23');
+  assert.equal(tradingDayOnOrAfter('2026-11-20'), '2026-11-20');
 });

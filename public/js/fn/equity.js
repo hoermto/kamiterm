@@ -777,9 +777,22 @@ const epsCols = [
 
 // ---------- DMOV: moves around the ex-dividend date ----------
 const DMOV_PERIODS = ["1Y", "2Y", "3Y", "5Y", "ALL"];
-async function renderDmov(ctx, period) {
+// Buy-write options from the command: ENTRY=2 (trading days before the ex-date), DTE=2-10.
+function dmovOpts(args) {
+  const o = {};
+  for (const a of args.map((x) => String(x).toUpperCase())) {
+    let m;
+    if ((m = /^ENTRY=(\d+)$/.exec(a))) o.entry = m[1];
+    if ((m = /^DTE=(\d+)-(\d+)$/.exec(a))) [o.dtemin, o.dtemax] = [m[1], m[2]];
+  }
+  return o;
+}
+const dmovCmd = (ctx, period, o) =>
+  `${ctx.sec.id} DMOV ${period}${o.entry ? ` ENTRY=${o.entry}` : ""}${o.dtemin ? ` DTE=${o.dtemin}-${o.dtemax}` : ""}`;
+async function renderDmov(ctx, period, opts) {
   period = period || ctx.args.map((a) => String(a).toUpperCase()).find((a) => DMOV_PERIODS.includes(a)) || "2Y";
-  const d = await api.fn("dmov", { symbol: ctx.sec.id, period });
+  opts = opts || dmovOpts(ctx.args);
+  const d = await api.fn("dmov", { symbol: ctx.sec.id, period, ...opts });
   if (!ctx.live()) return;
   ctx.el.innerHTML = "";
   const cur = d.currency || "";
@@ -794,8 +807,8 @@ async function renderDmov(ctx, period) {
   ctx.el.append(
     html(`<div style="font-size:15px;margin-bottom:6px">Next ex-date <b class="amber">${nextTxt}</b>${last ? `  <span class="dim">· last</span> ${esc(div(last.amount))} <span class="dim">on ${esc(last.exDate)} (${last.yieldPct.toFixed(2)}% of the price)</span>` : ""}</div>`),
     tabs(DMOV_PERIODS, d.period, (p) => {
-      setCmd(ctx, `${ctx.sec.id} DMOV ${p}`);
-      renderDmov(ctx, p);
+      setCmd(ctx, dmovCmd(ctx, p, opts));
+      renderDmov(ctx, p, opts);
     }),
   );
   const s = d.summary;
@@ -858,7 +871,82 @@ async function renderDmov(ctx, period) {
     e.preventDefault();
     ctx.go("DVD");
   };
-  ctx.setSource(d.source);
+  if (d.buyWrite) renderDmovBuyWrite(ctx, d, opts, { p1, amt, div });
+  ctx.setSource(d.source + (d.buyWrite?.quote?.source ? ` Calls: ${d.buyWrite.quote.source}.` : ""));
+}
+
+// Buy-write over the ex-date: buy N trading days before, sell the first call above the price on the first
+// expiry DTE days after the entry, hold through the ex-date to expiry.
+function renderDmovBuyWrite(ctx, d, opts, { p1, div }) {
+  const b = d.buyWrite;
+  const q = b.quote;
+  const form = html(`<form class="wform" autocomplete="off">
+    <label>Entry, trading days before the ex-date <input name="entry" type="number" min="1" max="10" style="width:52px" value="${b.entryDays}"></label>
+    <label>DTE from entry <input name="dtemin" type="number" min="0" max="30" style="width:52px" value="${b.dteMin}"> to <input name="dtemax" type="number" min="1" max="45" style="width:52px" value="${b.dteMax}"></label>
+    <button type="submit">Apply</button>
+  </form>`);
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const o = { entry: f.get("entry"), dtemin: f.get("dtemin"), dtemax: f.get("dtemax") };
+    setCmd(ctx, dmovCmd(ctx, d.period, o));
+    renderDmov(ctx, d.period, o);
+  };
+  ctx.el.append(
+    sect("Buy-write over the ex-date"),
+    hint(`Buy ${b.entryDays} trading day${b.entryDays > 1 ? "s" : ""} before the ex-date, sell the first call above the price on the first expiry ${b.dteMin} to ${b.dteMax} days after the entry, keep the dividend, hold to expiry.`),
+    form,
+  );
+  if (q) {
+    const c = q.call;
+    const today = [
+      ["Weekly options", q.weekly ? "yes" : "no (monthlies only)"],
+      ["Next ex-date", `${d.next?.date || "—"}${d.next?.estimated ? " (expected, not announced)" : ""}`],
+      ["Entry", q.entryDate || "—"],
+      ["Expiry", q.expiry ? `${q.expiry} · ${q.dte} days after entry` : "—"],
+      ["Call", c ? `strike ${num(c.strike, 2)} (${pct(q.strikePct)} over the price ${num(q.price, 2)}) · bid ${num(c.bid, 2)} / ask ${num(c.ask, 2)} · open interest ${c.oi}${finite(c.spreadPct) ? ` · spread ${c.spreadPct.toFixed(0)}%` : ""}` : "—"],
+      ["Premium", finite(q.premiumPct) ? `${num(q.premium, 2)} = ${q.premiumPct.toFixed(2)}% of the price${q.premiumEstimated ? ` (estimated for the entry day: ${q.dte} days left instead of ${q.dteNow} today, from today's implied volatility)` : " (today's bid)"}` : "—"],
+      ["Dividend", finite(q.dividendPct) ? `${div(q.dividend)} = ${q.dividendPct.toFixed(2)}%` : "—"],
+      ["Early assignment", q.early ? (q.early.risk ? "LIKELY: the call is in the money and its time value is below the dividend" : q.early.inTheMoney ? "unlikely (time value above the dividend)" : "only if the stock rises above the strike before the ex-date") : "—"],
+    ];
+    ctx.el.append(kv(today));
+    if (q.reason) ctx.el.append(hint(esc(q.reason)));
+  }
+  const s = b.sim;
+  const h = b.summary;
+  ctx.el.append(
+    sect(s ? `Today's terms on the past ${s.n} ex-dates` : `Stock side on the past ${h.n} ex-dates`),
+  );
+  if (s)
+    ctx.el.append(
+      kv([
+        ["Return per trade", `average ${p1(s.ret.avg)} · median ${p1(s.ret.median)} · best ${p1(s.ret.max)} · worst ${p1(s.ret.min)}`],
+        ["Winning trades", `${perc1(s.winPct)} · called away ${perc1(s.assignedPct)}`],
+        ["Per year", finite(s.perYearPct) ? `${p1(s.perYearPct)} if repeated every ${q.dte} days (simple, before costs)` : "—"],
+      ]),
+      hint("Return = the stock's move from entry to expiry, capped at the strike, plus premium and dividend, each in % of the entry price."),
+    );
+  ctx.el.append(
+    kv([
+      ["Stock, entry to expiry", `average ${p1(h.move.avg)} · median ${p1(h.move.median)} · 1 SD ±${finite(h.move.sd) ? h.move.sd.toFixed(2) : "—"}%`],
+      ["With the dividend", `average ${p1(h.total.avg)}`],
+      ["At or above the entry", perc1(h.atOrAbovePct)],
+      ["Below the entry", h.shortfall.n ? `${h.shortfall.n} times, by ${h.shortfall.avg.toFixed(2)}% on average, at most ${h.shortfall.max.toFixed(2)}%` : "never"],
+    ]),
+  );
+  if (b.note) ctx.el.append(hint(esc(b.note)));
+  const simBy = new Map((s?.rows || []).map((r) => [r.exDate, r.retPct]));
+  ctx.el.append(
+    table(b.events, [
+      { key: "exDate", label: "Ex-date", left: true, lbl: true },
+      { key: "entryDate", label: "Entry", left: true },
+      { key: "expiry", label: "Expiry", left: true, fmt: (v) => v || "none" },
+      { key: "dte", label: "DTE" },
+      { key: "movePct", label: "Stock", fmt: p1, cls },
+      { key: "totalPct", label: "Stock +\ndividend", fmt: p1, cls },
+      ...(s ? [{ key: (e) => simBy.get(e.exDate), label: "Buy-write\ntoday's terms", fmt: p1, cls }] : []),
+    ]),
+  );
 }
 
 async function renderEe(ctx) {
