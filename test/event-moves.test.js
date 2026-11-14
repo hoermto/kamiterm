@@ -86,3 +86,44 @@ test('nextExDate: announced date first, else estimated from the usual gap; stopp
   assert.equal(nextExDate(q, '2027-06-01'), null, 'two payments missed');
   assert.equal(nextExDate(q.slice(0, 2), '2025-06-01'), null, 'too little history');
 });
+
+// ---------- buy-write ----------
+import { weeklyExpiryAfter, buyWriteEvents, simulateBuyWrite, summarizeBuyWrite, calDays } from '../lib/event-moves.js';
+
+test('weeklyExpiryAfter: first Friday on/after the ex-date within DTE 2..10 from entry', () => {
+  // 2026-11-10 is a Tuesday; entry Friday 2026-11-06 -> Friday 2026-11-13 is 7 days later.
+  assert.equal(weeklyExpiryAfter('2026-11-10', '2026-11-06'), '2026-11-13');
+  // ex-date Friday 2026-11-13, entry Wednesday 11-11: same-day Friday is only 2 days -> ok.
+  assert.equal(weeklyExpiryAfter('2026-11-13', '2026-11-11'), '2026-11-13');
+  // entry Thursday 11-12, ex Friday 11-13: 1 day is below DTE 2 -> next Friday 11-20 (8 days).
+  assert.equal(weeklyExpiryAfter('2026-11-13', '2026-11-12'), '2026-11-20');
+  // DTE window too narrow -> none.
+  assert.equal(weeklyExpiryAfter('2026-11-13', '2026-11-12', { dteMin: 2, dteMax: 5 }), null);
+  assert.equal(calDays('2026-11-06', '2026-11-13'), 7);
+});
+
+test('buyWriteEvents: entry N trading days before, exit at the last close on/before expiry; simulate today\'s terms', () => {
+  // Real weekdays: Mon 2026-11-02 .. ; ex-date Wed 2026-11-11; entry 2 trading days before = Mon 11-09.
+  const days = ['2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06', '2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-16'];
+  const closes = [98, 99, 100, 100, 100, 100, 101, 100, 101, 102, 103];
+  const bw = days.map((d, i) => ({ time: Date.parse(`${d}T14:30:00Z`) / 1000, open: closes[i], close: closes[i] }));
+  const [e] = buyWriteEvents([{ exDate: '2026-11-11', amount: 1 }], bw);
+  assert.equal(e.entryDate, '2026-11-09'); assert.equal(e.entryClose, 100);
+  assert.equal(e.expiry, '2026-11-13'); assert.equal(e.dte, 4);
+  assert.equal(e.exitDate, '2026-11-13'); near(e.movePct, 2); near(e.totalPct, 3); near(e.dividendPct, 1);
+  // Entry 1 day before (cum day 11-10, close 101): exit 102 -> +0.990%
+  const [e1] = buyWriteEvents([{ exDate: '2026-11-11', amount: 1 }], bw, { entryDays: 1 });
+  assert.equal(e1.entryDate, '2026-11-10'); near(e1.movePct, (102 / 101 - 1) * 100);
+  // Expiry after the data ends: no outcome.
+  const [late] = buyWriteEvents([{ exDate: '2026-11-16', amount: 1 }], bw);
+  assert.equal(late.exitClose, null); assert.equal(late.movePct, null);
+
+  const events = [{ exDate: 'a', movePct: 2, dividendPct: 1 }, { exDate: 'b', movePct: -3, dividendPct: 1 }, { exDate: 'c', movePct: 0.5, dividendPct: 1 }, { exDate: 'd', movePct: null }];
+  const sim = simulateBuyWrite(events, { strikePct: 1, premiumPct: 0.8, dividendPct: 0.5, dte: 7 });
+  assert.equal(sim.n, 3);
+  assert.deepEqual(sim.rows.map((r) => +r.retPct.toFixed(6)), [2.3, -1.7, 1.8]); // min(move,1)+0.8+0.5
+  near(sim.winPct, 200 / 3); near(sim.assignedPct, 100 / 3);
+  near(sim.perYearPct, (sim.ret.avg * 365) / 7);
+  const s = summarizeBuyWrite(events);
+  assert.equal(s.n, 3); near(s.atOrAbovePct, 200 / 3); assert.equal(s.shortfall.max, 3);
+});
