@@ -10,7 +10,7 @@ export const PLAYBOOKS = [
     uses: ["WEI", "CRYPTO", "TOP", "ECO", "WIRP", "W", "ERN"],
     ask: "Using my Amber Terminal, give me this morning's brief in under 12 lines: what world markets and crypto did overnight (WEI, CRYPTO), the three headlines that matter most for my watchlist (TOP, W), today's economic releases with the consensus (ECO), what futures price for the next Fed meeting and how that changed since yesterday (WIRP), and anything on my watchlist with earnings this week (ERN). End with the one thing to watch today.",
     build:
-      "Add a function called BRIEF to Amber Terminal that puts this morning brief on one screen, built from the existing functions' data and refreshed every 15 minutes. Follow the README's 'Add your own screen' section and add a test.",
+      "Add a function called BRIEF to Amber Terminal that puts this morning brief on one screen, built from the existing functions' data and refreshed every 15 minutes. Follow the 'Add your own screen' section of README.original.md and add a test.",
   },
   {
     id: "earnings",
@@ -93,6 +93,6 @@ export const PLAYBOOKS = [
     why: "The terminal is yours. If it's missing the screen you check every day, Claude adds it in a few minutes, as a new function code.",
     uses: ["MOST", "EQS"],
     build:
-      "Add a function called SECT to Amber Terminal that shows today's performance by sector from the stock screener's data: each sector's average move, its biggest gainer and loser, and click a stock to open its DES. Follow the README's 'Add your own screen' section and add a test.",
+      "Add a function called SECT to Amber Terminal that shows today's performance by sector from the stock screener's data: each sector's average move, its biggest gainer and loser, and click a stock to open its DES. Follow the 'Add your own screen' section of README.original.md and add a test.",
   },
 ];

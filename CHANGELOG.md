@@ -2,6 +2,16 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
+## [1.4.1] – in Arbeit
+
+### Dokumentation
+- **Neues README** (KamiTerm): nennt Lewis Jackson als Autor von Amber Terminal und verlinkt die Original-Dokumentation, jetzt **README.original.md** (unverändert im Originalzustand). Dazu eine Übersicht der Erweiterungen: RSL26, RSLBT, weitere Screens, Einstellungen, Starter mit automatischem Update für Windows, Linux und macOS.
+
+### Updates
+- **Linux und macOS:** `start.sh` bzw. `start.command` (dasselbe Skript) arbeiten jetzt wie `start.bat`: Node.js 22.13+ wird verwendet oder, falls es fehlt oder zu alt ist, als offizieller Build für das System (Linux x64/arm64, macOS Intel/Apple Silicon) nach `.runtime/node` geladen (Prüfsumme geprüft, ohne root). Allein in einen leeren Ordner kopiert, lädt das Skript zuerst die App. Vor jedem Start Update-Prüfung und Installation (`AMBER_UPDATE=0` überspringt das). Entpacken der Updates mit Node selbst, ohne unzip oder tar. Beide Skripte sind ausführbar (`./start.sh`). `server.js --open` beachtet `QT_NO_OPEN=1`.
+- **Neues Standard-Repo für Updates: https://github.com/hoermto/kamiterm.git** (Branch master). Der Updater spricht jetzt neben Gitea/Forgejo auch die GitHub-API (neueste Commits, ZIP-Download). Gilt nur für die Update-Prüfung; die git-Remotes eines Checkouts bleiben unverändert.
+- **SETTINGS › Updates:** Repo-URL und Branch einstellbar (gespeichert in `data/launcher.cfg`, leer = Wert aus start.bat bzw. Standard), mit Status der letzten Prüfung und „Check now“. Speichern prüft sofort.
+
 ## [1.4.0] – in Arbeit
 
 ### Bedienung

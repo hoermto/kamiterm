@@ -30,7 +30,7 @@ switch (st.state) {
     say(`Newer version available ${v(st.remoteVersion)} (${st.behind} commit(s)), NOT installed: ${st.reason}.`);
     break;
   case "available": {
-    if (st.behind == null && !st.local) say(`Installed version unknown (ZIP download): installing ${v(st.remoteVersion)} from ${st.branch} @ ${st.remote}.`);
+    if (st.behind == null && !st.local) say(`Version of this copy not recorded yet (first start after a download): installing ${v(st.remoteVersion)} from ${st.branch} @ ${st.remote}.`);
     else if (st.behind == null) say(`New version ${v(st.remoteVersion)} on ${st.branch} @ ${st.remote} (installed ${st.local} is not among its last 30 commits).`);
     else {
       say(`New version ${v(st.remoteVersion)} on ${st.branch}: ${st.behind} commit(s)`);

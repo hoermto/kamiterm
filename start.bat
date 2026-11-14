@@ -3,7 +3,7 @@ rem ===========================================================================
 rem  Amber Terminal - starter for Windows. Double-click to start.
 rem   1. Node.js 22.13+: uses an installed one, otherwise downloads a portable
 rem      copy into .runtime next to this file (no admin rights needed).
-rem   2. Asks the repo server below for a newer version and installs it as a ZIP
+rem   2. Asks the repo below (GitHub or Gitea) for a newer version, installs it as a ZIP
 rem      (no git needed; data\ is never touched). A git checkout updates by git.
 rem   3. Starts the terminal in its own app window (Edge/Chrome app mode).
 rem  Copied alone into an empty folder, it first downloads the app (ZIP from the
@@ -16,7 +16,7 @@ rem  Already running from this folder: checks for an update, then opens the wind
 rem ===========================================================================
 setlocal
 rem --- default config --------------------------------------------------------
-set "AMBER_REPO_URL=http://192.168.0.25:4000/home/amber-terminal.git"
+set "AMBER_REPO_URL=https://github.com/hoermto/kamiterm.git"
 set "AMBER_BRANCH=master"
 set "AMBER_APP_WINDOW=1"
 rem ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ function Get-Zip($url, $dest, $sha256) {
   Move-Item $src $dest
   if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
 }
-# Download the branch as a ZIP from the repo server (Gitea/Forgejo: <repo>/archive/<branch>.zip) and copy it
+# Download the branch as a ZIP from the repo server (GitHub, Gitea/Forgejo: <repo>/archive/<branch>.zip) and copy it
 # over $dest. data\, .runtime\ and .git\ in $dest are kept; nothing else is deleted.
 function Install-Zip($url, $branch, $dest) {
   $web = ($url.Trim() -replace '/+$', '') -replace '\.git$', ''

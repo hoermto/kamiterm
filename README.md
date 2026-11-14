@@ -1,195 +1,87 @@
-# Amber Terminal
+# KamiTerm
 
-A Bloomberg-style market terminal that runs on your own computer. Type a ticker and a function code, press Enter, and the screen loads, four panels at a time: world indices, news, company descriptions, financials, SEC filings, insider trades, holders, options chains, yield curves, money markets, the Fed rate path priced by futures, economic data and calendars, central bank rates, positioning, commodities, currencies, crypto, charts and a backtester with quant checks.
+A Bloomberg-style market terminal that runs on your own computer, extended with a relative-strength trading toolkit, personal settings and a one-click starter that installs and updates itself.
 
-Every number comes from a public source that needs no account and no API key. It's one small Node.js app with no dependencies. Your layout is a plain file in the `data` folder, on your machine. It's built from public pages and public data, and it isn't affiliated with Bloomberg.
+KamiTerm is based on **Amber Terminal by Lewis Jackson** ([announcement](https://www.skool.com/zero-one/i-reverse-engineered-the-bloomberg-terminal-and-made-it-free), MIT licence, see [LICENSE](LICENSE) and [NOTICE](NOTICE)). All of the original terminal is still here: four panels, function codes, world markets, news, filings, rates, options, charts, the backtester, the API and the MCP server. Its documentation is unchanged in **[README.original.md](README.original.md)**: read that for the functions, the API, adding your own screens and data feeds.
+
+This file covers what was added.
+
+## What's added
+
+### RSL26: relative-strength scanner and holdings
+
+`RSL26 <universe>`: a weekly scanner after Levy's relative strength (close / 26-week average), with a book of your own positions.
+
+- **Universes:** Nasdaq 100, S&P 500, HDAX and STOXX Europe 600 (EUR), each with its own benchmark. Settings are remembered per universe.
+- **Ranking:** RSL26, RSL39 or 12-1 momentum (`MOM52_4`), with a configurable list length (Top X) and markers in the list: *in portfolio*, *held in another universe*, *buy candidate* for free slots, *skipped (M&A)*.
+- **Entry and exit rules:** N positions, M&A skip; exits on RRG weakness (Leading → Weakening/Lagging) with rank protection (RANKTOP) or confirmation weeks, RS exit (RSL below the benchmark), trailing stop on weekly closes, buy-back lock after a trailing exit. Profiles save a full parameter set; built-in profiles come from the best backtests.
+- **Holdings:** buy, edit, sell (also partial, fractional shares), reopen; P&L per position, open and closed, and an equity curve against the benchmark. Exit signals with reasons, the distance to the trailing stop, and compact columns.
+- **One click per row:** **GP** chart, **DES** description, **+** buy, **⏏** sell (ranking); **GP ✎ ⏏ ✕** in the holdings.
+
+### RSLBT: backtest of the same strategy
+
+`RSLBT <universe>`: a manual backtest of the RSL26 rules (monthly rotation, the same entry and exit logic), with parameter profiles per universe.
+
+- **Equity chart** for the strategy and the benchmark: curve with a **linear or log** y-axis, or **P&L per year or month** as bars (amount or %). The same chart shows the RSL26 holdings' equity.
+
+### More screens
+
+- **RRG**: sector rotation against the S&P 500 with stock drill-down and a season filter (a JdK-style approximation).
+- **MPUT**: married-put scanner (stock near a bottom, RRG winter → spring, far out-of-the-money put 6 to 12 months out).
+- **PARAMHEATMAP**: parameter heat map for RSL26 (N × RANKTOP × exit mode × RS exit).
+
+Details, formulas and validation notes: [EXTENSIONS.md](EXTENSIONS.md).
+
+### Settings (⚙ in the key strip, or `SETTINGS`)
+
+- **Colour scheme:** Amber, Grey, White, Green, Red.
+- **Name** top left instead of "AMBER".
+- **Top bar apps:** *Auto* (most used apps first; usage is counted per function and can be reset) or *Configure* (your own pick and order).
+- **Market clocks** top right: up to 8 of 15 exchanges, each with a dot for **trading**, **extended hours** (pre-market, after hours, auctions, Tradegate for Xetra) or **closed**, and the hours as tooltip. Exchange holidays are not known.
+- **Ticker tape:** scroll, follow Windows' animation setting (Remote Desktop turns animations off), or off.
+- **Updates:** repo URL and branch the updates come from, the last check, and *Check now*.
+
+### Starting, updating and quitting
+
+- **Windows, `start.bat`:** one double-click installs, updates and starts.
+  - Uses the installed Node.js (22.13 or newer), or downloads a portable copy into `.runtime` (checksum verified, no admin rights).
+  - Copied alone into an empty folder, it downloads the app first.
+  - On every start it checks the repo for a newer version and installs it; `data\` (settings, holdings, caches) is never touched.
+  - Starts in its **own app window** (Edge or Chrome app mode), or a browser tab if neither is installed.
+  - If the terminal already runs, it checks for an update and opens the window again.
+- **Linux, `./start.sh`, and macOS, `start.command`:** the same, then the terminal opens in the browser. Uses Node.js 22.13 or newer if installed, otherwise downloads the official build for the system (Linux x64/arm64, macOS Intel/Apple Silicon) into `.runtime/node`, checksum verified, no root needed. Copied alone into an empty folder, the script downloads the app first. Needs `curl` or `wget`, and `tar` (standard on both).
+- **Updates need neither git nor a `.git` folder:** the updater asks the repo's web API (GitHub, or Gitea/Forgejo) for the newest commit of the branch and installs it as a ZIP. A git checkout updates by git instead, fast-forward only, and its remotes are never changed.
+- **Daily check while running:** a yellow **⚠ UPDATE** badge next to the version when a newer one exists (tooltip: the new commits; click to check again). It is installed on the next start.
+- **Quitting:** closing the app window stops the terminal after 20 seconds (a reload doesn't count), and the **⏻** key quits at once. Started in a normal browser tab, it keeps running until ⏻ or `node scripts/stop.js`.
 
 ## Install
 
-**With an AI coding agent (easiest).** Paste the setup prompt from part-timequant.com/bloomberg into Claude Code or Codex. It checks your machine, installs this, tests every data source from your connection, sets the panels for what you follow and opens it in your browser.
+**Windows.** Either download the repository as ZIP (*Code → Download ZIP*) and unpack it, or save only [`start.bat`](https://raw.githubusercontent.com/hoermto/kamiterm/master/start.bat) into an empty folder. Then double-click `start.bat`.
 
-**By hand.** Install Node.js 18 or newer from [nodejs.org](https://nodejs.org), then in this folder:
+**Linux and macOS.** Download and unpack the ZIP (or clone the repository), or save only [`start.sh`](https://raw.githubusercontent.com/hoermto/kamiterm/master/start.sh) into an empty folder. Then run `./start.sh` (Linux; `sh start.sh` if it isn't executable) or double-click `start.command` (macOS; the first time, right-click → Open, because macOS blocks downloaded scripts). Node.js is downloaded if it's missing or older than 22.13; on Alpine and other musl systems, install it with the package manager.
 
-```bash
-node scripts/check.js
-```
+The terminal opens at http://localhost:3787 (or the next free port). More ways to start it, and the setup profiles, are in [README.original.md](README.original.md#install).
 
-```bash
-node scripts/launch.js
-```
+## Where updates come from
 
-There's no `npm install` step. Next time, double-click `start.command` (Mac) or `start.bat` (Windows), or run `./start.sh` (Linux). Stop it with `node scripts/stop.js`.
-
-**Windows starter (`start.bat`).** Double-click it. It:
-
-1. uses the installed Node.js (22.13 or newer, for the price cache). If it is missing, it downloads a portable copy into `.runtime` next to `start.bat` (checksum verified, no admin rights needed);
-2. asks the repo server for a newer version of the branch and installs it automatically. No git and no `.git` folder are needed: it uses the server's web API (Gitea/Forgejo) and downloads the new version as a ZIP over the app folder. The installed version is recorded in `data\installed.json`; a copy downloaded by hand (ZIP) is refreshed once on its first start. `data\` (settings, holdings, caches) is never touched. A git checkout (development) updates by git instead, fast-forward only, and a folder with local edits or local commits is never changed, only reported;
-3. starts the terminal in its own app window (Edge or Chrome app mode: no tabs, no address bar), or a browser tab if neither is installed.
-
-If the terminal is already running from this folder, `start.bat` skips the downloads, checks for an update (installing one restarts the server on the same port) and opens the window again.
-
-**Quitting.** Closing the app window stops the terminal. Once no window or tab has been connected for 20 seconds, the server shuts down (a reload doesn't count). The page tells the server when it closes, because Edge can keep a closed window's connection open. `data\server.log` records each window connecting and closing. The **⏻** key in the top bar quits at once. Alerts only fire while the terminal runs. Opened in a normal browser tab (`APP_WINDOW=0`, or `node scripts/launch.js`), it keeps running until ⏻ or `node scripts/stop.js`.
-
-To install on a new PC, copy only `start.bat` into an empty folder and run it. It downloads the app (ZIP from the repo server) into `.\amber-terminal` first. The defaults are at the top of `start.bat` (`AMBER_REPO_URL`, `AMBER_BRANCH=master`, `AMBER_APP_WINDOW=1`). A `launcher.cfg` next to `start.bat`, or `data\launcher.cfg` inside the app (survives updates, wins), overrides them per machine:
+By default from **https://github.com/hoermto/kamiterm.git**, branch **master**. Change it in ⚙ SETTINGS → Updates, or per computer in `data/launcher.cfg` (kept across updates):
 
 ```ini
-REPO_URL=http://host/path/amber-terminal.git
+REPO_URL=https://github.com/hoermto/kamiterm.git
 BRANCH=master
-APP_WINDOW=0          # browser tab instead of an app window
+APP_WINDOW=0          # Windows: browser tab instead of an app window
 EXIT_ON_CLOSE=0       # keep running when the window is closed
 UPDATE_CHECK_HOURS=24
 ```
 
-While it runs, the terminal checks the repo once a day. If a newer version exists, a yellow **⚠ UPDATE** badge appears next to the version (tooltip: the new commits; click it to check again). Quit the terminal (⏻ or close the window) and run `start.bat` to install. `node scripts/update.js` reports the same from the command line, and `AMBER_UPDATE_CHECK=0` turns the daily check off.
+A `launcher.cfg` next to `start.bat` sets the same for a first install. `node scripts/update.js` shows the update status from the command line, `AMBER_UPDATE_CHECK=0` turns off the daily check, and `AMBER_UPDATE=0 ./start.sh` starts without updating.
 
-Releases are developed on `rel-<version>` branches and merged into `master`, so installs following `master` only get finished releases.
-
-## How to use it
-
-Each panel has its own command line, and the bar at the top runs a command in the active panel. A command is a security, then a function, then Enter (that's GO):
-
-| Type | You get |
-|---|---|
-| `AAPL US EQUITY DES` or `AAPL DES` | Apple's description |
-| `VOD LN DES` | Vodafone in London (exchange codes LN, GR, FP, JP, HK, CN, AU and more) |
-| `SPX INDEX GP` | S&P 500 chart (`INDU`, `CCMP`, `NDX`, `UKX`, `DAX`, `NKY`, `HSI` and the other WEI codes) |
-| `CL1 COMDTY GP` | Front-month WTI crude (`GC1` gold, `SI1` silver, `NG1` gas, `ES1`, `NQ1`, `TY1` and more) |
-| `EURUSD CURNCY GP` | Euro against the dollar |
-| `BTC GP` | Bitcoin |
-| `WEI`, `TOP`, `ECO`, `WIRP` | Market-wide screens, no security needed |
-| `NVDA OMON` | A function first, then its subject, also works |
-
-Esc goes back. Ctrl or Cmd plus 1 to 4 picks a panel. `LAYOUT 1`, `LAYOUT 2` or `LAYOUT 4` in the top bar changes the grid. `HELP` lists every function and `DATA` shows where each one's numbers come from and how fresh they are.
-
-## Functions
-
-| Code | Screen |
-|---|---|
-| WEI | World equity indices: level, change, YTD, 52-week range |
-| GLCO | Commodities: energy, metals, agriculture |
-| FXC | Currency cross rates |
-| CRYPTO | Crypto monitor |
-| MOST | Most active, gainers and losers |
-| TOP | Top market news |
-| CN | News for one company |
-| DES | Company description and key data |
-| BQ | Quote with pre-market and after-hours prices, bid and ask |
-| FA | Income statement, balance sheet, cash flow, ratios |
-| CF | SEC filings |
-| INSD | Insider buys and sells |
-| HDS | Institutional holders |
-| ERN | Earnings calendar |
-| OMON | Options chain with implied volatility, greeks, open interest and the implied move |
-| GEX | Gamma exposure by strike: net GEX, call wall, put wall and the gamma flip |
-| GP, GIP, HP | Price chart, intraday chart, price history |
-| ECO | Economic calendar |
-| ECST | US economic statistics |
-| GC | Yield curves |
-| BTMM | US money markets |
-| WIRP | Fed rate path implied by fed funds futures |
-| CBRT | Central bank policy rates |
-| COT | CFTC Commitments of Traders positioning |
-| BTST | Backtest a strategy, then run quant checks on it |
-| HELP, DATA | Every function, and where each one's data comes from |
-
-## Add your own screen
-
-Ask your AI agent in this folder, for example "add a function called SHRT that shows the most shorted stocks". A function is two small files:
-
-- `lib/fn/<name>.js` fetches the data on your computer and is served at `/api/fn/<name>`. Export `default async function (query)` that returns JSON with a `source` line.
-- `public/js/fn/<area>.js` draws the screen. Export a list of `{ id, name, group, source, needs, render(ctx) }` and import it in `public/js/fn/index.js`.
-
-`public/js/ui.js` has the table, chart and tab helpers. The DATA screen lists the public sources already in use.
-
-## Excel, Python and the API
-
-Bloomberg sells its data to Excel as BDP (a snapshot: one value per security and field) and BDH (history: one row per day, week or month). Amber has both as web addresses on your computer while it's running. There's no key. Type `API` in the terminal for live examples with your panel's security.
-
-```text
-http://localhost:3787/api/bdh?security=AAPL%20US%20EQUITY&fields=PX_OPEN,PX_HIGH,PX_LOW,PX_LAST,PX_VOLUME&start=2025-01-01&end=2025-12-31&per=W&format=csv
-http://localhost:3787/api/bdp?securities=AAPL%20US%20EQUITY,SPX%20INDEX&fields=NAME,PX_LAST,CHG_PCT_1D,CUR_MKT_CAP,PE_RATIO&format=csv
-```
-
-- `per` is D, W, M, Q or Y. `start` and `end` take `2025-01-31`, `20250131`, or `-1Y`, `-6M`, `-30D` for a time before today.
-- Leave out `format=csv` for JSON. The JSON also says where the numbers came from, and why a field is empty.
-- BDH fields: `PX_OPEN`, `PX_HIGH`, `PX_LOW`, `PX_LAST`, `PX_VOLUME`, `CHG_NET_1D`, `CHG_PCT_1D`.
-- BDP fields: `NAME`, `TICKER`, `CRNCY`, `PX_LAST`, `PX_OPEN`, `PX_HIGH`, `PX_LOW`, `PX_VOLUME`, `PX_CLOSE_1D`, `CHG_NET_1D`, `CHG_PCT_1D`, `CHG_PCT_5D`, `CHG_PCT_1M`, `CHG_PCT_YTD`, `CHG_PCT_1YR`, `HIGH_52WEEK`, `LOW_52WEEK`, `VOLUME_AVG_30D`, `LAST_UPDATE_DT`, and for US-listed stocks `CUR_MKT_CAP`, `GICS_SECTOR_NAME`, `GICS_INDUSTRY_NAME`, `EQY_DVD_YLD_IND`, `DVD_EX_DT`, `PE_RATIO`, `TRAIL_12M_EPS`, `BEST_TARGET_PRICE`. A field it can't fill comes back empty.
-- **Excel:** Data > From Web (Windows) or Data > Get Data > From Web (Mac). Paste a CSV address and press Load. Data > Refresh All updates it.
-- **Python:** `pd.read_csv(url, parse_dates=["date"], index_col="date")` with a BDH address. `examples/quickstart.ipynb` is a short notebook that pulls history, a snapshot, a chart, the Fed path and the yield curve.
-- **Every screen's data:** `/api/fn/<code>` returns the JSON behind each function, for example `/api/fn/wirp`, `/api/fn/gc` or `/api/fn/des?symbol=AAPL`.
-
-The API only answers to this computer. The port is 3787 unless something else had it; `node scripts/launch.js` prints the one in use.
-
-## Ask Claude about the markets (MCP)
-
-Bloomberg's AI assistant is called ASKB. Here, your own Claude is the assistant. Connect Claude Code once:
-
-```bash
-claude mcp add --scope user amber -- node /full/path/to/amber-terminal/scripts/mcp.js
-```
-
-`node scripts/mcp.js --help` prints that line with this folder's real path, and so does the `ASK` screen. Claude runs the functions itself, so Amber doesn't need to be open (alerts are the exception: they're checked by the running app). Then ask things like:
-
-- "What does the futures market price for the next Fed meeting, and what is the 2s10s spread?"
-- "Compare the 10-year and 2-year yields over the last month."
-- "Which S&P stocks have insiders buying this week?"
-- "Backtest a 50/200-day moving average cross on SPY and tell me if it passes the quant checks."
-
-| Tool | Does |
-|---|---|
-| `terminal_function` | Runs any function code (WIRP, GC, OMON, DES, FA, INSD, EQS...) and returns its data and source |
-| `quote` | Price and the day's change for any securities |
-| `history` | Price bars for one security, any timeframe or date range |
-| `search_security` | Finds a ticker from a company name |
-| `list_functions` | Every code, what it shows and where its data comes from |
-| `backtest` | Tests a rule you describe in plain English, then runs the quant checks |
-| `workspace` | Your watchlist and portfolio, valued live |
-| `alerts` | Lists your alerts, or sets one while Amber is open |
-
-Other apps that speak MCP (Claude Desktop, Cursor) start it with the command `node` and the argument `/full/path/to/amber-terminal/scripts/mcp.js`.
-
-## Use your own data feed
-
-Every number here is free and public, and some of it runs 15 minutes behind. Two feeds plug in with just a key, for US stock prices (GP, HP, BTST, BDH and Claude's tools):
-
-| Provider | What it costs |
-|---|---|
-| Alpaca | A free account at alpaca.markets gives live prices on the IEX feed. Alpaca's paid plan adds the full market feed (`"feed": "sip"`) |
-| Polygon (now called Massive) | The free plan is end-of-day only, 5 requests a minute. Paid plans are 15-minute delayed or live |
-
-Put your keys in `data/feeds.json` (make the file with any text editor, and leave out the provider you don't use):
-
-```json
-{
-  "alpaca": { "keyId": "PK...", "secretKey": "...", "feed": "iex" },
-  "polygon": { "apiKey": "..." }
-}
-```
-
-The file stays on your computer: the data folder isn't in git, updates leave it alone, and each key goes only to its own provider, in a request header. Your key's prices come first and the free sources stay behind them, and each screen's source line says which one it used. `node scripts/doctor.js` checks each key.
-
-For any other feed (Interactive Brokers, Databento), ask your Claude to add it with your key, for example "add Databento as the first source for US stock prices, using my key in DATABENTO_API_KEY". Where it goes:
-
-- `lib/providers.js`: `getCandles` and `getQuotes` try sources in a chain (stocks: your keys, then Nasdaq and Yahoo; crypto: Binance, Coinbase, Kraken). A new feed is one more function at the front of the chain, and the free sources stay behind it as fallbacks. `lib/feeds.js` shows how the Alpaca and Polygon ones are done.
-- `lib/fn/<code>.js`: each function's own source (options from CBOE, filings from the SEC). A paid source for one screen goes in its file.
-- Your key goes in `data/feeds.json` or an environment variable, not in the code.
-
-The screens, BDP and BDH, and Claude's tools all read through those files, so they all pick up the new feed.
-
-## What it doesn't do
-
-There's no live order book. Some stock, index and futures prices run up to 15 minutes behind, depending on the exchange. Filings, insiders, holders and options are for US-listed securities. It doesn't place trades; to trade a strategy for real, connect PTQ (part-timequant.com). Use your broker's prices to place orders.
-
-## Commands
-
-| Command | Does |
-|---|---|
-| `node scripts/check.js` | Offline tests, a check of every data source from your connection, and a live smoke test. Prints READY or NOT READY |
-| `node scripts/setup.js --profile stocks` | Sets the four panels for stocks, crypto, fx, macro or mix (add `--ticker NVDA`) |
-| `node scripts/launch.js` | Starts it in the background and opens your browser (http://localhost:3787, or the next free port) |
-| `node scripts/stop.js` | Stops it |
-| `node scripts/test.js` | The offline tests |
+New versions are developed on `rel-<version>` branches and merged into `master`, so installs following `master` only get finished releases. Changes per version: [CHANGELOG.md](CHANGELOG.md) (in German).
 
 ## Credits
 
+Amber Terminal, the base of this project: Copyright (c) 2026 Lewis Jackson, MIT licence ([LICENSE](LICENSE), [NOTICE](NOTICE), [original README](README.original.md)).
+
 Charts are drawn with [TradingView Lightweight Charts™](https://www.tradingview.com/) (Copyright TradingView, Inc.), used under the Apache License 2.0. The library is in `public/vendor/` with its licence header.
+
+Market data comes from public endpoints, each under its own terms. Nothing in this software is financial advice.

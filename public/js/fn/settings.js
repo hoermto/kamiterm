@@ -2,7 +2,7 @@
 // (auto = most used, or your own pick and order), exchange clocks top right, ticker tape, and the app usage
 // counts behind the ranking.
 // Stored in data/state.json (amberPrefs, amberUsage) via prefs.js.
-import { esc } from "../api.js";
+import { esc, api } from "../api.js";
 import { table, sect, html } from "../ui.js";
 import { FUNCS } from "./index.js";
 import { THEMES, TAPE_MODES, DEFAULT_NAME, DEFAULT_BAR, NAME_MAX, BAR_MIN, BAR_MAX, barApps, barCandidates } from "../prefs-core.js";
@@ -23,6 +23,60 @@ const row = (...nodes) => {
   r.append(...nodes);
   return r;
 };
+
+// Where updates come from: data/launcher.cfg REPO_URL / BRANCH, read and written by the server.
+const FROM = { settings: "set here", "start.bat": "from start.bat", default: "default" };
+const STATE = { uptodate: "up to date", available: "update available", blocked: "update blocked", error: "error", unknown: "not checked yet" };
+async function renderUpdates(ctx, box, msg = "") {
+  let c;
+  try {
+    c = await api.get("/api/update/config");
+  } catch (e) {
+    box.replaceChildren(html(`<p class="para dim">Update settings not available: ${esc(e.message)}</p>`));
+    return;
+  }
+  if (!ctx.live()) return;
+  const st = c.status || { state: "unknown" };
+  const shownUrl = c.repoUrl || c.defaultRepoUrl;
+  const form = html(`<form class="wform" autocomplete="off">
+    <label>Repo URL <input name="repoUrl" style="width:380px" placeholder="${esc(c.defaultRepoUrl)}" value="${esc(c.repoFrom === "settings" ? c.repoUrl : "")}"></label>
+    <label>Branch <input name="branch" style="width:110px" placeholder="${esc(c.repoFrom === "default" && c.branchFrom === "default" ? c.defaultBranch : c.branch)}" value="${esc(c.branchFrom === "settings" ? c.branch : "")}"></label>
+  </form>`);
+  const save = async (body, done) => {
+    box.querySelectorAll("button").forEach((b) => (b.disabled = true));
+    try {
+      await api.put("/api/update/config", body);
+      renderUpdates(ctx, box, done);
+    } catch (e) {
+      ctx.toast(`Not saved: ${e.message}`, true);
+      box.querySelectorAll("button").forEach((b) => (b.disabled = false));
+    }
+  };
+  form.append(
+    btn("Save", () => form.requestSubmit(), "Save and check for updates now"),
+    btn("Default", () => save({ repoUrl: "", branch: "" }, "Back to the default repo"), `Remove the setting: ${c.defaultRepoUrl}, ${c.defaultBranch}`),
+    btn("Check now", async () => {
+      try { await api.post("/api/update/check"); } catch {}
+      renderUpdates(ctx, box, "Checked");
+    }),
+  );
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    save({ repoUrl: f.get("repoUrl"), branch: f.get("branch") }, "Saved and checked");
+  };
+  const v = (x) => (x ? `v${x}` : "");
+  const num = (x) => String(x || "").split(".").map(Number);
+  const older = st.state === "available" && st.remoteVersion && st.localVersion && num(st.remoteVersion).reduce((d, n, i) => d || n - (num(st.localVersion)[i] || 0), 0) < 0;
+  const stText = older
+    ? `the branch has ${v(st.remoteVersion)}, older than the installed one (start.bat would install it)`
+    : `${STATE[st.state] || st.state}${st.state === "available" ? ` ${v(st.remoteVersion)}` : ""}${st.reason ? ` (${esc(st.reason)})` : ""}`;
+  box.replaceChildren(
+    html(`<p class="para dim">New versions are looked up here and installed by start.bat on its next start. Empty fields use start.bat's value or the default. Saved in data/launcher.cfg on this computer.${c.gitCheckout ? " This folder is a git checkout: without a URL here it updates from its own origin remote; its remotes are never changed." : ""}</p>`),
+    form,
+    html(`<p class="para">Using <b>${esc(st.source || shownUrl)}</b> · branch <b>${esc(c.branch)}</b> <span class="dim">(${FROM[c.repoFrom] || c.repoFrom})</span><br>Status: <b>${stText}</b> · installed ${esc(v(st.localVersion) || "?")}${st.local ? ` @ ${esc(st.local)}` : ""}${st.checkedAt ? ` · checked ${esc(new Date(st.checkedAt).toLocaleString())}` : ""}${msg ? ` · <span class="dim">${esc(msg)}</span>` : ""}</p>`),
+  );
+}
 
 function render(ctx) {
   const p = getPrefs();
@@ -192,6 +246,12 @@ function render(ctx) {
   }
 
   // ---- usage ----
+  // ---- updates ----
+  ctx.el.append(sect("Updates"));
+  const updBox = html('<div><p class="para dim">Loading…</p></div>');
+  ctx.el.append(updBox);
+  renderUpdates(ctx, updBox);
+
   ctx.el.append(sect("App usage"));
   const used = Object.entries(usage).sort((a, b) => b[1] - a[1]);
   const total = used.reduce((s, [, n]) => s + n, 0);
