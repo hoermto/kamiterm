@@ -285,6 +285,13 @@ const FN = {
     what: "How a stock moved around its past ex-dividend dates (US and European stocks): run-up before, ex-day drop against the dividend, moves 1 to 3 weeks after, recovery time; period=1Y|2Y|3Y|5Y|ALL. Also a buy-write over the ex-date (entry=trading days before, default 2; dtemin/dtemax, default 2-10): stock side from history, and for US stocks today's first call above the price with premium, weekly check and the past events at today's terms",
     source: "Yahoo dividend events and daily prices, Nasdaq for announced ex-dates",
   },
+  DSCAN: {
+    file: "dscan",
+    arg: "universe",
+    argHint: "SPX (default), NDX or ALL; more as days=14 entry=2 dtemin=2 dtemax=10 minoi=50 maxspread=30 weekly=1 period=5Y",
+    what: "Buy-write scanner over the coming ex-dividend dates (US stocks): weekly options, an expiry a few days after the entry, the first call above the price with its premium, and the stock's past ex-dates at today's terms (return per trade, win rate)",
+    source: "Nasdaq dividend calendar, CBOE delayed option quotes, Yahoo dividends and prices",
+  },
   ERN: {
     arg: "days",
     argHint: "days ahead, default 5",

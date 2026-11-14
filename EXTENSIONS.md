@@ -37,6 +37,7 @@ it. After backend changes restart this copy; after UI changes refresh the browse
 | `RSL26 LOESCHEN AAPL` (auch `LÖSCHEN` / `DELETE`) | Offene Position endgültig löschen (keine Historie) |
 | `RSL26 REOPEN AAPL` | Zuletzt geschlossene Position wieder öffnen |
 | `RSL26 KAUF AAPL DATE=2026-01-15` | Kauf mit Datum-Override (UTC YYYY-MM-DD) |
+| `DSCAN SPX` / `DSCAN ALL DAYS=21 MINOI=0` | Buy-write-Scanner über die kommenden Ex-Tage (US), siehe „DSCAN“ unten |
 | `KO DMOV` / `SAP.DE DMOV 5Y` | Kursbewegung um vergangene Ex-Dividenden-Tage (US und Europa), Zeitraum 1Y/2Y/3Y/5Y/ALL, siehe „DMOV“ unten |
 | `RSL26 … MASKIP=0` | „M&A ignorieren“ aus (Standard `MASKIP=1`: M&A-Titel zählen nicht zum Kauf-Fenster). `HIDEMA` ist entfallen und wird ignoriert |
 | `RSLBT SPX START=10000 SIZE=EQUITY FRACTIONAL=1` | Backtest-Startkapital, Budget=Equity/n, Bruchstücke (Defaults) |
@@ -360,6 +361,27 @@ Rechnung: `lib/event-moves.js` (Historie) und `lib/buywrite.js` (Optionen).
   hochgerechnet, vor Kosten).
 - **Frühe Ausübung:** Risiko, wenn der Call im Geld ist und sein Zeitwert unter der
   Dividende liegt (dann übt der Käufer am Tag vor dem Ex-Tag aus).
+
+## DSCAN: Buy-write-Scanner über die kommenden Ex-Tage (seit v1.5.0)
+
+`DSCAN [SPX|NDX|ALL] DAYS=14 ENTRY=2 DTE=2-10 MINOI=50 MAXSPREAD=30 WEEKLY=1 PERIOD=5Y`
+(Einstellungen werden gemerkt). Nur US-Aktien (Optionsdaten). `lib/fn/dscan.js`.
+
+1. **Ex-Tage:** Nasdaq-Dividendenkalender, eine Abfrage je Werktag bis DAYS voraus,
+   12 Stunden im Event-Cache. Nur Stammaktien (einfache Ticker, keine Preferreds/Notes).
+2. **Universum:** SPX, NDX (wie RSL26) oder ALL (jede Aktie im Kalender).
+3. **Optionen je Aktie** (CBOE, wie DMOV › Buy-write): Filter in dieser Reihenfolge,
+   gezählt im Screen: keine US-Optionen · keine Weeklys (abschaltbar) · kein Verfall
+   DTE nach dem Einstieg · keine Prämie · Open Interest < MINOI oder Spread > MAXSPREAD
+   (Spread = (Ask − Bid) / Mitte des ersten Calls über dem Kurs).
+4. **Historie:** die vergangenen Ex-Tage der Aktie im Zeitraum PERIOD mit den heutigen
+   Konditionen (wie in DMOV): Durchschnitt, Median, schlechtester Trade, Gewinnquote,
+   Anteil ausgeübt, „pro Jahr“. Dazu „Prämie + Dividende“ = Ertrag bei unverändertem Kurs.
+5. **Sortierung:** Durchschnitt je Trade, absteigend. Klick auf eine Zeile öffnet DMOV
+   mit denselben Parametern.
+
+Außerhalb der Handelszeit sind die Spreads die vom Schluss und oft weit; Weekly-Strikes
+haben anfangs wenig Open Interest. Zeitbudget 120 s, 4 Ketten parallel.
 
 ## RRG: JdK-style approximation, not proprietary JdK
 

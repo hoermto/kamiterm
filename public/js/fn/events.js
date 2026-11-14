@@ -1,0 +1,112 @@
+// Event scanners. DSCAN: buy-write candidates over the coming ex-dividend dates (US stocks): weekly options,
+// an expiry a few days after the entry, the first call above the price, and the stock's past ex-dates at
+// today's terms. The maths runs on the server (lib/fn/dscan.js, lib/buywrite.js, lib/event-moves.js).
+import { api, esc, pct, num, cls } from "../api.js";
+import { table, sect, tabs, html } from "../ui.js";
+
+const finite = (v) => typeof v === "number" && Number.isFinite(v);
+const p2 = (v) => pct(v, 2);
+const perc0 = (v) => (finite(v) ? `${v.toFixed(0)}%` : "—");
+const DSCAN_DEFAULTS = { universe: "SPX", days: 14, entry: 2, dtemin: 2, dtemax: 10, minoi: 50, maxspread: 30, weekly: 1, period: "5Y" };
+const UNIS = ["SPX", "NDX", "ALL"];
+const PERIODS = ["1Y", "2Y", "3Y", "5Y", "ALL"];
+const keys = (args) => Object.fromEntries(args.filter((a) => a.includes("=")).map((a) => { const [k, ...v] = a.split("="); return [k.toLowerCase(), v.join("=")]; }));
+const dscanCmd = (v) => `DSCAN ${v.universe} DAYS=${v.days} ENTRY=${v.entry} DTE=${v.dtemin}-${v.dtemax} MINOI=${v.minoi} MAXSPREAD=${v.maxspread} WEEKLY=${v.weekly ? 1 : 0} PERIOD=${v.period}`;
+
+async function loadSaved() {
+  try { return (await api.get("/api/settings?tool=DSCAN"))?.settings || {}; } catch { return {}; }
+}
+
+async function dscan(ctx) {
+  const saved = await loadSaved();
+  const k = keys(ctx.args);
+  const pick = (name) => k[name] ?? saved[name] ?? DSCAN_DEFAULTS[name];
+  const v = {
+    universe: ctx.args.map((a) => String(a).toUpperCase()).find((a) => UNIS.includes(a)) || saved.universe || DSCAN_DEFAULTS.universe,
+    days: pick("days"), entry: pick("entry"), dtemin: pick("dtemin"), dtemax: pick("dtemax"),
+    minoi: pick("minoi"), maxspread: pick("maxspread"), weekly: Number(pick("weekly")) ? 1 : 0,
+    period: String(pick("period")).toUpperCase(),
+  };
+  const dte = /^(\d+)-(\d+)$/.exec(k.dte || "");
+  if (dte) [v.dtemin, v.dtemax] = [dte[1], dte[2]];
+  ctx.el.replaceChildren(html(`<p class="hint">Looking up ex-dates and option chains (the first run can take a minute)…</p>`));
+  const d = await api.fn("dscan", v);
+  if (!ctx.live()) return;
+  api.put("/api/settings", { tool: "DSCAN", settings: { ...v, updatedAt: new Date().toISOString() } }).catch(() => {});
+
+  ctx.el.replaceChildren(
+    sect(`Buy-write over the ex-date · ${d.universeLabel} · ex-dates in the next ${d.days} days`),
+    tabs(UNIS, d.universe, (u) => ctx.go(dscanCmd({ ...v, universe: u }))),
+  );
+  const form = html(`<form class="wform" autocomplete="off">
+    <label>Days ahead <input name="days" type="number" min="1" max="30" style="width:52px" value="${esc(v.days)}"></label>
+    <label>Entry, days before <input name="entry" type="number" min="1" max="10" style="width:46px" value="${esc(v.entry)}"></label>
+    <label>DTE <input name="dtemin" type="number" min="0" max="30" style="width:46px" value="${esc(v.dtemin)}"> to <input name="dtemax" type="number" min="1" max="45" style="width:46px" value="${esc(v.dtemax)}"></label>
+    <label>Min. open interest <input name="minoi" type="number" min="0" style="width:64px" value="${esc(v.minoi)}"></label>
+    <label>Max. spread % <input name="maxspread" type="number" min="1" max="200" style="width:52px" value="${esc(v.maxspread)}"></label>
+    <label><input name="weekly" type="checkbox"${v.weekly ? " checked" : ""}> weekly options only</label>
+    <label>History <select name="period">${PERIODS.map((p) => `<option${p === v.period ? " selected" : ""}>${p}</option>`).join("")}</select></label>
+    <button type="submit">Scan</button>
+  </form>`);
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    ctx.go(dscanCmd({ ...v, days: f.get("days"), entry: f.get("entry"), dtemin: f.get("dtemin"), dtemax: f.get("dtemax"), minoi: f.get("minoi"), maxspread: f.get("maxspread"), weekly: f.get("weekly") ? 1 : 0, period: f.get("period") }));
+  };
+  const c = d.coverage;
+  const sk = c.skipped;
+  const out = [
+    sk.noOptions && `${sk.noOptions} without US options`,
+    sk.noWeekly && `${sk.noWeekly} without weeklies`,
+    sk.noExpiry && `${sk.noExpiry} without an expiry ${d.dteMin}-${d.dteMax} days after the entry`,
+    sk.noPremium && `${sk.noPremium} without a usable premium`,
+    sk.illiquid && `${sk.illiquid} below ${d.minOi} open interest or above ${d.maxSpread}% spread`,
+    sk.error && `${sk.error} errors`,
+  ].filter(Boolean);
+  ctx.el.append(
+    form,
+    html(`<p class="hint">${c.exDates} stocks with an ex-date · ${c.listed} listed${out.length ? ` · left out: ${out.join(", ")}` : ""}${c.partial ? " · not all checked in time, run again" : ""}</p>`),
+  );
+  if (!d.rows.length) {
+    ctx.el.append(html(`<p class="hint">No candidates with these filters. More days ahead, a wider DTE or looser liquidity filters find more.</p>`));
+  } else {
+    ctx.el.append(
+      table(d.rows, [
+        { key: "symbol", label: "Ticker", left: true, lbl: true, title: "Click a row for DMOV" },
+        { key: "exDate", label: "Ex-date", left: true },
+        { key: "dividendPct", label: "Dividend", fmt: (x) => (finite(x) ? `${x.toFixed(2)}%` : "—") },
+        { key: "entryDate", label: "Entry", left: true },
+        { key: "expiry", label: "Expiry", left: true },
+        { key: "dte", label: "DTE" },
+        { key: "strike", label: "Strike", fmt: (x, r) => `${num(x, 2)} (${p2(r.strikePct)})` },
+        { key: "premiumPct", label: "Premium", fmt: (x, r) => (finite(x) ? `${x.toFixed(2)}%${r.premiumEstimated ? "*" : ""}` : "—"), title: "Call bid over the price; * = estimated for the entry day" },
+        { key: "flatPct", label: "Premium +\ndividend", fmt: (x) => (finite(x) ? `${x.toFixed(2)}%` : "—"), title: "What the trade makes if the stock ends where it started" },
+        { key: "oi", label: "Open\ninterest" },
+        { key: "spreadPct", label: "Spread", fmt: perc0 },
+        { key: "n", label: "Past\nex-dates" },
+        { key: "avgPct", label: "Avg per\ntrade", fmt: p2, cls, title: "Today's terms on the past ex-dates: average return per trade" },
+        { key: "medianPct", label: "Median", fmt: p2, cls },
+        { key: "worstPct", label: "Worst", fmt: p2, cls },
+        { key: "winPct", label: "Win", fmt: perc0 },
+        { key: "assignedPct", label: "Called\naway", fmt: perc0 },
+        { key: "perYearPct", label: "Per year", fmt: p2, cls, title: "Average per trade x 365 / DTE (simple, before costs)" },
+        { key: (r) => (r.earlyRisk ? "early assignment" : ""), label: "Warning", left: true },
+      ], { onRow: (r) => ctx.go(`${r.symbol} DMOV ${d.period} ENTRY=${d.entryDays} DTE=${d.dteMin}-${d.dteMax}`) }),
+    );
+  }
+  ctx.el.append(
+    html(`<p class="hint">Buy ${d.entryDays} trading day${d.entryDays > 1 ? "s" : ""} before the ex-date, sell the first call above the price on the first expiry ${d.dteMin} to ${d.dteMax} days after the entry, keep the dividend, hold to expiry. "Avg per trade" applies today's strike distance, premium and dividend to the stock's past ex-dates since ${esc(d.since || "the start of the data")}: the move to expiry capped at the strike, plus premium and dividend. Quotes are about 15 minutes behind; outside market hours the spreads are those of the close and often wide.</p>`),
+  );
+  ctx.setSource(d.source);
+}
+
+export default [
+  {
+    id: "DSCAN",
+    name: "Buy-write scanner over ex-dividend dates",
+    group: "Equities",
+    needs: false,
+    source: "Nasdaq dividend calendar, CBOE delayed option quotes, Yahoo dividends and prices",
+    render: dscan,
+  },
+];

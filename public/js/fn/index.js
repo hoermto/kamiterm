@@ -13,10 +13,11 @@ import btst from "./btst.js";
 import coverage from "./coverage.js";
 import workspace from "./workspace.js";
 import equity from "./equity.js";
+import events from "./events.js";
 import playbooks from "./playbooks.js";
 import settings from "./settings.js";
 
 import grokki from "./grokki.js";
 
 export const FUNCS = {};
-for (const f of [...grokki, ...market, ...security, ...calendar, ...newsfilings, ...docsearch, ...rates, ...options, ...btst, ...coverage, ...workspace, ...equity, ...playbooks, ...apiHelp, ...meta, ...settings]) FUNCS[f.id] = f;
+for (const f of [...grokki, ...market, ...security, ...calendar, ...newsfilings, ...docsearch, ...rates, ...options, ...btst, ...coverage, ...workspace, ...equity, ...events, ...playbooks, ...apiHelp, ...meta, ...settings]) FUNCS[f.id] = f;

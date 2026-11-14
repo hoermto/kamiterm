@@ -29,7 +29,8 @@ This file covers what was added.
 - **RRG**: sector rotation against the S&P 500 with stock drill-down and a season filter (a JdK-style approximation).
 - **MPUT**: married-put scanner (stock near a bottom, RRG winter → spring, far out-of-the-money put 6 to 12 months out).
 - **PARAMHEATMAP**: parameter heat map for RSL26 (N × RANKTOP × exit mode × RS exit).
-- **DMOV**: how a stock moved around its past ex-dividend dates, for US and European stocks: run-up before, the ex-day drop against the dividend, the moves 1 to 3 weeks after (average, median, best, worst, 1 SD, share up, in % and in the currency), and how long it took to get back. Over 1, 2, 3 or 5 years or all; next ex-date announced or estimated.
+- **DMOV**: how a stock moved around its past ex-dividend dates, for US and European stocks: run-up before, the ex-day drop against the dividend, the moves 1 to 3 weeks after (average, median, best, worst, 1 SD, share up, in % and in the currency), and how long it took to get back. Over 1, 2, 3 or 5 years or all; next ex-date announced or estimated. With a **buy-write** section: buy a few days before the ex-date, sell the first call above the price on a weekly expiry shortly after, and see how today's terms would have done on the past ex-dates (US stocks; history only for European ones).
+- **DSCAN**: buy-write scanner over the coming ex-dividend dates (S&P 500, Nasdaq 100 or all US stocks): weekly options, a matching expiry, premium, liquidity filters, and each stock's past ex-dates at today's terms.
 
 Details, formulas and validation notes: [EXTENSIONS.md](EXTENSIONS.md).
 
