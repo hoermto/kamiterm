@@ -4,8 +4,8 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ## [1.5.0] – in Arbeit
 
-### Starter (Linux/macOS)
-- **Node.js nur einmal laden:** Das Startskript der App (`amber-terminal/start.sh`) nimmt auch das Node.js aus `.runtime` im Ordner darüber, das ein allein kopiertes `start.sh` bei der Erstinstallation geladen hat. Vorher wurde es ein zweites Mal geladen (rund 30 MB).
+### Starter
+- **Node.js nur einmal laden (Windows, Linux, macOS):** Das Startskript der App (`amber-terminal\start.bat` bzw. `amber-terminal/start.sh`) nimmt auch das Node.js aus `.runtime` im Ordner darüber, das ein allein kopiertes `start.bat`/`start.sh` bei der Erstinstallation geladen hat. Vorher wurde es ein zweites Mal geladen (rund 30 MB).
 - **Alpine und andere musl-Linux:** statt abzubrechen wird der offizielle musl-Build von nodejs.org geladen (x64, Prüfsumme geprüft). Fehlt `libstdc++`, sagt die Meldung, wie es installiert wird (`apk add libstdc++`). Für musl auf ARM gibt es keinen Build: Hinweis auf den Paketmanager.
 
 ### Datenschutz

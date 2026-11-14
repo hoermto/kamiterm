@@ -1,8 +1,9 @@
 @echo off
 rem ===========================================================================
 rem  Amber Terminal - starter for Windows. Double-click to start.
-rem   1. Node.js 22.13+: uses an installed one, otherwise downloads a portable
-rem      copy into .runtime next to this file (no admin rights needed).
+rem   1. Node.js 22.13+: uses an installed one (also the .runtime one folder up),
+rem      otherwise downloads a portable copy into .runtime next to this file
+rem      (no admin rights needed).
 rem   2. Asks the repo below (GitHub or Gitea) for a newer version, installs it as a ZIP
 rem      (no git needed; data\ is never touched). A git checkout updates by git.
 rem   3. Starts the terminal in its own app window (Edge/Chrome app mode).
@@ -37,6 +38,10 @@ $Base = Split-Path -Parent $env:AMBER_SELF
 $Runtime = Join-Path $Base '.runtime'
 $MinNode = [version]'22.13.0'
 $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64' -or $env:PROCESSOR_ARCHITEW6432 -eq 'ARM64') { 'arm64' } else { 'x64' }
+# Node.js candidates: the portable one next to this file, the one in .runtime one folder up (the app's own
+# start.bat after an install from a lone start.bat), then the installed one.
+$parentDir = Split-Path -Parent $Base
+$NodeCands = @((Join-Path $Runtime 'node\node.exe'), $(if ($parentDir) { Join-Path $parentDir '.runtime\node\node.exe' }), (Get-Command node.exe -ErrorAction SilentlyContinue).Source)
 function Say($m) { Write-Host "  $m" }
 function Fail($m) { Write-Host ''; Write-Host "  ERROR: $m" -ForegroundColor Red; exit 1 }
 function Read-Cfg($file) {
@@ -117,12 +122,12 @@ if ($known) {
   $port = Find-Running $known
   if ($port -and -not (Test-Path (Join-Path $known '.git')) -and -not (Test-Path (Join-Path $known 'data\installed.json'))) {
     # ZIP copy with unknown version: needs the one-time refresh below, which needs the server stopped.
-    $qn = @((Join-Path $Runtime 'node\node.exe'), (Get-Command node.exe -ErrorAction SilentlyContinue).Source) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    $qn = $NodeCands | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
     if ($qn) { Say "Running on port $port - stopping it to refresh this copy."; $env:PORT = "$port"; Push-Location $known; & $qn scripts\stop.js; Pop-Location }
     $port = $null
   }
   if ($port) {
-    $qn = @((Join-Path $Runtime 'node\node.exe'), (Get-Command node.exe -ErrorAction SilentlyContinue).Source) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    $qn = $NodeCands | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
     if ($qn) {
       Say "Already running on port $port - checking for updates, then opening the window."
       Set-Location $known
@@ -144,7 +149,7 @@ if ($known) {
 # ---- 1. Node.js ----
 $node = $null
 $portableNode = Join-Path $Runtime 'node\node.exe'
-foreach ($cand in @($portableNode, (Get-Command node.exe -ErrorAction SilentlyContinue).Source)) {
+foreach ($cand in $NodeCands) {
   if ($cand -and (Test-Path $cand) -and (Get-NodeVersion $cand) -ge $MinNode) { $node = $cand; break }
 }
 if (-not $node) {
