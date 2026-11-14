@@ -49,7 +49,7 @@ Details, formulas and validation notes: [EXTENSIONS.md](EXTENSIONS.md).
   - On every start it checks the repo for a newer version and installs it; `data\` (settings, holdings, caches) is never touched.
   - Starts in its **own app window** (Edge or Chrome app mode), or a browser tab if neither is installed.
   - If the terminal already runs, it checks for an update and opens the window again.
-- **Linux, `./start.sh`, and macOS, `start.command`:** the same, then the terminal opens in the browser. Uses Node.js 22.13 or newer if installed, otherwise downloads the official build for the system (Linux x64/arm64, macOS Intel/Apple Silicon) into `.runtime/node`, checksum verified, no root needed. Copied alone into an empty folder, the script downloads the app first. Needs `curl` or `wget`, and `tar` (standard on both).
+- **Linux, `./start.sh`, and macOS, `start.command`:** the same, then the terminal opens in the browser. Uses Node.js 22.13 or newer if installed, otherwise downloads the official build for the system (Linux x64/arm64, Alpine/musl x64, macOS Intel/Apple Silicon) into `.runtime/node`, checksum verified, no root needed. Copied alone into an empty folder, the script downloads the app first. Needs `curl` or `wget`, and `tar` (standard on both).
 - **Updates need neither git nor a `.git` folder:** the updater asks the repo's web API (GitHub, or Gitea/Forgejo) for the newest commit of the branch and installs it as a ZIP. A git checkout updates by git instead, fast-forward only, and its remotes are never changed.
 - **Daily check while running:** a yellow **⚠ UPDATE** badge next to the version when a newer one exists (tooltip: the new commits; click to check again). It is installed on the next start.
 - **Quitting:** closing the app window stops the terminal after 20 seconds (a reload doesn't count), and the **⏻** key quits at once. Started in a normal browser tab, it keeps running until ⏻ or `node scripts/stop.js`.
@@ -58,7 +58,7 @@ Details, formulas and validation notes: [EXTENSIONS.md](EXTENSIONS.md).
 
 **Windows.** Either download the repository as ZIP (*Code → Download ZIP*) and unpack it, or save only [`start.bat`](https://raw.githubusercontent.com/hoermto/kamiterm/master/start.bat) into an empty folder. Then double-click `start.bat`.
 
-**Linux and macOS.** Download and unpack the ZIP (or clone the repository), or save only [`start.sh`](https://raw.githubusercontent.com/hoermto/kamiterm/master/start.sh) into an empty folder. Then run `./start.sh` (Linux; `sh start.sh` if it isn't executable) or double-click `start.command` (macOS; the first time, right-click → Open, because macOS blocks downloaded scripts). Node.js is downloaded if it's missing or older than 22.13; on Alpine and other musl systems, install it with the package manager.
+**Linux and macOS.** Download and unpack the ZIP (or clone the repository), or save only [`start.sh`](https://raw.githubusercontent.com/hoermto/kamiterm/master/start.sh) into an empty folder. Then run `./start.sh` (Linux; `sh start.sh` if it isn't executable) or double-click `start.command` (macOS; the first time, right-click → Open, because macOS blocks downloaded scripts). Node.js is downloaded if it's missing or older than 22.13, also on Alpine and other musl systems (x64; they need `libstdc++`, e.g. `apk add libstdc++`). On musl ARM, install it with the package manager.
 
 The terminal opens at http://localhost:3787 (or the next free port). More ways to start it, and the setup profiles, are in [README.original.md](README.original.md#install).
 

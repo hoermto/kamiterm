@@ -1,7 +1,8 @@
 #!/bin/sh
 # Amber Terminal starter for Linux (./start.sh) and macOS (double-click start.command, the same script).
-#   1. Node.js 22.13+: uses an installed one, otherwise downloads a portable copy from nodejs.org into
-#      .runtime/node next to this file (checksum verified, no root needed; curl or wget, and tar).
+#   1. Node.js 22.13+: uses an installed one (also the .runtime one folder up), otherwise downloads a
+#      portable copy from nodejs.org into .runtime/node next to this file (checksum verified, no root
+#      needed; curl or wget, and tar). Alpine/musl: the official musl build (x64; needs libstdc++).
 #   2. Copied alone into an empty folder, it first downloads the app into ./amber-terminal.
 #   3. Checks the repo for a newer version and installs it (no git needed; data/ is never touched;
 #      a git checkout updates by git, fast-forward only).
@@ -55,12 +56,15 @@
   export AMBER_REPO_URL AMBER_BRANCH
 
   # ---- 1. Node.js ----
+  # Also the .runtime one folder up: after a first install from a lone start.sh, the app's own copy
+  # (./amber-terminal/start.sh) uses the Node that was downloaded next to the first one.
   NODE=""
-  for cand in "$RUNTIME/node/bin/node" "$(command -v node 2>/dev/null)"; do
+  for cand in "$RUNTIME/node/bin/node" "$(cd "$BASE/.." && pwd)/.runtime/node/bin/node" "$(command -v node 2>/dev/null)"; do
     if [ -z "${AMBER_FORCE_NODE_DOWNLOAD:-}" ] && node_ok "$cand"; then NODE=$cand; break; fi
   done
   if [ -z "$NODE" ]; then
     os=${AMBER_OS:-$(uname -s)}; arch=${AMBER_ARCH:-$(uname -m)}
+    libc=""   # "-musl" on Alpine and other musl Linux: nodejs.org has an official build for x64
     case "$os" in
       Linux|linux) os=linux; key_os=linux; key_suffix="" ;;
       Darwin|darwin) os=darwin; key_os=osx; key_suffix="-tar" ;;
@@ -71,8 +75,9 @@
       aarch64|arm64) arch=arm64 ;;
       *) fail "No Node.js $MIN_NODE or newer found, and no portable download for $arch. Install it from https://nodejs.org" ;;
     esac
-    if [ "$os" = linux ] && ldd --version 2>&1 | grep -qi musl; then
-      fail "This Linux uses musl (e.g. Alpine): install Node.js $MIN_NODE or newer with the package manager."
+    if [ "$os" = linux ] && { [ -n "${AMBER_MUSL:-}" ] || ldd --version 2>&1 | grep -qi musl || ls /lib/ld-musl-* >/dev/null 2>&1; }; then
+      [ "$arch" = x64 ] || fail "This Linux uses musl (e.g. Alpine) on $arch: nodejs.org has no build for it. Install Node.js $MIN_NODE or newer with the package manager (apk add nodejs)."
+      libc="-musl"; key_suffix="-musl"
     fi
     say "Node.js $MIN_NODE or newer not found: downloading a portable copy (about 30 MB) ..."
     mkdir -p "$RUNTIME" || fail "Cannot create $RUNTIME"
@@ -83,9 +88,9 @@
     ver=$(grep '"lts":"' "$tmp/index.json" | grep "\"$key_os-$arch$key_suffix\"" | sed -n 's/.*"version":"v\([0-9.]*\)".*/\1/p' | while read -r v; do
       if ver_ge "$v" "$MIN_NODE"; then echo "$v"; break; fi
     done)
-    [ -n "$ver" ] || fail "No Node.js LTS download for $os-$arch found."
-    say "Node.js v$ver for $os-$arch ..."
-    name="node-v$ver-$os-$arch.tar.gz"
+    [ -n "$ver" ] || fail "No Node.js LTS download for $os-$arch$libc found."
+    say "Node.js v$ver for $os-$arch$libc ..."
+    name="node-v$ver-$os-$arch$libc.tar.gz"
     fetch "https://nodejs.org/dist/v$ver/$name" "$tmp/$name" || fail "Download failed: $name"
     fetch "https://nodejs.org/dist/v$ver/SHASUMS256.txt" "$tmp/SHASUMS256.txt" || fail "Download failed: SHASUMS256.txt"
     want=$(grep " $name\$" "$tmp/SHASUMS256.txt" | cut -d' ' -f1)
@@ -95,10 +100,13 @@
     fi
     tar -xzf "$tmp/$name" -C "$tmp" || fail "Could not unpack $name"
     rm -rf "$RUNTIME/node"
-    mv "$tmp/node-v$ver-$os-$arch" "$RUNTIME/node" || fail "Could not install Node.js into $RUNTIME/node"
+    mv "$tmp/node-v$ver-$os-$arch$libc" "$RUNTIME/node" || fail "Could not install Node.js into $RUNTIME/node"
     rm -rf "$tmp"
     NODE="$RUNTIME/node/bin/node"
-    node_ok "$NODE" || fail "The downloaded Node.js does not run on this system."
+    if ! node_ok "$NODE"; then
+      [ -n "$libc" ] && fail "The downloaded Node.js does not run here. On Alpine it needs: apk add libstdc++"
+      fail "The downloaded Node.js does not run on this system."
+    fi
   fi
   say "Node.js  $("$NODE" -v)  $NODE"
   PATH="$(dirname "$NODE"):$PATH"; export PATH

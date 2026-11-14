@@ -2,7 +2,11 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
-## [1.4.1] – in Arbeit
+## [1.5.0] – in Arbeit
+
+### Starter (Linux/macOS)
+- **Node.js nur einmal laden:** Das Startskript der App (`amber-terminal/start.sh`) nimmt auch das Node.js aus `.runtime` im Ordner darüber, das ein allein kopiertes `start.sh` bei der Erstinstallation geladen hat. Vorher wurde es ein zweites Mal geladen (rund 30 MB).
+- **Alpine und andere musl-Linux:** statt abzubrechen wird der offizielle musl-Build von nodejs.org geladen (x64, Prüfsumme geprüft). Fehlt `libstdc++`, sagt die Meldung, wie es installiert wird (`apk add libstdc++`). Für musl auf ARM gibt es keinen Build: Hinweis auf den Paketmanager.
 
 ### Datenschutz
 - **SEC-Kontakt-E-Mail in SETTINGS › Data sources** statt fest im Code: SEC EDGAR verlangt von Programmen eine Kontaktadresse im Request-Header. Die Adresse steht jetzt nur in `data/settings.json` auf dem eigenen Rechner und geht nur an sec.gov. Ohne Adresse laufen Filings (CF), Insider (INSD), Dokumentsuche (DS) und der M&A-Check unter dem allgemeinen Amber-Terminal-Namen wie im Original. Gilt für alle SEC-Abfragen (`lib/sec-contact.js`).
@@ -10,6 +14,8 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 ### Abhängigkeiten
 - **TradingView Lightweight Charts 5.3.0** (vorher 5.2.1), aus dem offiziellen npm-Paket, Prüfsumme geprüft; API unverändert, Charts (GP, GIP, RSLBT) geprüft.
 - **Node.js 22.13 oder neuer** jetzt auch in `package.json` (`engines`) und `npm run doctor` (vorher 18): der SQLite-Cache braucht `node:sqlite`, das es ohne Flag erst ab 22.13 gibt. Die Starter laden ohnehin das aktuelle LTS (derzeit v26). Sonst hat das Projekt keine Pakete.
+
+## [1.4.1] – in Arbeit
 
 ### Dokumentation
 - **Neues README** (KamiTerm): nennt Lewis Jackson als Autor von Amber Terminal und verlinkt die Original-Dokumentation, jetzt **README.original.md** (unverändert im Originalzustand). Dazu eine Übersicht der Erweiterungen: RSL26, RSLBT, weitere Screens, Einstellungen, Starter mit automatischem Update für Windows, Linux und macOS.
