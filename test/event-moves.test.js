@@ -127,3 +127,14 @@ test('buyWriteEvents: entry N trading days before, exit at the last close on/bef
   const s = summarizeBuyWrite(events);
   assert.equal(s.n, 3); near(s.atOrAbovePct, 200 / 3); assert.equal(s.shortfall.max, 3);
 });
+
+test('buyWriteEvents fixedDte: hold a fixed number of calendar days (monthly expiry today)', () => {
+  const days = ['2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06', '2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20'];
+  const bw = days.map((d, i) => ({ time: Date.parse(`${d}T14:30:00Z`) / 1000, open: 100 + i, close: 100 + i }));
+  // ex Wed 11-11, entry Mon 11-09 (close 105); +6 days = Sun 11-15 -> exit at Fri 11-13 (close 109)
+  const [e] = buyWriteEvents([{ exDate: '2026-11-11', amount: 1 }], bw, { fixedDte: 6 });
+  assert.equal(e.expiry, '2026-11-15'); assert.equal(e.exitDate, '2026-11-13'); near(e.movePct, (109 / 105 - 1) * 100);
+  // a fixed hold that ends before the ex-date gives no outcome
+  const [short] = buyWriteEvents([{ exDate: '2026-11-11', amount: 1 }], bw, { fixedDte: 1 });
+  assert.equal(short.expiry, null);
+});

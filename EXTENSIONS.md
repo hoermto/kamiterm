@@ -364,16 +364,22 @@ Rechnung: `lib/event-moves.js` (Historie) und `lib/buywrite.js` (Optionen).
 
 ## DSCAN: Buy-write-Scanner über die kommenden Ex-Tage (seit v1.5.0)
 
-`DSCAN [SPX|NDX|ALL] DAYS=14 ENTRY=2 DTE=2-10 MINOI=50 MAXSPREAD=30 WEEKLY=1 PERIOD=5Y`
+`DSCAN [SPX|NDX|ALL] DAYS=14 ENTRY=2 DTE=2-10 WEEKLY=1 MDTE=45 LIQUID=0 MINOI=50 MAXSPREAD=30 PERIOD=5Y`
 (Einstellungen werden gemerkt). Nur US-Aktien (Optionsdaten). `lib/fn/dscan.js`.
 
 1. **Ex-Tage:** Nasdaq-Dividendenkalender, eine Abfrage je Werktag bis DAYS voraus,
    12 Stunden im Event-Cache. Nur Stammaktien (einfache Ticker, keine Preferreds/Notes).
 2. **Universum:** SPX, NDX (wie RSL26) oder ALL (jede Aktie im Kalender).
 3. **Optionen je Aktie** (CBOE, wie DMOV › Buy-write): Filter in dieser Reihenfolge,
-   gezählt im Screen: keine US-Optionen · keine Weeklys (abschaltbar) · kein Verfall
-   DTE nach dem Einstieg · keine Prämie · Open Interest < MINOI oder Spread > MAXSPREAD
-   (Spread = (Ask − Bid) / Mitte des ersten Calls über dem Kurs).
+   gezählt im Screen: keine US-Optionen · zu spät (letzter Kauftag vor dem Ex-Tag
+   vorbei) · keine Weeklys (`WEEKLY=1`, Standard) · kein Verfall DTE nach dem Einstieg ·
+   keine Prämie · nur mit `LIQUID=1`: Open Interest < MINOI oder Spread > MAXSPREAD
+   (Spread = (Ask − Bid) / Mitte des ersten Calls über dem Kurs). Open Interest und
+   Spread stehen immer in der Tabelle.
+   **Monatsoptionen:** mit `WEEKLY=0` bekommt eine Aktie ohne Verfall im DTE-Bereich den
+   ersten Verfall nach dem Ex-Tag bis MDTE Tage nach dem Einstieg (Standard 45, in der
+   Tabelle „M“); ihre Historie hält dann dieselbe Anzahl Kalendertage statt bis zum
+   Weekly-Freitag. DMOV nutzt diesen Rückfall immer.
 4. **Historie:** die vergangenen Ex-Tage der Aktie im Zeitraum PERIOD mit den heutigen
    Konditionen (wie in DMOV): Durchschnitt, Median, schlechtester Trade, Gewinnquote,
    Anteil ausgeübt, „pro Jahr“. Dazu „Prämie + Dividende“ = Ertrag bei unverändertem Kurs.

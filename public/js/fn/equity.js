@@ -903,7 +903,7 @@ function renderDmovBuyWrite(ctx, d, opts, { p1, div }) {
       ["Weekly options", q.weekly ? "yes" : "no (monthlies only)"],
       ["Next ex-date", `${d.next?.date || "—"}${d.next?.estimated ? " (expected, not announced)" : ""}`],
       ["Entry", q.entryDate || "—"],
-      ["Expiry", q.expiry ? `${q.expiry} · ${q.dte} days after entry` : "—"],
+      ["Expiry", q.expiry ? `${q.expiry} · ${q.dte} days after entry${q.fallback ? ` (monthly: no expiry ${b.dteMin}-${b.dteMax} days after the entry; the history below holds ${q.dte} days too)` : ""}` : "—"],
       ["Call", c ? `strike ${num(c.strike, 2)} (${pct(q.strikePct)} over the price ${num(q.price, 2)}) · bid ${num(c.bid, 2)} / ask ${num(c.ask, 2)} · open interest ${c.oi}${finite(c.spreadPct) ? ` · spread ${c.spreadPct.toFixed(0)}%` : ""}` : "—"],
       ["Premium", finite(q.premiumPct) ? `${num(q.premium, 2)} = ${q.premiumPct.toFixed(2)}% of the price${q.premiumEstimated ? ` (estimated for the entry day: ${q.dte} days left instead of ${q.dteNow} today, from today's implied volatility)` : " (today's bid)"}` : "—"],
       ["Dividend", finite(q.dividendPct) ? `${div(q.dividend)} = ${q.dividendPct.toFixed(2)}%` : "—"],

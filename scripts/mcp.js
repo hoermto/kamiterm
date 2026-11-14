@@ -288,7 +288,7 @@ const FN = {
   DSCAN: {
     file: "dscan",
     arg: "universe",
-    argHint: "SPX (default), NDX or ALL; more as days=14 entry=2 dtemin=2 dtemax=10 minoi=50 maxspread=30 weekly=1 period=5Y",
+    argHint: "SPX (default), NDX or ALL; more as days=14 entry=2 dtemin=2 dtemax=10 weekly=1 (0: monthly options too, up to mdte=45 days) liquid=0 (1: minoi=50 maxspread=30) period=5Y",
     what: "Buy-write scanner over the coming ex-dividend dates (US stocks): weekly options, an expiry a few days after the entry, the first call above the price with its premium, and the stock's past ex-dates at today's terms (return per trade, win rate)",
     source: "Nasdaq dividend calendar, CBOE delayed option quotes, Yahoo dividends and prices",
   },

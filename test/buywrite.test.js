@@ -60,6 +60,8 @@ test('buyWriteQuote: weekly, expiry, strike, premium, dividend in % of the price
   assert.match(buyWriteQuote(weeklyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-24' }).reason, /not ahead/);
   assert.match(buyWriteQuote(monthlyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-14' }).reason, /No expiry 2-10/);
   assert.match(buyWriteQuote(weeklyChain, { exDate: '2026-11-10', dividend: 0.5, today: '2026-11-14' }).reason, /not ahead/);
+  // Saturday before a Monday ex-date: the next trading day is the ex-date itself.
+  assert.equal(buyWriteQuote(weeklyChain, { exDate: '2026-11-23', dividend: 0.5, today: '2026-11-21' }).tooLate, true);
 });
 
 import { bsCall, premiumAtEntry, tradingDayOnOrAfter } from '../lib/buywrite.js';
@@ -75,4 +77,15 @@ test('bsCall: known values; premiumAtEntry shrinks with fewer days and keeps the
   assert.equal(premiumAtEntry({ price: 100, strike: 100, iv: null, bid: 1, dteNow: 5, dteEntry: 2 }), null);
   assert.equal(tradingDayOnOrAfter('2026-11-21'), '2026-11-23');
   assert.equal(tradingDayOnOrAfter('2026-11-20'), '2026-11-20');
+});
+
+test('buyWriteQuote: monthly fallback when no expiry lies in the DTE range', () => {
+  const none = buyWriteQuote(monthlyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-14' });
+  assert.equal(none.expiry, null); assert.equal(none.fallback, false);
+  const m = buyWriteQuote(monthlyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-14', fallbackMaxDte: 45 });
+  assert.equal(m.expiry, '2026-12-18'); assert.equal(m.dte, 28); assert.equal(m.fallback, true);
+  // a weekly in range is preferred, no fallback
+  assert.equal(buyWriteQuote(weeklyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-14', fallbackMaxDte: 45 }).fallback, false);
+  // nothing within the fallback either
+  assert.match(buyWriteQuote(monthlyChain, { exDate: '2026-11-24', dividend: 0.5, today: '2026-11-14', fallbackMaxDte: 20 }).reason, /No expiry 2-20/);
 });

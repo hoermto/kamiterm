@@ -7,11 +7,12 @@ import { table, sect, tabs, html } from "../ui.js";
 const finite = (v) => typeof v === "number" && Number.isFinite(v);
 const p2 = (v) => pct(v, 2);
 const perc0 = (v) => (finite(v) ? `${v.toFixed(0)}%` : "—");
-const DSCAN_DEFAULTS = { universe: "SPX", days: 14, entry: 2, dtemin: 2, dtemax: 10, minoi: 50, maxspread: 30, weekly: 1, period: "5Y" };
+const DSCAN_DEFAULTS = { universe: "SPX", days: 14, entry: 2, dtemin: 2, dtemax: 10, weekly: 1, mdte: 45, liquid: 0, minoi: 50, maxspread: 30, period: "5Y" };
 const UNIS = ["SPX", "NDX", "ALL"];
 const PERIODS = ["1Y", "2Y", "3Y", "5Y", "ALL"];
 const keys = (args) => Object.fromEntries(args.filter((a) => a.includes("=")).map((a) => { const [k, ...v] = a.split("="); return [k.toLowerCase(), v.join("=")]; }));
-const dscanCmd = (v) => `DSCAN ${v.universe} DAYS=${v.days} ENTRY=${v.entry} DTE=${v.dtemin}-${v.dtemax} MINOI=${v.minoi} MAXSPREAD=${v.maxspread} WEEKLY=${v.weekly ? 1 : 0} PERIOD=${v.period}`;
+const dscanCmd = (v) =>
+  `DSCAN ${v.universe} DAYS=${v.days} ENTRY=${v.entry} DTE=${v.dtemin}-${v.dtemax} WEEKLY=${v.weekly ? 1 : 0}${v.weekly ? "" : ` MDTE=${v.mdte}`} LIQUID=${v.liquid ? 1 : 0}${v.liquid ? ` MINOI=${v.minoi} MAXSPREAD=${v.maxspread}` : ""} PERIOD=${v.period}`;
 
 async function loadSaved() {
   try { return (await api.get("/api/settings?tool=DSCAN"))?.settings || {}; } catch { return {}; }
@@ -25,6 +26,7 @@ async function dscan(ctx) {
     universe: ctx.args.map((a) => String(a).toUpperCase()).find((a) => UNIS.includes(a)) || saved.universe || DSCAN_DEFAULTS.universe,
     days: pick("days"), entry: pick("entry"), dtemin: pick("dtemin"), dtemax: pick("dtemax"),
     minoi: pick("minoi"), maxspread: pick("maxspread"), weekly: Number(pick("weekly")) ? 1 : 0,
+    mdte: pick("mdte"), liquid: Number(pick("liquid")) ? 1 : 0,
     period: String(pick("period")).toUpperCase(),
   };
   const dte = /^(\d+)-(\d+)$/.exec(k.dte || "");
@@ -42,26 +44,29 @@ async function dscan(ctx) {
     <label>Days ahead <input name="days" type="number" min="1" max="30" style="width:52px" value="${esc(v.days)}"></label>
     <label>Entry, days before <input name="entry" type="number" min="1" max="10" style="width:46px" value="${esc(v.entry)}"></label>
     <label>DTE <input name="dtemin" type="number" min="0" max="30" style="width:46px" value="${esc(v.dtemin)}"> to <input name="dtemax" type="number" min="1" max="45" style="width:46px" value="${esc(v.dtemax)}"></label>
-    <label>Min. open interest <input name="minoi" type="number" min="0" style="width:64px" value="${esc(v.minoi)}"></label>
-    <label>Max. spread % <input name="maxspread" type="number" min="1" max="200" style="width:52px" value="${esc(v.maxspread)}"></label>
     <label><input name="weekly" type="checkbox"${v.weekly ? " checked" : ""}> weekly options only</label>
+    <label title="Without weekly options only: stocks with monthly options get the first expiry after the ex-date up to this many days after the entry">else monthly up to <input name="mdte" type="number" min="5" max="90" style="width:52px" value="${esc(v.mdte)}"> days</label>
+    <label><input name="liquid" type="checkbox"${v.liquid ? " checked" : ""}> liquidity filter:</label>
+    <label>open interest ≥ <input name="minoi" type="number" min="0" style="width:64px" value="${esc(v.minoi)}"></label>
+    <label>spread ≤ <input name="maxspread" type="number" min="1" max="200" style="width:52px" value="${esc(v.maxspread)}">%</label>
     <label>History <select name="period">${PERIODS.map((p) => `<option${p === v.period ? " selected" : ""}>${p}</option>`).join("")}</select></label>
     <button type="submit">Scan</button>
   </form>`);
   form.onsubmit = (e) => {
     e.preventDefault();
     const f = new FormData(form);
-    ctx.go(dscanCmd({ ...v, days: f.get("days"), entry: f.get("entry"), dtemin: f.get("dtemin"), dtemax: f.get("dtemax"), minoi: f.get("minoi"), maxspread: f.get("maxspread"), weekly: f.get("weekly") ? 1 : 0, period: f.get("period") }));
+    ctx.go(dscanCmd({ ...v, days: f.get("days"), entry: f.get("entry"), dtemin: f.get("dtemin"), dtemax: f.get("dtemax"), minoi: f.get("minoi"), maxspread: f.get("maxspread"), weekly: f.get("weekly") ? 1 : 0, mdte: f.get("mdte"), liquid: f.get("liquid") ? 1 : 0, period: f.get("period") }));
   };
   const c = d.coverage;
   const sk = c.skipped;
   const out = [
     sk.noOptions && `${sk.noOptions} without US options`,
+    sk.tooLate && `${sk.tooLate} too late to buy before the ex-date`,
     sk.noWeekly && `${sk.noWeekly} without weeklies`,
-    sk.noExpiry && `${sk.noExpiry} without an expiry ${d.dteMin}-${d.dteMax} days after the entry`,
+    sk.noExpiry && `${sk.noExpiry} without an expiry ${d.dteMin}-${d.weeklyOnly ? d.dteMax : d.monthlyMaxDte} days after the entry`,
     sk.noPremium && `${sk.noPremium} without a usable premium`,
     sk.illiquid && `${sk.illiquid} below ${d.minOi} open interest or above ${d.maxSpread}% spread`,
-    sk.error && `${sk.error} errors`,
+    sk.error && `${sk.error} where the option data did not load (CBOE limits requests: run again in a minute)`,
   ].filter(Boolean);
   ctx.el.append(
     form,
@@ -76,7 +81,7 @@ async function dscan(ctx) {
         { key: "exDate", label: "Ex-date", left: true },
         { key: "dividendPct", label: "Dividend", fmt: (x) => (finite(x) ? `${x.toFixed(2)}%` : "—") },
         { key: "entryDate", label: "Entry", left: true },
-        { key: "expiry", label: "Expiry", left: true },
+        { key: "expiry", label: "Expiry", left: true, fmt: (x, r) => `${x}${r.monthly ? " M" : ""}`, title: "M = monthly expiry (no weekly one in the DTE range)" },
         { key: "dte", label: "DTE" },
         { key: "strike", label: "Strike", fmt: (x, r) => `${num(x, 2)} (${p2(r.strikePct)})` },
         { key: "premiumPct", label: "Premium", fmt: (x, r) => (finite(x) ? `${x.toFixed(2)}%${r.premiumEstimated ? "*" : ""}` : "—"), title: "Call bid over the price; * = estimated for the entry day" },
