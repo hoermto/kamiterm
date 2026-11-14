@@ -5,6 +5,7 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 ## [1.4.1] – in Arbeit
 
 ### Updates
+- **Linux und macOS:** `start.sh` bzw. `start.command` prüfen vor dem Start ebenso auf Updates und installieren sie (`AMBER_UPDATE=0` überspringt das). Entpacken mit Node selbst, ohne unzip oder tar. Beide Skripte sind jetzt ausführbar (`./start.sh`).
 - **Neues Standard-Repo für Updates: https://github.com/hoermto/kamiterm.git** (Branch master). Der Updater spricht jetzt neben Gitea/Forgejo auch die GitHub-API (neueste Commits, ZIP-Download). Gilt nur für die Update-Prüfung; die git-Remotes eines Checkouts bleiben unverändert.
 - **SETTINGS › Updates:** Repo-URL und Branch einstellbar (gespeichert in `data/launcher.cfg`, leer = Wert aus start.bat bzw. Standard), mit Status der letzten Prüfung und „Check now“. Speichern prüft sofort.
 
