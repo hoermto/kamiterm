@@ -1,4 +1,5 @@
 // Equity tools: compare returns (COMP), the equity screener (EQS), your portfolio (PORT), dividends (DVD),
+// moves around ex-dividend dates (DMOV),
 // earnings estimates (EE) and analyst ratings (ANR). The maths runs on the server (lib/fn/eq-*.js, eqs.js,
 // dvd.js, ee.js, anr.js), so the numbers the tests check are the numbers on screen.
 import { api, esc, px, pct, cls, big, num, date } from "../api.js";
@@ -754,9 +755,13 @@ async function renderDvd(ctx) {
         ])
       : html(`<p class="hint">No dividends on record.</p>`),
     hint(
-      "Indicated annual dividend is the latest regular dividend times the payments a year; indicated yield is that over the live price.",
+      "Indicated annual dividend is the latest regular dividend times the payments a year; indicated yield is that over the live price. How the price moved around past ex-dates: <a href=\"#\" data-c=\"DMOV\">DMOV</a>.",
     ),
   );
+  ctx.el.querySelector('a[data-c="DMOV"]').onclick = (e) => {
+    e.preventDefault();
+    ctx.go("DMOV");
+  };
   ctx.setSource(d.source);
 }
 
@@ -769,6 +774,92 @@ const epsCols = [
   { key: "up", label: "Revised up (4 wk)", fmt: (v) => num(v, 0) },
   { key: "down", label: "Revised down (4 wk)", fmt: (v) => num(v, 0) },
 ];
+
+// ---------- DMOV: moves around the ex-dividend date ----------
+const DMOV_PERIODS = ["1Y", "2Y", "3Y", "5Y", "ALL"];
+async function renderDmov(ctx, period) {
+  period = period || ctx.args.map((a) => String(a).toUpperCase()).find((a) => DMOV_PERIODS.includes(a)) || "2Y";
+  const d = await api.fn("dmov", { symbol: ctx.sec.id, period });
+  if (!ctx.live()) return;
+  ctx.el.innerHTML = "";
+  const cur = d.currency || "";
+  const amt = (v, d2 = 2) => (finite(v) ? `${v > 0 ? "+" : v < 0 ? "-" : ""}${num(Math.abs(v), d2)} ${cur}` : "—");
+  const div = (v) => (finite(v) ? `${num(v, Math.abs(v * 100 - Math.round(v * 100)) > 1e-9 ? 4 : 2)} ${cur}` : "—");
+  const p1 = (v) => pct(v, 2);
+  const last = d.events?.[0];
+  const nx = d.next;
+  const nextTxt = nx
+    ? `${esc(nx.date)} <span class="dim">${nx.estimated ? (nx.overdue ? `expected, not announced yet (usually every ${nx.gapDays} days)` : `expected (usually every ${nx.gapDays} days)`) : "announced"}${nx.amount != null ? ` · ${esc(div(nx.amount))}` : ""}</span>`
+    : `<span class="dim">none expected</span>`;
+  ctx.el.append(
+    html(`<div style="font-size:15px;margin-bottom:6px">Next ex-date <b class="amber">${nextTxt}</b>${last ? `  <span class="dim">· last</span> ${esc(div(last.amount))} <span class="dim">on ${esc(last.exDate)} (${last.yieldPct.toFixed(2)}% of the price)</span>` : ""}</div>`),
+    tabs(DMOV_PERIODS, d.period, (p) => {
+      setCmd(ctx, `${ctx.sec.id} DMOV ${p}`);
+      renderDmov(ctx, p);
+    }),
+  );
+  const s = d.summary;
+  if (!s || !s.n) {
+    ctx.el.append(html(`<p class="hint">${esc(d.note || `No ex-dates with price data in this period. Try a longer one.`)}</p>`));
+    ctx.setSource(d.source);
+    return;
+  }
+  const [w1, w2, w3] = d.horizons;
+  const rows = [
+    { what: `Run-up, ${d.preDays} days before`, st: s.runUp },
+    { what: "Ex-day open (gap)", st: s.gap },
+    { what: "Ex-day close", st: s.exDay, am: s.exDayAmt },
+    { what: "+1 week", st: s.after[w1].price, am: s.after[w1].amt },
+    { what: "+2 weeks", st: s.after[w2].price, am: s.after[w2].amt },
+    { what: "+3 weeks", st: s.after[w3].price, am: s.after[w3].amt },
+    { what: "+1 week incl. dividend", st: s.after[w1].total },
+    { what: "+3 weeks incl. dividend", st: s.after[w3].total },
+  ];
+  const r = s.recovery;
+  const smallDiv = finite(s.yieldPct.median) && s.yieldPct.median < 0.3;
+  ctx.el.append(
+    sect(`Moves around the ex-date: ${s.n} ex-dates, ${s.from} to ${s.to}`),
+    table(rows, [
+      { key: "what", label: "From the close before the ex-date", left: true, lbl: true },
+      { key: (x) => x.st.avg, label: "Average", fmt: p1, cls },
+      { key: (x) => x.st.median, label: "Median", fmt: p1, cls },
+      { key: (x) => x.st.max, label: "Best", fmt: p1, cls },
+      { key: (x) => x.st.min, label: "Worst", fmt: p1, cls },
+      { key: (x) => x.st.sd, label: "1 SD", fmt: (v) => (finite(v) ? `±${v.toFixed(2)}%` : "—"), title: "Standard deviation of the moves" },
+      { key: (x) => x.st.upPct, label: "Up", fmt: perc1, title: "Share of ex-dates with a gain" },
+      { key: (x) => x.am?.avg, label: `Average\n${cur}`, fmt: (v) => amt(v), cls },
+    ]),
+    kv([
+      ["Ex-day drop ÷ dividend", finite(s.dropVsDiv.median) ? `median ${s.dropVsDiv.median.toFixed(2)} · average ${s.dropVsDiv.avg.toFixed(2)}  (1 = fell by exactly the dividend)` : "—"],
+      ["Dividend per payment", finite(s.yieldPct.median) ? `median ${s.yieldPct.median.toFixed(2)}% of the price` : "—"],
+      ["Back at the close before", r.n ? `${r.recovered} of ${r.n} (${perc1(r.pct)}) within ${d.recoverMax} trading days, before the next ex-date${r.days.n ? ` · median ${r.days.median} days, longest ${r.days.max}` : ""}${r.open ? ` · ${r.open} still open` : ""}` : "—"],
+    ]),
+  );
+  if (smallDiv)
+    ctx.el.append(hint("The dividend is small against the stock's normal daily moves, so the ex-day drop ÷ dividend is mostly noise. The moves themselves still count."));
+  const recTxt = (e) => (e.recoveryDays != null ? (e.recoveryDays === 0 ? "ex-day" : `${e.recoveryDays} d`) : e.recoveryOpen ? "not yet" : "no");
+  ctx.el.append(
+    sect("Each ex-date"),
+    table(d.events, [
+      { key: "exDate", label: "Ex-date", left: true, lbl: true },
+      { key: "amount", label: "Dividend", fmt: div },
+      { key: "yieldPct", label: "Yield", fmt: (v) => `${v.toFixed(2)}%`, title: "Dividend over the close before the ex-date" },
+      { key: "runUpPct", label: `Run-up\n${d.preDays} d`, fmt: p1, cls },
+      { key: "exDayPct", label: "Ex-day", fmt: p1, cls },
+      { key: "dropVsDiv", label: "Drop ÷\ndividend", fmt: (v) => (finite(v) ? v.toFixed(2) : "—") },
+      { key: (e) => e.after[w1]?.pricePct, label: "+1 week", fmt: p1, cls },
+      { key: (e) => e.after[w2]?.pricePct, label: "+2 weeks", fmt: p1, cls },
+      { key: (e) => e.after[w3]?.pricePct, label: "+3 weeks", fmt: p1, cls },
+      { key: recTxt, label: "Back at\nclose before", title: "Trading days after the ex-day until a close at or above the close before the ex-date (no = not before the next ex-date or within the limit)" },
+    ]),
+    hint(`All moves are measured from the close of the last trading day before the ex-date, the last day the price still included the dividend. A week is ${w1} trading days. Prices and dividends are split-adjusted, not dividend-adjusted. See also <a href="#" data-c="DVD">DVD</a> for the dividend history.`),
+  );
+  ctx.el.querySelector('a[data-c="DVD"]').onclick = (e) => {
+    e.preventDefault();
+    ctx.go("DVD");
+  };
+  ctx.setSource(d.source);
+}
 
 async function renderEe(ctx) {
   const d = await api.fn("ee", { symbol: ctx.sec.id });
@@ -890,6 +981,15 @@ export default [
     source:
       "Nasdaq dividend history (Nasdaq-listed), Yahoo dividend events (NYSE and others), live price from Nasdaq",
     render: renderDvd,
+  },
+  {
+    id: "DMOV",
+    name: "Ex-dividend moves",
+    group: "Equities",
+    needs: true,
+    source:
+      "Yahoo dividend events and daily prices (US and European stocks), announced ex-dates from Nasdaq",
+    render: renderDmov,
   },
   {
     id: "EE",

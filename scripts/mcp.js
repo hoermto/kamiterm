@@ -277,6 +277,14 @@ const FN = {
     what: "Dividend history, next ex-date, yield and how often it pays (US stocks)",
     source: "Nasdaq dividend history, Yahoo as the fallback",
   },
+  DMOV: {
+    file: "dmov",
+    needs: true,
+    arg: "period",
+    argHint: "1Y, 2Y (default), 3Y, 5Y or ALL",
+    what: "How a stock moved around its past ex-dividend dates (US and European stocks): run-up before, ex-day drop against the dividend, moves 1 to 3 weeks after, recovery time; period=1Y|2Y|3Y|5Y|ALL",
+    source: "Yahoo dividend events and daily prices, Nasdaq for announced ex-dates",
+  },
   ERN: {
     arg: "days",
     argHint: "days ahead, default 5",

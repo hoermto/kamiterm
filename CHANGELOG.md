@@ -4,6 +4,10 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ## [1.5.0] – in Arbeit
 
+### Neue Funktionen
+- **DMOV – Kursbewegung um den Ex-Dividenden-Tag** (`KO DMOV`, `SAP.DE DMOV 5Y`), US und Europa: Run-up in den 5 Tagen davor, Ex-Tag (Gap und Schluss), Abschlag ÷ Dividende, +1/+2/+3 Wochen ohne und mit Dividende, Erholung bis zum Kurs vor dem Ex-Tag. Je Zeitraum (1Y, 2Y, 3Y, 5Y, ALL) Durchschnitt, Median, bester, schlechtester Wert, 1 SD, Anteil positiv und Durchschnitt in Währung; dazu jeder Ex-Tag einzeln. Nächster Ex-Tag angekündigt (Nasdaq) oder geschätzt. Links aus DVD und DES. Auch über den MCP-Server.
+- **Event-Cache** `data/cache/events.sqlite`: Dividenden, Earnings-Termine und Kalender werden einmal geladen und dann aus dem Cache bedient (Dividenden wöchentlich aufgefrischt); fällt eine Quelle aus, gelten die gespeicherten Daten. Größe und „Clear“ in SETTINGS › Data sources.
+
 ### Starter
 - **Node.js nur einmal laden (Windows, Linux, macOS):** Das Startskript der App (`amber-terminal\start.bat` bzw. `amber-terminal/start.sh`) nimmt auch das Node.js aus `.runtime` im Ordner darüber, das ein allein kopiertes `start.bat`/`start.sh` bei der Erstinstallation geladen hat. Vorher wurde es ein zweites Mal geladen (rund 30 MB).
 - **Alpine und andere musl-Linux:** statt abzubrechen wird der offizielle musl-Build von nodejs.org geladen (x64, Prüfsumme geprüft). Fehlt `libstdc++`, sagt die Meldung, wie es installiert wird (`apk add libstdc++`). Für musl auf ARM gibt es keinen Build: Hinweis auf den Paketmanager.

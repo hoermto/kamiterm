@@ -37,6 +37,7 @@ it. After backend changes restart this copy; after UI changes refresh the browse
 | `RSL26 LOESCHEN AAPL` (auch `LÖSCHEN` / `DELETE`) | Offene Position endgültig löschen (keine Historie) |
 | `RSL26 REOPEN AAPL` | Zuletzt geschlossene Position wieder öffnen |
 | `RSL26 KAUF AAPL DATE=2026-01-15` | Kauf mit Datum-Override (UTC YYYY-MM-DD) |
+| `KO DMOV` / `SAP.DE DMOV 5Y` | Kursbewegung um vergangene Ex-Dividenden-Tage (US und Europa), Zeitraum 1Y/2Y/3Y/5Y/ALL, siehe „DMOV“ unten |
 | `RSL26 … MASKIP=0` | „M&A ignorieren“ aus (Standard `MASKIP=1`: M&A-Titel zählen nicht zum Kauf-Fenster). `HIDEMA` ist entfallen und wird ignoriert |
 | `RSLBT SPX START=10000 SIZE=EQUITY FRACTIONAL=1` | Backtest-Startkapital, Budget=Equity/n, Bruchstücke (Defaults) |
 | `RSLBT SPX YEARS=10 N=5 RANKTOP=25 TRAIL=20 TRAILLOCK=4 RUN` | Backtest mit Trailing-Stop −20 % vom Hoch seit Kauf, 4 Wochen Rückkauf-Sperre |
@@ -105,6 +106,17 @@ on refresh. If SQLite fails, behaviour falls back to the previous live chain.
 Scan budget default is 180s / concurrency 6 so a first full SPX run can complete.
 The cache directory is listed in the Seafile library `seafile-ignore.txt`
 (`amber-terminal/data/cache/`) and is not synced.
+
+### Event cache (dividends, earnings dates)
+
+Company events are stored in **`data/cache/events.sqlite`** (`lib/events-cache.js`,
+`node:sqlite`, `QT_EVENTS_PATH` overrides): tables `dividends` and `earnings` (per
+symbol and source), `upcoming` (dates seen in calendars) and `fetch_log` (when each
+source was last asked, and whether it answered). `refresh()` serves the cache while it
+is fresh, asks the source when it is stale, and falls back to the cached rows (marked
+stale) when the source fails; a failed source is asked again after 15 minutes, not on
+every request. If SQLite fails, the live data is used without the cache. SETTINGS ›
+Data sources shows the size and has **Clear**.
 
 Coverage is shown on screen and in JSON, together with per-symbol errors. Missing
 history does not become a zero score. Histories with latest price >14 days old are
@@ -298,6 +310,31 @@ comma, ISO dates (client Blob via existing `downloadText`). Helpers:
 `toGermanCsv` / `backtestTradesCsv` / `backtestWeeklyCsv`. Invariants via
 `auditBacktestInvariants` (`backtest.audit`).
 
+
+## DMOV: moves around the ex-dividend date (seit v1.5.0)
+
+`<Ticker> DMOV [1Y|2Y|3Y|5Y|ALL]` (Standard 2Y), US-Aktien (`KO`) und europäische
+Yahoo-Ticker (`SAP.DE`). Rechnung: `lib/event-moves.js` (rein, getestet), Daten:
+`lib/fn/dmov.js`.
+
+- **Daten:** Yahoo-Dividenden-Events (`interval=1wk&range=15y`: vollständig, ~90 KB;
+  `range=max` lässt Jahrzehnte aus, Monatskerzen fassen zwei Zahlungen eines Monats
+  zusammen), wöchentlich im Event-Cache aufgefrischt. Kurse: tägliche Yahoo-Kerzen
+  aus dem OHLCV-Cache, 10 Jahre. Beide **split-, nicht dividendenbereinigt**, daher
+  passen Dividende und Kursabschlag zusammen. US: angekündigte Ex-Tage von Nasdaq
+  (nur künftige Termine; Nasdaqs alte Beträge sind nicht splitbereinigt).
+- **Bezug:** Schlusskurs des letzten Handelstags vor dem Ex-Tag („cum“). Run-up = cum
+  gegen 5 Handelstage davor; Ex-Tag Open (Gap) und Close; Abschlag ÷ Dividende
+  (1 = genau um die Dividende gefallen); +1/+2/+3 Wochen = 5/10/15 Handelstage nach
+  cum, ohne und mit Dividende; Erholung = Handelstage nach dem Ex-Tag bis zu einem
+  Schluss ≥ cum (höchstens 60, nur bis zum nächsten Ex-Tag; noch laufend = „not yet“).
+- **Statistik je Zeitraum:** Durchschnitt, Median, bester, schlechtester Wert,
+  1 Standardabweichung, Anteil positiv, Durchschnitt in Währung.
+- **Nächster Ex-Tag:** angekündigt, sonst geschätzt aus dem üblichen Abstand (Median
+  der letzten 8); ein üblicher Termin, der weniger als einen halben Abstand zurückliegt,
+  gilt als „expected, not announced yet“. Wer zwei Zahlungen ausgelassen hat: keiner.
+- **Grenze:** Ist die Dividende klein gegen die normalen Tagesbewegungen (Median unter
+  0,3 % des Kurses), ist Abschlag ÷ Dividende vor allem Rauschen; der Screen sagt das.
 
 ## RRG: JdK-style approximation, not proprietary JdK
 
