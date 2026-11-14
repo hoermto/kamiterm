@@ -4,6 +4,9 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 
 ## [1.4.1] – in Arbeit
 
+### Dokumentation
+- **Neues README** (KamiTerm): nennt Lewis Jackson als Autor von Amber Terminal und verlinkt die Original-Dokumentation, jetzt **README.original.md** (unverändert im Originalzustand). Dazu eine Übersicht der Erweiterungen: RSL26, RSLBT, weitere Screens, Einstellungen, Starter mit automatischem Update für Windows, Linux und macOS.
+
 ### Updates
 - **Linux und macOS:** `start.sh` bzw. `start.command` prüfen vor dem Start ebenso auf Updates und installieren sie (`AMBER_UPDATE=0` überspringt das). Entpacken mit Node selbst, ohne unzip oder tar. Beide Skripte sind jetzt ausführbar (`./start.sh`).
 - **Neues Standard-Repo für Updates: https://github.com/hoermto/kamiterm.git** (Branch master). Der Updater spricht jetzt neben Gitea/Forgejo auch die GitHub-API (neueste Commits, ZIP-Download). Gilt nur für die Update-Prüfung; die git-Remotes eines Checkouts bleiben unverändert.
