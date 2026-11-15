@@ -138,3 +138,25 @@ test('buyWriteEvents fixedDte: hold a fixed number of calendar days (monthly exp
   const [short] = buyWriteEvents([{ exDate: '2026-11-11', amount: 1 }], bw, { fixedDte: 1 });
   assert.equal(short.expiry, null);
 });
+
+import { verdict } from '../lib/event-moves.js';
+
+test('verdict: too little history, not promising, mixed, promising', () => {
+  assert.equal(verdict([1, 2, 3]).level, 'na');
+  assert.match(verdict([1, 2, 3]).reason, /3 past ex-dates, at least 8/);
+  // average below zero
+  assert.equal(verdict([1, -2, 1, -2, 1, -2, 1, -2]).level, 'poor');
+  // average positive but fewer than half won
+  assert.equal(verdict([5, -1, -1, -1, -1, 5, -1, -1]).level, 'poor');
+  // 6 of 8 won (75%) but very noisy: t < 1.5 -> mixed, "could be luck"
+  const noisy = verdict([3, 3, 3, 3, 3, 3, -8, -8]);
+  assert.equal(noisy.level, 'mixed'); assert.match(noisy.reason, /could be luck/);
+  // 5 of 8 won (62.5%) -> mixed, "under 65% won"
+  const few = verdict([2, 2, 2, 2, 2, -0.5, -0.5, -0.5]);
+  assert.equal(few.level, 'mixed'); assert.match(few.reason, /under 65% won/);
+  // steady wins
+  const good = verdict([1.2, 1.0, 1.5, 0.8, 1.1, -0.4, 1.3, 0.9, 1.0, -0.2], { basis: 'x' });
+  assert.equal(good.level, 'good'); assert.equal(good.label, 'promising'); assert.equal(good.basis, 'x');
+  assert.match(good.reason, /^8 of 10 won, average \+0\.82%, worst -0\.40%$/);
+  assert.ok(good.t > 1.5);
+});

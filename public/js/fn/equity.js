@@ -5,6 +5,7 @@
 import { api, esc, px, pct, cls, big, num, date } from "../api.js";
 import { table, kv, sect, tabs, html, lineChart, delayTag } from "../ui.js";
 import { toSecurity, parseOption, YELLOW } from "../securities.js";
+import { verdictHtml } from "./events.js";
 
 // Six line colours that read on black and don't look like the green and red of up and down.
 export const PALETTE = [
@@ -805,7 +806,7 @@ async function renderDmov(ctx, period, opts) {
     ? `${esc(nx.date)} <span class="dim">${nx.estimated ? (nx.overdue ? `expected, not announced yet (usually every ${nx.gapDays} days)` : `expected (usually every ${nx.gapDays} days)`) : "announced"}${nx.amount != null ? ` · ${esc(div(nx.amount))}` : ""}</span>`
     : `<span class="dim">none expected</span>`;
   ctx.el.append(
-    html(`<div style="font-size:15px;margin-bottom:6px">Next ex-date <b class="amber">${nextTxt}</b>${last ? `  <span class="dim">· last</span> ${esc(div(last.amount))} <span class="dim">on ${esc(last.exDate)} (${last.yieldPct.toFixed(2)}% of the price)</span>` : ""}</div>`),
+    html(`<div style="font-size:15px;margin-bottom:6px">Next ex-date <b class="amber">${nextTxt}</b>${last ? `  <span class="dim">· last</span> ${esc(div(last.amount))} <span class="dim">on ${esc(last.exDate)} (${last.yieldPct.toFixed(2)}% of the price)</span>` : ""}${d.buyWrite?.verdict ? `  <span class="dim">· buy-write entry</span> <b>${verdictHtml(d.buyWrite.verdict.level, d.buyWrite.verdict.label, `${d.buyWrite.verdict.reason} (${d.buyWrite.verdict.basis})`)}</b>` : ""}</div>`),
     tabs(DMOV_PERIODS, d.period, (p) => {
       setCmd(ctx, dmovCmd(ctx, p, opts));
       renderDmov(ctx, p, opts);
@@ -892,8 +893,10 @@ function renderDmovBuyWrite(ctx, d, opts, { p1, div }) {
     setCmd(ctx, dmovCmd(ctx, d.period, o));
     renderDmov(ctx, d.period, o);
   };
+  const v = b.verdict;
   ctx.el.append(
     sect("Buy-write over the ex-date"),
+    ...(v ? [html(`<div style="font-size:15px;margin:4px 0 6px">Entry: <b>${verdictHtml(v.level, v.label.toUpperCase(), v.reason)}</b> <span class="dim">· ${esc(v.reason)} · ${esc(v.basis)}</span></div>`)] : []),
     hint(`Buy ${b.entryDays} trading day${b.entryDays > 1 ? "s" : ""} before the ex-date, sell the first call above the price on the first expiry ${b.dteMin} to ${b.dteMax} days after the entry, keep the dividend, hold to expiry.`),
     form,
   );

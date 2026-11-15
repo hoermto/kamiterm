@@ -361,6 +361,16 @@ Rechnung: `lib/event-moves.js` (Historie) und `lib/buywrite.js` (Optionen).
   hochgerechnet, vor Kosten).
 - **Frühe Ausübung:** Risiko, wenn der Call im Geld ist und sein Zeitwert unter der
   Dividende liegt (dann übt der Käufer am Tag vor dem Ex-Tag aus).
+- **Bewertung des Einstiegs** (`verdict()` in `lib/event-moves.js`, auch in DSCAN):
+  Grundlage sind die Renditen je vergangenem Ex-Tag, mit Optionskurs die heutigen
+  Buy-write-Konditionen, sonst Aktie + Dividende vom Einstieg bis zum Verfall.
+  **promising** = mindestens 8 Ex-Tage, Durchschnitt > 0, mindestens 65 % gewonnen und
+  der Durchschnitt deutlich über null (t = Durchschnitt / (SD / √n) ≥ 1,5);
+  **not promising** = Durchschnitt ≤ 0 oder weniger als die Hälfte gewonnen;
+  **mixed** = dazwischen; **too little history** = weniger als 8 Ex-Tage (bei
+  jährlichen Zahlern einen längeren Zeitraum wählen). Mit Begründung (gewonnen,
+  Durchschnitt, schlechtester Trade). DSCAN sortiert nach Bewertung, dann nach
+  Durchschnitt.
 
 ## DSCAN: Buy-write-Scanner über die kommenden Ex-Tage (seit v1.5.0)
 
