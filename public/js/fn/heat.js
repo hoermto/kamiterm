@@ -168,7 +168,7 @@ export default [
   {
     id: "HEAT",
     name: "Market heatmap (S&P 500 and sectors, Nasdaq-100, DAX 40, STOXX Europe 600)",
-    group: "Equities",
+    group: "Kamikaze",
     needs: false,
     source: "Yahoo daily prices via the OHLC cache, Yahoo market caps, iShares STOXX 600 weights",
     render: heat,
