@@ -79,9 +79,9 @@ async function dscan(ctx) {
   if (!d.rows.length) {
     ctx.el.append(html(`<p class="hint">No candidates with these filters. More days ahead, a wider DTE or looser liquidity filters find more.</p>`));
   } else {
-    ctx.el.append(
-      table(d.rows, [
-        { key: "symbol", label: "Ticker", left: true, lbl: true, title: "Click a row for DMOV" },
+    const t = table(d.rows, [
+        { key: "symbol", label: "Ticker", left: true, lbl: true, title: "Click a row for DMOV, the Chart button for the price chart" },
+        { key: "symbol", label: "", left: true, html: true, fmt: (x) => `<button class="tab" data-chart="${esc(x)}" title="Price chart (GP) for ${esc(x)}">Chart</button>`, title: "Open the price chart" },
         { key: "verdictLabel", label: "Verdict", left: true, html: true, fmt: (x, r) => verdictHtml(r.verdict, x, r.verdictReason), title: "From the past ex-dates at today's terms; hover for the reason" },
         { key: "exDate", label: "Ex-date", left: true },
         { key: "dividendPct", label: "Dividend", fmt: (x) => (finite(x) ? `${x.toFixed(2)}%` : "—") },
@@ -101,8 +101,15 @@ async function dscan(ctx) {
         { key: "assignedPct", label: "Called\naway", fmt: perc0 },
         { key: "perYearPct", label: "Per year", fmt: p2, cls, title: "Average per trade x 365 / DTE (simple, before costs)" },
         { key: (r) => (r.earlyRisk ? "early assignment" : ""), label: "Warning", left: true },
-      ], { onRow: (r) => ctx.go(`${r.symbol} DMOV ${d.period} ENTRY=${d.entryDays} DTE=${d.dteMin}-${d.dteMax}`) }),
-    );
+      ], { onRow: (r) => ctx.go(`${r.symbol} DMOV ${d.period} ENTRY=${d.entryDays} DTE=${d.dteMin}-${d.dteMax}`) });
+    // The Chart button opens GP; the rest of the row opens DMOV.
+    t.addEventListener("click", (e) => {
+      const sym = e.target.closest("[data-chart]")?.dataset.chart;
+      if (!sym) return;
+      e.stopImmediatePropagation();
+      ctx.go(`${sym} GP`);
+    }, true);
+    ctx.el.append(t);
   }
   ctx.el.append(
     html(`<p class="hint">Buy ${d.entryDays} trading day${d.entryDays > 1 ? "s" : ""} before the ex-date, sell the first call above the price on the first expiry ${d.dteMin} to ${d.dteMax} days after the entry, keep the dividend, hold to expiry. Verdict: <span class="up">promising</span> = at least 8 past ex-dates, average above zero, at least 65% won and the average clearly above chance (t ≥ 1.5); <span class="down">not promising</span> = average at or below zero or under half won; <span class="amber">mixed</span> = in between. "Avg per trade" applies today's strike distance, premium and dividend to the stock's past ex-dates since ${esc(d.since || "the start of the data")}: the move to expiry capped at the strike, plus premium and dividend. Quotes are about 15 minutes behind; outside market hours the spreads are those of the close and often wide.</p>`),

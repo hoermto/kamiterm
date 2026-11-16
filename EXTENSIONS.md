@@ -375,6 +375,8 @@ Rechnung: `lib/event-moves.js` (Historie) und `lib/buywrite.js` (Optionen).
 
 ## DSCAN: Buy-write-Scanner über die kommenden Ex-Tage (seit v1.5.0)
 
+Je Zeile ein „Chart“-Knopf (öffnet `<Ticker> GP`); ein Klick auf den Rest der Zeile öffnet DMOV. DMOV selbst zeigt oben den Tageskurs des Zeitraums mit allen Ex-Tagen (Pfeil + Dividende) und „Full chart (GP)“.
+
 `DSCAN [SPX|NDX|ALL] DAYS=14 ENTRY=2 DTE=2-10 WEEKLY=1 MDTE=45 LIQUID=0 MINOI=50 MAXSPREAD=30 PERIOD=5Y`
 (Einstellungen werden gemerkt). Nur US-Aktien (Optionsdaten). `lib/fn/dscan.js`.
 
