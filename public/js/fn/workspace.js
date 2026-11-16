@@ -1,5 +1,6 @@
 // Workspace: W, your own watchlist monitor (a Launchpad monitor), and ALRT, price alerts that fire from the server.
-// The list lives in the server state (GET/PUT /api/state, key amberWatch); alerts use the engine in lib/alerts.js.
+// The lists live in the server state (GET/PUT /api/state, key amberWatch = { lists: {MAIN: [...], TECH: [...]},
+// active, names }); alerts use the engine in lib/alerts.js.
 import { api, esc, px, pct, chg, cls } from "../api.js";
 import { table, sect, html, delayTag } from "../ui.js";
 import { toSecurity, bbgCode, yahooSymbol, lookupList } from "../securities.js";
@@ -29,6 +30,80 @@ const words = (s) =>
     .split(/\s+/)
     .filter(Boolean);
 const secOf = (code) => toSecurity(words(code));
+
+// ---------- several lists ----------
+export const LIST_NAME = /^[A-Z0-9][A-Z0-9_-]{0,19}$/;
+export const MAX_LISTS = 20;
+const LIST_VERBS = { NEW: "NEW", CREATE: "NEW", RENAME: "RENAME", DROP: "DROP", DELLIST: "DROP" };
+const RESERVED = ["ADD", "DEL", "DELETE", "REMOVE", "RM", ...Object.keys(LIST_VERBS)];
+
+/** W command words -> { show } | { op: NEW|RENAME|DROP, name, to } | { list, op, ws } (ADD/DEL, list null = active). */
+export function watchCommand(args, names) {
+  const a = args.map((x) => String(x).toUpperCase());
+  if (!a.length) return { show: null };
+  const [v, ...rest] = a;
+  const verb = LIST_VERBS[v];
+  if (verb === "NEW" || verb === "DROP") return { op: verb, name: rest[0] };
+  if (verb === "RENAME") return rest.length >= 2 ? { op: verb, name: rest[0], to: rest[1] } : { op: verb, name: null, to: rest[0] };
+  if (names.includes(v)) return rest.length ? { list: v, op: rest[0], ws: rest.slice(1) } : { show: v };
+  return { list: null, op: v, ws: rest };
+}
+
+/** Normalises the saved amberWatch value: at least one list, a valid active list. */
+export function watchState(w = {}) {
+  const lists = {};
+  for (const [k, v] of Object.entries(w.lists || {})) if (Array.isArray(v)) lists[k] = v.slice();
+  if (!Object.keys(lists).length) lists.MAIN = DEFAULT_WATCH.slice();
+  const active = lists[w.active] ? w.active : lists.MAIN ? "MAIN" : Object.keys(lists)[0];
+  return { lists, active, names: { ...DEFAULT_NAMES, ...(w.names || {}) } };
+}
+
+/** Applies a command from watchCommand() to a state from watchState(). Returns { st, msg, code } or { error }; never changes st in place. */
+export function applyWatch(st, cmd) {
+  const names = Object.keys(st.lists);
+  const next = { ...st, lists: { ...st.lists } };
+  if (cmd.show !== undefined) {
+    if (cmd.show) next.active = cmd.show;
+    return { st: next };
+  }
+  if (cmd.op === "NEW") {
+    const n = cmd.name;
+    if (!n || !LIST_NAME.test(n)) return { error: "Name the list with letters, digits, - or _ (up to 20), for example W NEW TECH." };
+    if (RESERVED.includes(n)) return { error: `${n} is a command word; pick another name.` };
+    if (st.lists[n]) return { error: `There is already a list ${n}. Open it with W ${n}.` };
+    if (names.length >= MAX_LISTS) return { error: `You can keep ${MAX_LISTS} lists. Delete one first (W DROP name).` };
+    next.lists[n] = [];
+    next.active = n;
+    return { st: next, msg: `New list ${n}` };
+  }
+  if (cmd.op === "RENAME") {
+    const from = cmd.name || st.active, to = cmd.to;
+    if (!st.lists[from]) return { error: `There is no list ${from}.` };
+    if (!to || !LIST_NAME.test(to)) return { error: "Give the new name, for example W RENAME TECH CHIPS (or W RENAME CHIPS for the open list)." };
+    if (RESERVED.includes(to)) return { error: `${to} is a command word; pick another name.` };
+    if (st.lists[to]) return { error: `There is already a list ${to}.` };
+    // Keep the tab order: rebuild the object with the new key in the old place.
+    next.lists = Object.fromEntries(Object.entries(st.lists).map(([k, v]) => [k === from ? to : k, v]));
+    if (st.active === from) next.active = to;
+    return { st: next, msg: `Renamed ${from} to ${to}` };
+  }
+  if (cmd.op === "DROP") {
+    const n = cmd.name || st.active;
+    if (!st.lists[n]) return { error: `There is no list ${n}.` };
+    if (names.length <= 1) return { error: "This is your only list. Take securities off it instead." };
+    delete next.lists[n];
+    if (st.active === n) next.active = Object.keys(next.lists)[0];
+    return { st: next, msg: `Deleted the list ${n}` };
+  }
+  const target = cmd.list || st.active;
+  const r = editWatch(st.lists[target], cmd.op, cmd.ws);
+  if (r.error) return { error: r.error };
+  if (r.list === st.lists[target]) return { st, msg: r.msg, code: r.code };
+  next.lists[target] = r.list;
+  const added = r.msg.startsWith("Added");
+  const msg = target === st.active ? r.msg : `${r.msg} ${added ? "to" : "from"} ${target}`;
+  return { st: next, msg, code: r.code, added };
+}
 
 // W ADD NVDA, W ADD VOD LN, W DEL NVDA. Returns { list, code, msg } or { list (unchanged), error }.
 export function editWatch(list, op, ws) {
@@ -127,18 +202,20 @@ const spark = (vals) => {
 };
 
 async function loadWatch() {
-  const st = await api.get("/api/state").catch(() => null);
-  const w = st?.amberWatch || {};
-  return {
-    lists: w.lists || {},
-    list: Array.isArray(w.lists?.MAIN) ? w.lists.MAIN : DEFAULT_WATCH.slice(),
-    names: { ...DEFAULT_NAMES, ...(w.names || {}) },
-  };
+  const st = await api.get("/api/state");
+  return watchState(st?.amberWatch || {});
 }
-const saveWatch = (s) =>
-  api.put("/api/state", {
-    amberWatch: { lists: { ...s.lists, MAIN: s.list }, names: s.names },
-  });
+const saveWatch = (s) => api.put("/api/state", { amberWatch: { lists: s.lists, active: s.active, names: s.names } });
+// Every change starts from the saved lists, not from what this screen loaded earlier: a second W panel
+// (or window) would otherwise write its older copy back over a change made in the first.
+async function changeWatch(cmd) {
+  const st = await loadWatch();
+  const r = applyWatch(st, cmd);
+  if (r.error) return r;
+  if (r.added && !r.st.names[r.code]) r.st.names = { ...r.st.names, [r.code]: await nameFor(r.code) };
+  if (r.st !== st) await saveWatch(r.st);
+  return r;
+}
 
 // A company's name for a new row, from the same search the command line's lookup uses.
 async function nameFor(code) {
@@ -257,44 +334,66 @@ export default [
     source:
       "Yahoo Finance prices (some exchanges delayed 15 minutes), crypto live from Binance. Your list is saved on this computer",
     async render(ctx) {
-      const st = await loadWatch();
+      let st = await loadWatch().catch((e) => {
+        ctx.toast(`Couldn't read your lists: ${e.message}`, true);
+        return null;
+      });
+      if (!st) return;
       if (ctx.args.length) {
-        const r = editWatch(st.list, ctx.args[0], ctx.args.slice(1));
+        const cmd = watchCommand(ctx.args, Object.keys(st.lists));
+        const r = await changeWatch(cmd).catch((e) => ({ error: `Couldn't save the list: ${e.message}` }));
         if (r.error) ctx.toast(r.error, true);
-        else if (r.list !== st.list) {
-          st.list = r.list;
-          if (r.msg.startsWith("Added") && !st.names[r.code])
-            st.names[r.code] = await nameFor(r.code);
-          await saveWatch(st).catch((e) =>
-            ctx.toast(`Couldn't save the list: ${e.message}`, true),
-          );
-          ctx.toast(r.msg);
-        } else ctx.toast(r.msg);
+        else {
+          if (r.msg) ctx.toast(r.msg);
+          st = r.st;
+        }
         ctx.setCmd("W");
       }
       if (!ctx.live()) return;
-      ctx.setTitle("Main list");
+      const name = st.active;
+      ctx.setTitle(`${name} list`);
       ctx.el.innerHTML = "";
+      const listTabs = document.createElement("div");
+      listTabs.className = "tabs";
+      for (const n of Object.keys(st.lists)) {
+        const b = document.createElement("button");
+        b.className = `tab${n === name ? " on" : ""}`;
+        b.textContent = `${n} (${st.lists[n].length})`;
+        b.title = `Show the list ${n} (W ${n})`;
+        b.onclick = () => ctx.go(`W ${n}`);
+        listTabs.append(b);
+      }
       const form = html(
-        `<form class="wform" autocomplete="off"><input class="sec" spellcheck="false" placeholder="Add: NVDA, VOD LN, BTC, GC1 COMDTY"><button type="submit">Add</button><span class="hint">Click a row to open it.</span></form>`,
+        `<form class="wform" autocomplete="off"><input class="sec" spellcheck="false" placeholder="Add to ${esc(name)}: NVDA, VOD LN, BTC, GC1 COMDTY"><button type="submit">Add</button><span class="hint">Click a row to open it.</span></form>`,
+      );
+      const lists = html(
+        `<form class="wform lists" autocomplete="off"><input name="n" spellcheck="false" maxlength="20" style="width:110px;text-transform:uppercase" placeholder="list name"><button type="submit" title="Start an empty list with this name (W NEW name)">New list</button><button type="button" data-a="rename" title="Give ${esc(name)} the name typed on the left (W RENAME name)">Rename ${esc(name)}</button><button type="button" data-a="drop" title="Delete the list ${esc(name)} (W DROP ${esc(name)})"${Object.keys(st.lists).length < 2 ? " disabled" : ""}>Delete ${esc(name)}</button></form>`,
       );
       const body = document.createElement("div");
-      ctx.el.append(form, body);
+      ctx.el.append(listTabs, form, lists, body);
 
-      const edit = async (op, ws) => {
-        const r = editWatch(st.list, op, ws);
+      // Runs a list command on the saved lists; a new, renamed or deleted list redraws the whole screen.
+      const run = async (cmd, { redraw = false } = {}) => {
+        const r = await changeWatch(cmd).catch((e) => ({ error: `Couldn't save the list: ${e.message}` }));
         if (r.error) return ctx.toast(r.error, true);
-        if (r.list === st.list) return ctx.toast(r.msg);
-        st.list = r.list;
-        if (op === "ADD" && !st.names[r.code])
-          st.names[r.code] = await nameFor(r.code);
-        try {
-          await saveWatch(st);
-        } catch (e) {
-          return ctx.toast(`Couldn't save the list: ${e.message}`, true);
-        }
-        ctx.toast(r.msg);
+        if (r.msg) ctx.toast(r.msg);
+        if (redraw || r.st.active !== name) return ctx.go("W");
+        st = r.st;
+        const on = listTabs.querySelector(".tab.on");
+        if (on) on.textContent = `${name} (${(st.lists[name] || []).length})`;
         load();
+      };
+      const edit = (op, ws) => run({ list: name, op, ws });
+      const typed = () => lists.querySelector("input").value.trim().toUpperCase();
+      lists.onsubmit = (e) => {
+        e.preventDefault();
+        run({ op: "NEW", name: typed() }, { redraw: true });
+      };
+      lists.querySelector('[data-a="rename"]').onclick = () =>
+        run({ op: "RENAME", name, to: typed() }, { redraw: true });
+      lists.querySelector('[data-a="drop"]').onclick = () => {
+        if (window.confirm(`Delete the list ${name} with its ${(st.lists[name] || []).length} securities?`))
+          run({ op: "DROP", name }, { redraw: true });
       };
       form.onsubmit = (e) => {
         e.preventDefault();
@@ -338,7 +437,8 @@ export default [
         },
       ];
       const load = async () => {
-        const secs = st.list.map(secOf).filter(Boolean);
+        const list = st.lists[name] || [];
+        const secs = list.map(secOf).filter(Boolean);
         const ys = [...new Set(secs.map(yahooSymbol).filter(Boolean))];
         const crypto = secs
           .filter((s) => s.sector === "CRYPTO")
@@ -354,16 +454,16 @@ export default [
         if (!ctx.live()) return;
         const top = ctx.el.scrollTop;
         body.innerHTML = "";
-        body.append(sect(`Main list, ${st.list.length} securities`));
-        if (!st.list.length)
+        body.append(sect(`${name}, ${list.length} securities`));
+        if (!list.length)
           body.append(
             html(
-              `<div class="hint">The list is empty. Add a security above, or type W ADD NVDA.</div>`,
+              `<div class="hint">The list is empty. Add a security above, or type W ${esc(name)} ADD NVDA.</div>`,
             ),
           );
         else
           body.append(
-            table(watchRows(st.list, b.rows, q, st.names), cols, {
+            table(watchRows(list, b.rows, q, st.names), cols, {
               onRow: (r) =>
                 ctx.go(`${r.code} ${r.sector === "EQUITY" ? "DES" : "GP"}`),
             }),

@@ -18,6 +18,10 @@ import { buildCsv, csvCell, csvName, linkSources } from "../public/js/ui.js";
 import {
   editWatch,
   watchRows,
+  watchCommand,
+  watchState,
+  applyWatch,
+  MAX_LISTS,
   alertArgs,
   alertRule,
   alertStatus,
@@ -399,4 +403,64 @@ test("Command line: ETF as a yellow key, CHART for GP, OMON expiry by date or mo
   assert.deepEqual(parse("OMON AAPL 2027-01-15").args, ["2027-01-15"]);
   assert.equal(parse("OMON AAPL 2027-01-15").sec.ticker, "AAPL");
   assert.deepEqual(parse("SPY OMON JAN27").args, ["JAN27"]);
+});
+
+test("watchlists: old saved state still loads, MAIN is the default list", () => {
+  const st = watchState({ lists: { MAIN: ["SPX INDEX"] }, names: { X: "y" } });
+  assert.deepEqual(Object.keys(st.lists), ["MAIN"]);
+  assert.equal(st.active, "MAIN");
+  assert.equal(st.names.X, "y");
+  assert.deepEqual(watchState({}).lists.MAIN, DEFAULT_WATCH);
+  assert.equal(watchState({ lists: { TECH: [] }, active: "GONE" }).active, "TECH");
+});
+
+test("watchlists: command words", () => {
+  const names = ["MAIN", "TECH"];
+  assert.deepEqual(watchCommand([], names), { show: null });
+  assert.deepEqual(watchCommand(["tech"], names), { show: "TECH" });
+  assert.deepEqual(watchCommand(["TECH", "ADD", "NVDA"], names), { list: "TECH", op: "ADD", ws: ["NVDA"] });
+  assert.deepEqual(watchCommand(["ADD", "VOD", "LN"], names), { list: null, op: "ADD", ws: ["VOD", "LN"] });
+  assert.deepEqual(watchCommand(["NEW", "chips"], names), { op: "NEW", name: "CHIPS" });
+  assert.deepEqual(watchCommand(["RENAME", "TECH", "CHIPS"], names), { op: "RENAME", name: "TECH", to: "CHIPS" });
+  assert.deepEqual(watchCommand(["RENAME", "CHIPS"], names), { op: "RENAME", name: null, to: "CHIPS" });
+  assert.deepEqual(watchCommand(["DROP", "TECH"], names), { op: "DROP", name: "TECH" });
+});
+
+test("watchlists: new, add to a named list, rename in place, drop; the input state is never changed", () => {
+  const st0 = watchState({ lists: { MAIN: ["SPX INDEX"] } });
+  const frozen = JSON.stringify(st0);
+  let r = applyWatch(st0, { op: "NEW", name: "TECH" });
+  assert.equal(r.st.active, "TECH");
+  assert.deepEqual(r.st.lists.TECH, []);
+  assert.equal(JSON.stringify(st0), frozen);
+  let st = r.st;
+  r = applyWatch(st, { list: "MAIN", op: "ADD", ws: ["NVDA"] });
+  assert.deepEqual(r.st.lists.MAIN, ["SPX INDEX", "NVDA US EQUITY"]);
+  assert.equal(r.msg, "Added NVDA US EQUITY to MAIN");
+  assert.ok(r.added);
+  r = applyWatch(r.st, { list: null, op: "ADD", ws: ["AAPL"] });
+  assert.deepEqual(r.st.lists.TECH, ["AAPL US EQUITY"], "no list named: the active one");
+  st = r.st;
+  r = applyWatch(st, { op: "RENAME", name: "MAIN", to: "CORE" });
+  assert.deepEqual(Object.keys(r.st.lists), ["CORE", "TECH"], "same tab order");
+  assert.equal(r.st.active, "TECH");
+  r = applyWatch(r.st, { op: "RENAME", name: null, to: "CHIPS" });
+  assert.equal(r.st.active, "CHIPS");
+  r = applyWatch(r.st, { op: "DROP", name: "CHIPS" });
+  assert.deepEqual(Object.keys(r.st.lists), ["CORE"]);
+  assert.equal(r.st.active, "CORE");
+  assert.match(applyWatch(r.st, { op: "DROP", name: "CORE" }).error, /only list/);
+});
+
+test("watchlists: bad names, duplicates and the list limit are refused", () => {
+  const st = watchState({ lists: { MAIN: [], TECH: [] } });
+  assert.ok(applyWatch(st, { op: "NEW", name: "TECH" }).error);
+  assert.ok(applyWatch(st, { op: "NEW", name: "" }).error);
+  assert.ok(applyWatch(st, { op: "NEW", name: "A B" }).error);
+  assert.ok(applyWatch(st, { op: "NEW", name: "ADD" }).error);
+  assert.ok(applyWatch(st, { op: "RENAME", name: "MAIN", to: "TECH" }).error);
+  assert.ok(applyWatch(st, { op: "DROP", name: "NOPE" }).error);
+  assert.ok(applyWatch(st, { list: "MAIN", op: "SWAP", ws: ["X"] }).error);
+  const many = watchState({ lists: Object.fromEntries(Array.from({ length: MAX_LISTS }, (_, i) => [`L${i}`, []])) });
+  assert.match(applyWatch(many, { op: "NEW", name: "ONE_MORE" }).error, /lists/);
 });

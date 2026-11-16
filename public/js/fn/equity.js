@@ -1,9 +1,11 @@
 // Equity tools: compare returns (COMP), the equity screener (EQS), your portfolio (PORT), dividends (DVD),
+// moves around ex-dividend dates (DMOV),
 // earnings estimates (EE) and analyst ratings (ANR). The maths runs on the server (lib/fn/eq-*.js, eqs.js,
 // dvd.js, ee.js, anr.js), so the numbers the tests check are the numbers on screen.
 import { api, esc, px, pct, cls, big, num, date } from "../api.js";
-import { table, kv, sect, tabs, html, lineChart, delayTag } from "../ui.js";
+import { table, kv, sect, tabs, html, lineChart, priceChart, delayTag } from "../ui.js";
 import { toSecurity, parseOption, YELLOW } from "../securities.js";
+import { verdictHtml } from "./events.js";
 
 // Six line colours that read on black and don't look like the green and red of up and down.
 export const PALETTE = [
@@ -754,9 +756,13 @@ async function renderDvd(ctx) {
         ])
       : html(`<p class="hint">No dividends on record.</p>`),
     hint(
-      "Indicated annual dividend is the latest regular dividend times the payments a year; indicated yield is that over the live price.",
+      "Indicated annual dividend is the latest regular dividend times the payments a year; indicated yield is that over the live price. How the price moved around past ex-dates: <a href=\"#\" data-c=\"DMOV\">DMOV</a>.",
     ),
   );
+  ctx.el.querySelector('a[data-c="DMOV"]').onclick = (e) => {
+    e.preventDefault();
+    ctx.go("DMOV");
+  };
   ctx.setSource(d.source);
 }
 
@@ -769,6 +775,228 @@ const epsCols = [
   { key: "up", label: "Revised up (4 wk)", fmt: (v) => num(v, 0) },
   { key: "down", label: "Revised down (4 wk)", fmt: (v) => num(v, 0) },
 ];
+
+// ---------- DMOV: moves around the ex-dividend date ----------
+const DMOV_PERIODS = ["1Y", "2Y", "3Y", "5Y", "ALL"];
+// Buy-write options from the command: ENTRY=2 (trading days before the ex-date), DTE=2-10.
+function dmovOpts(args) {
+  const o = {};
+  for (const a of args.map((x) => String(x).toUpperCase())) {
+    let m;
+    if ((m = /^ENTRY=(\d+)$/.exec(a))) o.entry = m[1];
+    if ((m = /^DTE=(\d+)-(\d+)$/.exec(a))) [o.dtemin, o.dtemax] = [m[1], m[2]];
+  }
+  return o;
+}
+// Trading days of daily bars per DMOV period, for the chart.
+const DMOV_BARS = { "1Y": 260, "2Y": 520, "3Y": 780, "5Y": 1300, ALL: 4000 };
+const isoOf = (t) => new Date(t * 1000).toISOString().slice(0, 10);
+// DMOV chart: daily candles over the period, every past ex-date marked with its dividend; today's buy-write
+// entry too once it is in the data. "Full chart" opens GP for the same security.
+async function dmovChart(ctx, d, period, host) {
+  ctx.dmovChart?.remove();
+  ctx.dmovChart = null;
+  const res = await api.candles(ctx.sec.id, "1D", DMOV_BARS[period] || 520).catch(() => null);
+  if (!ctx.live() || !host.isConnected) return;
+  const bars = (res?.candles || []).filter((b) => b.close > 0);
+  if (!bars.length) {
+    host.replaceChildren(html(`<p class="hint">No price chart available.</p>`));
+    return;
+  }
+  host.replaceChildren();
+  const c = priceChart(host, { type: "candles", height: 300 });
+  let gone = false;
+  const remove = () => { if (!gone) { gone = true; c.remove(); } };
+  ctx.dmovChart = { remove };
+  ctx.onCleanup(remove);
+  c.series.setData(bars.map((b) => ({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close })));
+  // Marker on the first bar on or after a date (an ex-date can fall on a holiday in the data).
+  const barOn = (iso) => bars.find((b) => isoOf(b.time) >= iso);
+  const marks = [];
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  for (const e of d.events || []) {
+    const b = barOn(e.exDate);
+    if (b) marks.push({ time: b.time, position: "belowBar", color: css("--amber"), shape: "arrowUp", text: `ex ${num(e.amount, 2)}` });
+  }
+  const q = d.buyWrite?.quote;
+  const lastIso = isoOf(bars.at(-1).time);
+  if (q?.entryDate && q.entryDate <= lastIso) marks.push({ time: barOn(q.entryDate).time, position: "aboveBar", color: css("--up"), shape: "arrowDown", text: "entry" });
+  marks.sort((a, b) => a.time - b.time);
+  window.LightweightCharts.createSeriesMarkers?.(c.series, marks);
+  c.chart.timeScale().fitContent();
+}
+const dmovCmd = (ctx, period, o) =>
+  `${ctx.sec.id} DMOV ${period}${o.entry ? ` ENTRY=${o.entry}` : ""}${o.dtemin ? ` DTE=${o.dtemin}-${o.dtemax}` : ""}`;
+async function renderDmov(ctx, period, opts) {
+  period = period || ctx.args.map((a) => String(a).toUpperCase()).find((a) => DMOV_PERIODS.includes(a)) || "2Y";
+  opts = opts || dmovOpts(ctx.args);
+  const d = await api.fn("dmov", { symbol: ctx.sec.id, period, ...opts });
+  if (!ctx.live()) return;
+  ctx.el.innerHTML = "";
+  const cur = d.currency || "";
+  const amt = (v, d2 = 2) => (finite(v) ? `${v > 0 ? "+" : v < 0 ? "-" : ""}${num(Math.abs(v), d2)} ${cur}` : "—");
+  const div = (v) => (finite(v) ? `${num(v, Math.abs(v * 100 - Math.round(v * 100)) > 1e-9 ? 4 : 2)} ${cur}` : "—");
+  const p1 = (v) => pct(v, 2);
+  const last = d.events?.[0];
+  const nx = d.next;
+  const nextTxt = nx
+    ? `${esc(nx.date)} <span class="dim">${nx.estimated ? (nx.overdue ? `expected, not announced yet (usually every ${nx.gapDays} days)` : `expected (usually every ${nx.gapDays} days)`) : "announced"}${nx.amount != null ? ` · ${esc(div(nx.amount))}` : ""}</span>`
+    : `<span class="dim">none expected</span>`;
+  ctx.el.append(
+    html(`<div style="font-size:15px;margin-bottom:6px">Next ex-date <b class="amber">${nextTxt}</b>${last ? `  <span class="dim">· last</span> ${esc(div(last.amount))} <span class="dim">on ${esc(last.exDate)} (${last.yieldPct.toFixed(2)}% of the price)</span>` : ""}${d.buyWrite?.verdict ? `  <span class="dim">· buy-write entry</span> <b>${verdictHtml(d.buyWrite.verdict.level, d.buyWrite.verdict.label, `${d.buyWrite.verdict.reason} (${d.buyWrite.verdict.basis})`)}</b>` : ""}</div>`),
+    tabs(DMOV_PERIODS, d.period, (p) => {
+      setCmd(ctx, dmovCmd(ctx, p, opts));
+      renderDmov(ctx, p, opts);
+    }),
+  );
+  const chartHost = html(`<div style="position:relative;height:300px;margin:4px 0 8px"><p class="hint">Loading the chart…</p></div>`);
+  const full = html(`<button class="tab" title="Open the full price chart (GP) for ${esc(d.symbol)}">Full chart (GP)</button>`);
+  full.onclick = () => ctx.go(`${ctx.sec.id} GP`);
+  ctx.el.append(
+    html(`<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><span class="dim">Daily price over ${esc(d.period)}, ex-dates marked with the dividend</span></div>`),
+    chartHost,
+  );
+  ctx.el.lastElementChild.previousElementSibling.append(full);
+  dmovChart(ctx, d, d.period, chartHost);
+  const s = d.summary;
+  if (!s || !s.n) {
+    ctx.el.append(html(`<p class="hint">${esc(d.note || `No ex-dates with price data in this period. Try a longer one.`)}</p>`));
+    ctx.setSource(d.source);
+    return;
+  }
+  const [w1, w2, w3] = d.horizons;
+  const rows = [
+    { what: `Run-up, ${d.preDays} days before`, st: s.runUp },
+    { what: "Ex-day open (gap)", st: s.gap },
+    { what: "Ex-day close", st: s.exDay, am: s.exDayAmt },
+    { what: "+1 week", st: s.after[w1].price, am: s.after[w1].amt },
+    { what: "+2 weeks", st: s.after[w2].price, am: s.after[w2].amt },
+    { what: "+3 weeks", st: s.after[w3].price, am: s.after[w3].amt },
+    { what: "+1 week incl. dividend", st: s.after[w1].total },
+    { what: "+3 weeks incl. dividend", st: s.after[w3].total },
+  ];
+  const r = s.recovery;
+  const smallDiv = finite(s.yieldPct.median) && s.yieldPct.median < 0.3;
+  ctx.el.append(
+    sect(`Moves around the ex-date: ${s.n} ex-dates, ${s.from} to ${s.to}`),
+    table(rows, [
+      { key: "what", label: "From the close before the ex-date", left: true, lbl: true },
+      { key: (x) => x.st.avg, label: "Average", fmt: p1, cls },
+      { key: (x) => x.st.median, label: "Median", fmt: p1, cls },
+      { key: (x) => x.st.max, label: "Best", fmt: p1, cls },
+      { key: (x) => x.st.min, label: "Worst", fmt: p1, cls },
+      { key: (x) => x.st.sd, label: "1 SD", fmt: (v) => (finite(v) ? `±${v.toFixed(2)}%` : "—"), title: "Standard deviation of the moves" },
+      { key: (x) => x.st.upPct, label: "Up", fmt: perc1, title: "Share of ex-dates with a gain" },
+      { key: (x) => x.am?.avg, label: `Average\n${cur}`, fmt: (v) => amt(v), cls },
+    ]),
+    kv([
+      ["Ex-day drop ÷ dividend", finite(s.dropVsDiv.median) ? `median ${s.dropVsDiv.median.toFixed(2)} · average ${s.dropVsDiv.avg.toFixed(2)}  (1 = fell by exactly the dividend)` : "—"],
+      ["Dividend per payment", finite(s.yieldPct.median) ? `median ${s.yieldPct.median.toFixed(2)}% of the price` : "—"],
+      ["Back at the close before", r.n ? `${r.recovered} of ${r.n} (${perc1(r.pct)}) within ${d.recoverMax} trading days, before the next ex-date${r.days.n ? ` · median ${r.days.median} days, longest ${r.days.max}` : ""}${r.open ? ` · ${r.open} still open` : ""}` : "—"],
+    ]),
+  );
+  if (smallDiv)
+    ctx.el.append(hint("The dividend is small against the stock's normal daily moves, so the ex-day drop ÷ dividend is mostly noise. The moves themselves still count."));
+  const recTxt = (e) => (e.recoveryDays != null ? (e.recoveryDays === 0 ? "ex-day" : `${e.recoveryDays} d`) : e.recoveryOpen ? "not yet" : "no");
+  ctx.el.append(
+    sect("Each ex-date"),
+    table(d.events, [
+      { key: "exDate", label: "Ex-date", left: true, lbl: true },
+      { key: "amount", label: "Dividend", fmt: div },
+      { key: "yieldPct", label: "Yield", fmt: (v) => `${v.toFixed(2)}%`, title: "Dividend over the close before the ex-date" },
+      { key: "runUpPct", label: `Run-up\n${d.preDays} d`, fmt: p1, cls },
+      { key: "exDayPct", label: "Ex-day", fmt: p1, cls },
+      { key: "dropVsDiv", label: "Drop ÷\ndividend", fmt: (v) => (finite(v) ? v.toFixed(2) : "—") },
+      { key: (e) => e.after[w1]?.pricePct, label: "+1 week", fmt: p1, cls },
+      { key: (e) => e.after[w2]?.pricePct, label: "+2 weeks", fmt: p1, cls },
+      { key: (e) => e.after[w3]?.pricePct, label: "+3 weeks", fmt: p1, cls },
+      { key: recTxt, label: "Back at\nclose before", title: "Trading days after the ex-day until a close at or above the close before the ex-date (no = not before the next ex-date or within the limit)" },
+    ]),
+    hint(`All moves are measured from the close of the last trading day before the ex-date, the last day the price still included the dividend. A week is ${w1} trading days. Prices and dividends are split-adjusted, not dividend-adjusted. See also <a href="#" data-c="DVD">DVD</a> for the dividend history.`),
+  );
+  ctx.el.querySelector('a[data-c="DVD"]').onclick = (e) => {
+    e.preventDefault();
+    ctx.go("DVD");
+  };
+  if (d.buyWrite) renderDmovBuyWrite(ctx, d, opts, { p1, amt, div });
+  ctx.setSource(d.source + (d.buyWrite?.quote?.source ? ` Calls: ${d.buyWrite.quote.source}.` : ""));
+}
+
+// Buy-write over the ex-date: buy N trading days before, sell the first call above the price on the first
+// expiry DTE days after the entry, hold through the ex-date to expiry.
+function renderDmovBuyWrite(ctx, d, opts, { p1, div }) {
+  const b = d.buyWrite;
+  const q = b.quote;
+  const form = html(`<form class="wform" autocomplete="off">
+    <label>Entry, trading days before the ex-date <input name="entry" type="number" min="1" max="10" style="width:52px" value="${b.entryDays}"></label>
+    <label>DTE from entry <input name="dtemin" type="number" min="0" max="30" style="width:52px" value="${b.dteMin}"> to <input name="dtemax" type="number" min="1" max="45" style="width:52px" value="${b.dteMax}"></label>
+    <button type="submit">Apply</button>
+  </form>`);
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const o = { entry: f.get("entry"), dtemin: f.get("dtemin"), dtemax: f.get("dtemax") };
+    setCmd(ctx, dmovCmd(ctx, d.period, o));
+    renderDmov(ctx, d.period, o);
+  };
+  const v = b.verdict;
+  ctx.el.append(
+    sect("Buy-write over the ex-date"),
+    ...(v ? [html(`<div style="font-size:15px;margin:4px 0 6px">Entry: <b>${verdictHtml(v.level, v.label.toUpperCase(), v.reason)}</b> <span class="dim">· ${esc(v.reason)} · ${esc(v.basis)}</span></div>`)] : []),
+    hint(`Buy ${b.entryDays} trading day${b.entryDays > 1 ? "s" : ""} before the ex-date, sell the first call above the price on the first expiry ${b.dteMin} to ${b.dteMax} days after the entry, keep the dividend, hold to expiry.`),
+    form,
+  );
+  if (q) {
+    const c = q.call;
+    const today = [
+      ["Weekly options", q.weekly ? "yes" : "no (monthlies only)"],
+      ["Next ex-date", `${d.next?.date || "—"}${d.next?.estimated ? " (expected, not announced)" : ""}`],
+      ["Entry", q.entryDate || "—"],
+      ["Expiry", q.expiry ? `${q.expiry} · ${q.dte} days after entry${q.fallback ? ` (monthly: no expiry ${b.dteMin}-${b.dteMax} days after the entry; the history below holds ${q.dte} days too)` : ""}` : "—"],
+      ["Call", c ? `strike ${num(c.strike, 2)} (${pct(q.strikePct)} over the price ${num(q.price, 2)}) · bid ${num(c.bid, 2)} / ask ${num(c.ask, 2)} · open interest ${c.oi}${finite(c.spreadPct) ? ` · spread ${c.spreadPct.toFixed(0)}%` : ""}` : "—"],
+      ["Premium", finite(q.premiumPct) ? `${num(q.premium, 2)} = ${q.premiumPct.toFixed(2)}% of the price${q.premiumEstimated ? ` (estimated for the entry day: ${q.dte} days left instead of ${q.dteNow} today, from today's implied volatility)` : " (today's bid)"}` : "—"],
+      ["Dividend", finite(q.dividendPct) ? `${div(q.dividend)} = ${q.dividendPct.toFixed(2)}%` : "—"],
+      ["Early assignment", q.early ? (q.early.risk ? "LIKELY: the call is in the money and its time value is below the dividend" : q.early.inTheMoney ? "unlikely (time value above the dividend)" : "only if the stock rises above the strike before the ex-date") : "—"],
+    ];
+    ctx.el.append(kv(today));
+    if (q.reason) ctx.el.append(hint(esc(q.reason)));
+  }
+  const s = b.sim;
+  const h = b.summary;
+  ctx.el.append(
+    sect(s ? `Today's terms on the past ${s.n} ex-dates` : `Stock side on the past ${h.n} ex-dates`),
+  );
+  if (s)
+    ctx.el.append(
+      kv([
+        ["Return per trade", `average ${p1(s.ret.avg)} · median ${p1(s.ret.median)} · best ${p1(s.ret.max)} · worst ${p1(s.ret.min)}`],
+        ["Winning trades", `${perc1(s.winPct)} · called away ${perc1(s.assignedPct)}`],
+        ["Per year", finite(s.perYearPct) ? `${p1(s.perYearPct)} if repeated every ${q.dte} days (simple, before costs)` : "—"],
+      ]),
+      hint("Return = the stock's move from entry to expiry, capped at the strike, plus premium and dividend, each in % of the entry price."),
+    );
+  ctx.el.append(
+    kv([
+      ["Stock, entry to expiry", `average ${p1(h.move.avg)} · median ${p1(h.move.median)} · 1 SD ±${finite(h.move.sd) ? h.move.sd.toFixed(2) : "—"}%`],
+      ["With the dividend", `average ${p1(h.total.avg)}`],
+      ["At or above the entry", perc1(h.atOrAbovePct)],
+      ["Below the entry", h.shortfall.n ? `${h.shortfall.n} times, by ${h.shortfall.avg.toFixed(2)}% on average, at most ${h.shortfall.max.toFixed(2)}%` : "never"],
+    ]),
+  );
+  if (b.note) ctx.el.append(hint(esc(b.note)));
+  const simBy = new Map((s?.rows || []).map((r) => [r.exDate, r.retPct]));
+  ctx.el.append(
+    table(b.events, [
+      { key: "exDate", label: "Ex-date", left: true, lbl: true },
+      { key: "entryDate", label: "Entry", left: true },
+      { key: "expiry", label: "Expiry", left: true, fmt: (v) => v || "none" },
+      { key: "dte", label: "DTE" },
+      { key: "movePct", label: "Stock", fmt: p1, cls },
+      { key: "totalPct", label: "Stock +\ndividend", fmt: p1, cls },
+      ...(s ? [{ key: (e) => simBy.get(e.exDate), label: "Buy-write\ntoday's terms", fmt: p1, cls }] : []),
+    ]),
+  );
+}
 
 async function renderEe(ctx) {
   const d = await api.fn("ee", { symbol: ctx.sec.id });
@@ -890,6 +1118,15 @@ export default [
     source:
       "Nasdaq dividend history (Nasdaq-listed), Yahoo dividend events (NYSE and others), live price from Nasdaq",
     render: renderDvd,
+  },
+  {
+    id: "DMOV",
+    name: "Ex-dividend moves",
+    group: "Equities",
+    needs: true,
+    source:
+      "Yahoo dividend events and daily prices (US and European stocks), announced ex-dates from Nasdaq",
+    render: renderDmov,
   },
   {
     id: "EE",

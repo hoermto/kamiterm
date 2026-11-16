@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Amber Terminal server. Node 18+ and nothing else: no npm install, no build step.
+// Amber Terminal server. Node 22.13+ (built-in SQLite) and nothing else: no npm install, no build step.
 //   node server.js            start on http://localhost:3787 (or the next free port)
 //   node server.js --open     start and open your browser
 //   PORT=4000 node server.js  pick a port
@@ -15,6 +15,8 @@ import * as feeds from "./lib/feeds.js";
 import * as alerts from "./lib/alerts.js";
 import * as store from "./lib/store.js";
 import * as toolSettings from "./lib/tool-settings.js";
+import * as secContact from "./lib/sec-contact.js";
+import * as eventsCache from "./lib/events-cache.js";
 import * as rslEvalJobs from "./lib/rsl-eval-jobs.js";
 import * as ptq from "./lib/ptq.js";
 import * as info from "./lib/market-info.js";
@@ -476,6 +478,22 @@ async function handle(req, res) {
       return send(res, 200, updateStatus || updater.loadStatus());
     }
     // SETTINGS > Updates: where updates come from (data/launcher.cfg REPO_URL / BRANCH). Saving checks at once.
+    if (p === "/api/events-cache") {
+      // Event cache (data/cache/events.sqlite): size for SETTINGS; POST {clear:true} empties it.
+      if (req.method === "POST") {
+        const body = await readBody(req, 1e3);
+        if (body.clear) return send(res, 200, eventsCache.clearCache());
+      }
+      if (req.method === "GET") return send(res, 200, eventsCache.cacheStats());
+    }
+    if (p === "/api/sec/contact") {
+      // Contact email for SEC EDGAR requests (SETTINGS > Data sources); stays in data/settings.json.
+      if (req.method === "PUT") {
+        const body = await readBody(req, 1e4);
+        secContact.saveContact(body.contact);
+      }
+      if (req.method === "GET" || req.method === "PUT") return send(res, 200, { contact: secContact.getContact() });
+    }
     if (p === "/api/update/config") {
       const view = () => {
         const c = updater.readConfig();

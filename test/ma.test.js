@@ -31,8 +31,9 @@ const serve = (...r) => {
 const { addEntry, removeEntry, loadList, listEntries } = await import('../lib/ma-list.js');
 const {
   isMergerForm, roleForForm, pickMergerFiling, isUsTicker, checkTickerEdgar,
-  checkTickersEdgar, loadEdgarCache, MA_UA, MERGER_FORMS,
+  checkTickersEdgar, loadEdgarCache, MERGER_FORMS,
 } = await import('../lib/ma-edgar.js');
+const { saveContact } = await import('../lib/sec-contact.js');
 const { buildFlag, resolveMaFlags, applyMaFlags } = await import('../lib/ma-flags.js');
 const maFn = (await import('../lib/fn/ma.js')).default;
 
@@ -98,6 +99,7 @@ test('buildFlag merges manual and edgar', () => {
 });
 
 test('EDGAR check uses User-Agent and caches; soft-fail on network', async () => {
+  saveContact('tester@example.com');
   serve(
     [/company_tickers\.json/, 200, fj('newsfilings/sec-tickers.json')],
     [/submissions\/CIK0000320193\.json/, 200, fj('ma/sec-submissions-merger.json')],
@@ -106,7 +108,7 @@ test('EDGAR check uses User-Agent and caches; soft-fail on network', async () =>
   assert.equal(r.flag.form, 'DEFM14A');
   assert.equal(r.flag.role, 'target');
   assert.match(r.flag.url, /sec\.gov/);
-  assert.ok(calls.some((c) => /Amber Terminal name@example\.com/.test(c.ua || '')));
+  assert.ok(calls.some((c) => /tester@example\.com/.test(c.ua || '')));
   // second call hits cache (no new submissions fetch required if not stale — force false)
   const n = calls.length;
   const r2 = await checkTickerEdgar('AAPL', { force: false, universe: 'SPX' });

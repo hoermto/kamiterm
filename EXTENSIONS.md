@@ -1,6 +1,6 @@
 # Grokki extensions · Amber Terminal MVP
 
-**Version 1.4.1** (in Arbeit) — Änderungen siehe [CHANGELOG.md](CHANGELOG.md). Versionsquelle: `package.json` (Server/MCP) und `public/js/version.js` (UI-Kopfzeile, HELP), Test `test/version.test.js`.
+**Version 1.5.0** (in Arbeit) — Änderungen siehe [CHANGELOG.md](CHANGELOG.md). Versionsquelle: `package.json` (Server/MCP) und `public/js/version.js` (UI-Kopfzeile, HELP), Test `test/version.test.js`.
 
 Installed **only on the bot's shared box**, not on the user's offline computer.
 Folder: `/workspace/thoBox/Grokki/amber-terminal`.
@@ -37,6 +37,10 @@ it. After backend changes restart this copy; after UI changes refresh the browse
 | `RSL26 LOESCHEN AAPL` (auch `LÖSCHEN` / `DELETE`) | Offene Position endgültig löschen (keine Historie) |
 | `RSL26 REOPEN AAPL` | Zuletzt geschlossene Position wieder öffnen |
 | `RSL26 KAUF AAPL DATE=2026-01-15` | Kauf mit Datum-Override (UTC YYYY-MM-DD) |
+| `DSCAN SPX` / `DSCAN ALL DAYS=21 MINOI=0` | Buy-write-Scanner über die kommenden Ex-Tage (US), siehe „DSCAN“ unten |
+| `W` / `W TECH` / `W NEW TECH` / `W TECH ADD NVDA` / `W RENAME TECH CHIPS` / `W DROP TECH` | Mehrere Watchlists: Reiter je Liste; `W ADD`/`W DEL` gelten für die offene Liste. Gespeichert in `data/state.json` (`amberWatch.lists`, `active`) |
+| `HEAT SPX` / `HEAT SPX XLK 1W` / `HEAT SXXP Germany YTD` / `HEAT DAX` | Markt-Heatmap, siehe „HEAT“ unten |
+| `KO DMOV` / `SAP.DE DMOV 5Y` | Kursbewegung um vergangene Ex-Dividenden-Tage (US und Europa), Zeitraum 1Y/2Y/3Y/5Y/ALL, siehe „DMOV“ unten |
 | `RSL26 … MASKIP=0` | „M&A ignorieren“ aus (Standard `MASKIP=1`: M&A-Titel zählen nicht zum Kauf-Fenster). `HIDEMA` ist entfallen und wird ignoriert |
 | `RSLBT SPX START=10000 SIZE=EQUITY FRACTIONAL=1` | Backtest-Startkapital, Budget=Equity/n, Bruchstücke (Defaults) |
 | `RSLBT SPX YEARS=10 N=5 RANKTOP=25 TRAIL=20 TRAILLOCK=4 RUN` | Backtest mit Trailing-Stop −20 % vom Hoch seit Kauf, 4 Wochen Rückkauf-Sperre |
@@ -60,7 +64,7 @@ it. After backend changes restart this copy; after UI changes refresh the browse
 RSL26 and MPUT have universe tabs and parameter inputs. RRG has quadrant tabs,
 sector selector, a four-quadrant graph with eight weekly tail points, and a table.
 Click a sector table row to drill down; stock rows open GP. MPUT rows open the
-suggested expiry in OMON. HELP and DATA list the new functions under **Grokki**.
+suggested expiry in OMON. HELP and DATA list the new functions under **Kamikaze**.
 
 ### Raw endpoints
 
@@ -105,6 +109,17 @@ on refresh. If SQLite fails, behaviour falls back to the previous live chain.
 Scan budget default is 180s / concurrency 6 so a first full SPX run can complete.
 The cache directory is listed in the Seafile library `seafile-ignore.txt`
 (`amber-terminal/data/cache/`) and is not synced.
+
+### Event cache (dividends, earnings dates)
+
+Company events are stored in **`data/cache/events.sqlite`** (`lib/events-cache.js`,
+`node:sqlite`, `QT_EVENTS_PATH` overrides): tables `dividends` and `earnings` (per
+symbol and source), `upcoming` (dates seen in calendars) and `fetch_log` (when each
+source was last asked, and whether it answered). `refresh()` serves the cache while it
+is fresh, asks the source when it is stale, and falls back to the cached rows (marked
+stale) when the source fails; a failed source is asked again after 15 minutes, not on
+every request. If SQLite fails, the live data is used without the cache. SETTINGS ›
+Data sources shows the size and has **Clear**.
 
 Coverage is shown on screen and in JSON, together with per-symbol errors. Missing
 history does not become a zero score. Histories with latest price >14 days old are
@@ -209,8 +224,9 @@ RSL ranking (and annotated in RRG / MPUT when those tickers were checked).
    Role labels when the company itself is the filer: `SC 14D9` / `DEFM14*` /
    `PREM14*` / `SC 13E3` → **target**; `SC TO-T` → **acquirer**; `S-4` →
    **possible-acquirer** (S-4 is often filed by the issuer/acquirer). Soft-fail on
-   network errors (no flag, no crash). User-Agent:
-   `Amber Terminal name@example.com`. Rate ≤ ~5 req/s. Cache:
+   network errors (no flag, no crash). User-Agent: the contact email from
+   SETTINGS → Data sources (SEC asks for one; stored only in `data/settings.json`),
+   or the generic Amber Terminal name when none is set. Rate ≤ ~5 req/s. Cache:
    `data/cache/ma-edgar.json` (Seafile-ignored), refresh when stale > 7 days.
 3. **UI** — `M&A` badge with tooltip (source, form, date, link) on Holdings and the
    RSL ranking; also on RRG / MPUT rows that were checked. The ranking always shows
@@ -297,6 +313,105 @@ comma, ISO dates (client Blob via existing `downloadText`). Helpers:
 `toGermanCsv` / `backtestTradesCsv` / `backtestWeeklyCsv`. Invariants via
 `auditBacktestInvariants` (`backtest.audit`).
 
+
+## DMOV: moves around the ex-dividend date (seit v1.5.0)
+
+`<Ticker> DMOV [1Y|2Y|3Y|5Y|ALL]` (Standard 2Y), US-Aktien (`KO`) und europäische
+Yahoo-Ticker (`SAP.DE`). Rechnung: `lib/event-moves.js` (rein, getestet), Daten:
+`lib/fn/dmov.js`.
+
+- **Daten:** Yahoo-Dividenden-Events (`interval=1wk&range=15y`: vollständig, ~90 KB;
+  `range=max` lässt Jahrzehnte aus, Monatskerzen fassen zwei Zahlungen eines Monats
+  zusammen), wöchentlich im Event-Cache aufgefrischt. Kurse: tägliche Yahoo-Kerzen
+  aus dem OHLCV-Cache, 10 Jahre. Beide **split-, nicht dividendenbereinigt**, daher
+  passen Dividende und Kursabschlag zusammen. US: angekündigte Ex-Tage von Nasdaq
+  (nur künftige Termine; Nasdaqs alte Beträge sind nicht splitbereinigt).
+- **Bezug:** Schlusskurs des letzten Handelstags vor dem Ex-Tag („cum“). Run-up = cum
+  gegen 5 Handelstage davor; Ex-Tag Open (Gap) und Close; Abschlag ÷ Dividende
+  (1 = genau um die Dividende gefallen); +1/+2/+3 Wochen = 5/10/15 Handelstage nach
+  cum, ohne und mit Dividende; Erholung = Handelstage nach dem Ex-Tag bis zu einem
+  Schluss ≥ cum (höchstens 60, nur bis zum nächsten Ex-Tag; noch laufend = „not yet“).
+- **Statistik je Zeitraum:** Durchschnitt, Median, bester, schlechtester Wert,
+  1 Standardabweichung, Anteil positiv, Durchschnitt in Währung.
+- **Nächster Ex-Tag:** angekündigt, sonst geschätzt aus dem üblichen Abstand (Median
+  der letzten 8); ein üblicher Termin, der weniger als einen halben Abstand zurückliegt,
+  gilt als „expected, not announced yet“. Wer zwei Zahlungen ausgelassen hat: keiner.
+- **Grenze:** Ist die Dividende klein gegen die normalen Tagesbewegungen (Median unter
+  0,3 % des Kurses), ist Abschlag ÷ Dividende vor allem Rauschen; der Screen sagt das.
+
+### Buy-write über den Ex-Tag (Abschnitt in DMOV)
+
+`KO DMOV 5Y ENTRY=2 DTE=2-10` (Standard ENTRY=2, DTE=2-10; im Screen änderbar).
+Rechnung: `lib/event-moves.js` (Historie) und `lib/buywrite.js` (Optionen).
+
+- **Trade:** Kauf zum Schluss ENTRY Handelstage vor dem Ex-Tag, Verkauf des ersten
+  Calls über dem Kurs auf dem ersten Verfall am oder nach dem Ex-Tag, der DTE
+  Kalendertage nach dem Einstieg liegt; Dividende behalten, bis zum Verfall halten.
+- **Historie (alle Aktien):** je Ex-Tag Einstieg, Verfall (erster Freitag in der
+  Spanne; Feiertag → letzter Handelstag davor) und Kursbewegung Einstieg → Verfall,
+  ohne/mit Dividende. Historische Optionspreise gibt es nicht frei.
+- **Heute (nur US, CBOE-Kette, ~15 Min. verzögert):** Weeklys = mindestens 3
+  Verfallstermine in den nächsten 35 Tagen; passender Verfall; erster Strike über dem
+  Kurs mit Bid/Ask, Open Interest, Spread. **Prämie:** liegt der Einstieg heute bzw.
+  am nächsten Handelstag, der Bid; liegt er später, eine Schätzung für den
+  Einstiegstag (Black-Scholes mit der heutigen impliziten Vola des Strikes, den Tagen
+  ab Einstieg und Kurs minus Dividende, mal Bid/Modell von heute), weil der Call dann
+  weniger Restlaufzeit hat.
+- **Heutige Konditionen auf die Historie:** je Ex-Tag Rendite = min(Bewegung,
+  Strike-Abstand) + Prämie + Dividende (in % des Einstiegs); Durchschnitt, Median,
+  bester/schlechtester Trade, Gewinnquote, Anteil ausgeübt, „pro Jahr“ (einfach
+  hochgerechnet, vor Kosten).
+- **Frühe Ausübung:** Risiko, wenn der Call im Geld ist und sein Zeitwert unter der
+  Dividende liegt (dann übt der Käufer am Tag vor dem Ex-Tag aus).
+- **Bewertung des Einstiegs** (`verdict()` in `lib/event-moves.js`, auch in DSCAN):
+  Grundlage sind die Renditen je vergangenem Ex-Tag, mit Optionskurs die heutigen
+  Buy-write-Konditionen, sonst Aktie + Dividende vom Einstieg bis zum Verfall.
+  **promising** = mindestens 8 Ex-Tage, Durchschnitt > 0, mindestens 65 % gewonnen und
+  der Durchschnitt deutlich über null (t = Durchschnitt / (SD / √n) ≥ 1,5);
+  **not promising** = Durchschnitt ≤ 0 oder weniger als die Hälfte gewonnen;
+  **mixed** = dazwischen; **too little history** = weniger als 8 Ex-Tage (bei
+  jährlichen Zahlern einen längeren Zeitraum wählen). Mit Begründung (gewonnen,
+  Durchschnitt, schlechtester Trade). DSCAN sortiert nach Bewertung, dann nach
+  Durchschnitt.
+
+## DSCAN: Buy-write-Scanner über die kommenden Ex-Tage (seit v1.5.0)
+
+Je Zeile ein „Chart“-Knopf (öffnet `<Ticker> GP`); ein Klick auf den Rest der Zeile öffnet DMOV. DMOV selbst zeigt oben den Tageskurs des Zeitraums mit allen Ex-Tagen (Pfeil + Dividende) und „Full chart (GP)“.
+
+`DSCAN [SPX|NDX|ALL] DAYS=14 ENTRY=2 DTE=2-10 WEEKLY=1 MDTE=45 LIQUID=0 MINOI=50 MAXSPREAD=30 PERIOD=5Y`
+(Einstellungen werden gemerkt). Nur US-Aktien (Optionsdaten). `lib/fn/dscan.js`.
+
+1. **Ex-Tage:** Nasdaq-Dividendenkalender, eine Abfrage je Werktag bis DAYS voraus,
+   12 Stunden im Event-Cache. Nur Stammaktien (einfache Ticker, keine Preferreds/Notes).
+2. **Universum:** SPX, NDX (wie RSL26) oder ALL (jede Aktie im Kalender).
+3. **Optionen je Aktie** (CBOE, wie DMOV › Buy-write): Filter in dieser Reihenfolge,
+   gezählt im Screen: keine US-Optionen · zu spät (letzter Kauftag vor dem Ex-Tag
+   vorbei) · keine Weeklys (`WEEKLY=1`, Standard) · kein Verfall DTE nach dem Einstieg ·
+   keine Prämie · nur mit `LIQUID=1`: Open Interest < MINOI oder Spread > MAXSPREAD
+   (Spread = (Ask − Bid) / Mitte des ersten Calls über dem Kurs). Open Interest und
+   Spread stehen immer in der Tabelle.
+   **Monatsoptionen:** mit `WEEKLY=0` bekommt eine Aktie ohne Verfall im DTE-Bereich den
+   ersten Verfall nach dem Ex-Tag bis MDTE Tage nach dem Einstieg (Standard 45, in der
+   Tabelle „M“); ihre Historie hält dann dieselbe Anzahl Kalendertage statt bis zum
+   Weekly-Freitag. DMOV nutzt diesen Rückfall immer.
+4. **Historie:** die vergangenen Ex-Tage der Aktie im Zeitraum PERIOD mit den heutigen
+   Konditionen (wie in DMOV): Durchschnitt, Median, schlechtester Trade, Gewinnquote,
+   Anteil ausgeübt, „pro Jahr“. Dazu „Prämie + Dividende“ = Ertrag bei unverändertem Kurs.
+5. **Sortierung:** Durchschnitt je Trade, absteigend. Klick auf eine Zeile öffnet DMOV
+   mit denselben Parametern.
+
+Außerhalb der Handelszeit sind die Spreads die vom Schluss und oft weit; Weekly-Strikes
+haben anfangs wenig Open Interest. Zeitbudget 120 s, 4 Ketten parallel.
+
+## HEAT: Markt-Heatmap (seit v1.5.0)
+
+`HEAT [SPX|NDX|DAX|SXXP] [Sektor/Land] [1D|1W|1M|3M|YTD|1Y]`, z. B. `HEAT SPX XLK 1W`, `HEAT SXXP United_Kingdom`.
+
+- **Universen** als Reiter: S&P 500 (nach den 11 Sektoren aus `SECTORS` in `grokki-universes.js` gruppiert; zweite Reiterzeile ALL / XLK … XLRE zeigt einen Sektor allein), Nasdaq-100 (S&P-Sektor, sonst „Not in the S&P 500“), DAX 40 (ungruppiert), STOXX Europe 600 (nach Land). Klick auf einen Gruppenkopf zoomt hinein, Klick auf eine Kachel öffnet `<Ticker> GP`.
+- **Kachelgröße:** Marktkapitalisierung von Yahoo (v7 quote, 50 Titel je Anfrage, einen Tag gespeichert in `data/heat-caps.json`; dauert der erste Abruf über 20 s, zeichnet die Karte mit dem Gespeicherten und der Abruf läuft im Hintergrund weiter). STOXX 600: iShares-Indexgewicht aus der Mitgliederliste (Streubesitz). Ohne Wert: Mediangröße.
+- **Farbe:** Veränderung über den Zeitraum aus den Tageskursen des OHLC-Caches (`history()`, bis 15 Minuten verzögert): n Handelstage zurück (1D=1, 1W=5, 1M=21, 3M=63, 1Y=252), YTD gegen den letzten Schluss des Vorjahres. Volles Rot/Grün bei ±3 % (1D), ±6 % (1W), ±10 % (1M), ±15 % (3M), ±30 % (YTD, 1Y). Europäische Kurse mit `repairBars` bereinigt; Veränderung in Landeswährung (keine EUR-Umrechnung).
+- Alle Zeiträume kommen in einer Antwort, der Wechsel des Zeitraums lädt nicht neu. Universum und Zeitraum werden gemerkt (`/api/settings`, Tool HEAT). Gruppenkopf und Kopfzeile zeigen die nach Gewicht gemittelte Veränderung.
+- Server: `lib/fn/heat.js`, Screen: `public/js/fn/heat.js` (squarified Treemap), Tests: `test/heat.test.js`.
 
 ## RRG: JdK-style approximation, not proprietary JdK
 

@@ -1,11 +1,14 @@
-# Seafile ignore patterns (library root = Grokki)
+# Template: Seafile only reads seafile-ignore.txt at the library root (Grokki), with the paths
+# prefixed "amber-terminal/". Folders must end with "/" or they are taken as file names.
 # Amber Terminal OHLCV SQLite cache (local only)
 data/cache/
 data/alerts.json
 data/settings.json
-.git
-.vscode
-.venv
+.git/
+.vscode/
+.venv/
 */*.log
 # Temporaere Box-Snapshot-Dateien
 *.box-store-snap-*
+# The app window's Edge profile differs per computer
+data/app-window/
