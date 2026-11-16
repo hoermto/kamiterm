@@ -63,7 +63,7 @@ it. After backend changes restart this copy; after UI changes refresh the browse
 RSL26 and MPUT have universe tabs and parameter inputs. RRG has quadrant tabs,
 sector selector, a four-quadrant graph with eight weekly tail points, and a table.
 Click a sector table row to drill down; stock rows open GP. MPUT rows open the
-suggested expiry in OMON. HELP and DATA list the new functions under **Grokki**.
+suggested expiry in OMON. HELP and DATA list the new functions under **Kamikaze**.
 
 ### Raw endpoints
 

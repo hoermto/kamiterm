@@ -1427,9 +1427,9 @@ async function rslbt(ctx) {
 }
 
 export default [
-  {id:'RSL26',name:'Levy RSL26 Scanner · Holdings, Rangliste, weekly Exits',group:'Grokki',needs:false,source:'Yahoo weekly closes; user book data/rsl-watchlist.json; RRG vs universe benchmark',render:rsl},
-  {id:'RSLBT',name:'RSL-BT · manueller Backtest und Parameter-Profile',group:'Grokki',needs:false,source:'Yahoo weekly closes; same engine as RSL26; profiles in data/settings.json',render:rslbt},
-  {id:'RRG',name:'Sector rotation vs SPX + stock drill-down / season filter',group:'Grokki',needs:false,source:'Yahoo; sector ETF proxies; JdK-style approximation',render:rrg},
-  {id:'MPUT',name:'Married-put scanner: bottom + RRG Winter→Spring + 6–12M far-OTM put, dividends, max risk',group:'Grokki',needs:false,source:'Yahoo prices; CBOE delayed options; realized-vol IVR proxy, not true IVR',render:mput},
-  {id:'PARAMHEATMAP',name:'Parameter-Heatmap (N × RANKTOP × Exit-Mode × RS-Exit)',group:'Grokki',needs:false,source:'Offline grid JSON public/data/backtests/grid-2026-11-09.json; FEE=$1/trade fixed',render:paramHeatmap},
+  {id:'RSL26',name:'Levy RSL26 Scanner · Holdings, Rangliste, weekly Exits',group:'Kamikaze',needs:false,source:'Yahoo weekly closes; user book data/rsl-watchlist.json; RRG vs universe benchmark',render:rsl},
+  {id:'RSLBT',name:'RSL-BT · manueller Backtest und Parameter-Profile',group:'Kamikaze',needs:false,source:'Yahoo weekly closes; same engine as RSL26; profiles in data/settings.json',render:rslbt},
+  {id:'RRG',name:'Sector rotation vs SPX + stock drill-down / season filter',group:'Kamikaze',needs:false,source:'Yahoo; sector ETF proxies; JdK-style approximation',render:rrg},
+  {id:'MPUT',name:'Married-put scanner: bottom + RRG Winter→Spring + 6–12M far-OTM put, dividends, max risk',group:'Kamikaze',needs:false,source:'Yahoo prices; CBOE delayed options; realized-vol IVR proxy, not true IVR',render:mput},
+  {id:'PARAMHEATMAP',name:'Parameter-Heatmap (N × RANKTOP × Exit-Mode × RS-Exit)',group:'Kamikaze',needs:false,source:'Offline grid JSON public/data/backtests/grid-2026-11-09.json; FEE=$1/trade fixed',render:paramHeatmap},
 ];
