@@ -38,6 +38,7 @@ it. After backend changes restart this copy; after UI changes refresh the browse
 | `RSL26 REOPEN AAPL` | Zuletzt geschlossene Position wieder öffnen |
 | `RSL26 KAUF AAPL DATE=2026-01-15` | Kauf mit Datum-Override (UTC YYYY-MM-DD) |
 | `DSCAN SPX` / `DSCAN ALL DAYS=21 MINOI=0` | Buy-write-Scanner über die kommenden Ex-Tage (US), siehe „DSCAN“ unten |
+| `W` / `W TECH` / `W NEW TECH` / `W TECH ADD NVDA` / `W RENAME TECH CHIPS` / `W DROP TECH` | Mehrere Watchlists: Reiter je Liste; `W ADD`/`W DEL` gelten für die offene Liste. Gespeichert in `data/state.json` (`amberWatch.lists`, `active`) |
 | `HEAT SPX` / `HEAT SPX XLK 1W` / `HEAT SXXP Germany YTD` / `HEAT DAX` | Markt-Heatmap, siehe „HEAT“ unten |
 | `KO DMOV` / `SAP.DE DMOV 5Y` | Kursbewegung um vergangene Ex-Dividenden-Tage (US und Europa), Zeitraum 1Y/2Y/3Y/5Y/ALL, siehe „DMOV“ unten |
 | `RSL26 … MASKIP=0` | „M&A ignorieren“ aus (Standard `MASKIP=1`: M&A-Titel zählen nicht zum Kauf-Fenster). `HIDEMA` ist entfallen und wird ignoriert |
