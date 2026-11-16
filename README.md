@@ -31,6 +31,7 @@ This file covers what was added.
 - **PARAMHEATMAP**: parameter heat map for RSL26 (N × RANKTOP × exit mode × RS exit).
 - **DMOV**: how a stock moved around its past ex-dividend dates, for US and European stocks: run-up before, the ex-day drop against the dividend, the moves 1 to 3 weeks after (average, median, best, worst, 1 SD, share up, in % and in the currency), and how long it took to get back. Over 1, 2, 3 or 5 years or all; next ex-date announced or estimated. With a **buy-write** section: buy a few days before the ex-date, sell the first call above the price on a weekly expiry shortly after, and see how today's terms would have done on the past ex-dates (US stocks; history only for European ones).
 - **DSCAN**: buy-write scanner over the coming ex-dividend dates (S&P 500, Nasdaq 100 or all US stocks): weekly options, a matching expiry, premium, liquidity filters, and each stock's past ex-dates at today's terms.
+- **HEAT**: market heatmap for the S&P 500 (all, or one sector), the Nasdaq-100, the DAX 40 and the STOXX Europe 600: tiles sized by market cap (STOXX 600: index weight), coloured by the change over 1 day, 1 week, 1, 3 months, YTD or 1 year, grouped by sector or country. A tile opens the chart.
 
 Details, formulas and validation notes: [EXTENSIONS.md](EXTENSIONS.md).
 

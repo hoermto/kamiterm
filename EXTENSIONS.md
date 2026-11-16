@@ -38,6 +38,7 @@ it. After backend changes restart this copy; after UI changes refresh the browse
 | `RSL26 REOPEN AAPL` | Zuletzt geschlossene Position wieder öffnen |
 | `RSL26 KAUF AAPL DATE=2026-01-15` | Kauf mit Datum-Override (UTC YYYY-MM-DD) |
 | `DSCAN SPX` / `DSCAN ALL DAYS=21 MINOI=0` | Buy-write-Scanner über die kommenden Ex-Tage (US), siehe „DSCAN“ unten |
+| `HEAT SPX` / `HEAT SPX XLK 1W` / `HEAT SXXP Germany YTD` / `HEAT DAX` | Markt-Heatmap, siehe „HEAT“ unten |
 | `KO DMOV` / `SAP.DE DMOV 5Y` | Kursbewegung um vergangene Ex-Dividenden-Tage (US und Europa), Zeitraum 1Y/2Y/3Y/5Y/ALL, siehe „DMOV“ unten |
 | `RSL26 … MASKIP=0` | „M&A ignorieren“ aus (Standard `MASKIP=1`: M&A-Titel zählen nicht zum Kauf-Fenster). `HIDEMA` ist entfallen und wird ignoriert |
 | `RSLBT SPX START=10000 SIZE=EQUITY FRACTIONAL=1` | Backtest-Startkapital, Budget=Equity/n, Bruchstücke (Defaults) |
@@ -398,6 +399,16 @@ Rechnung: `lib/event-moves.js` (Historie) und `lib/buywrite.js` (Optionen).
 
 Außerhalb der Handelszeit sind die Spreads die vom Schluss und oft weit; Weekly-Strikes
 haben anfangs wenig Open Interest. Zeitbudget 120 s, 4 Ketten parallel.
+
+## HEAT: Markt-Heatmap (seit v1.5.0)
+
+`HEAT [SPX|NDX|DAX|SXXP] [Sektor/Land] [1D|1W|1M|3M|YTD|1Y]`, z. B. `HEAT SPX XLK 1W`, `HEAT SXXP United_Kingdom`.
+
+- **Universen** als Reiter: S&P 500 (nach den 11 Sektoren aus `SECTORS` in `grokki-universes.js` gruppiert; zweite Reiterzeile ALL / XLK … XLRE zeigt einen Sektor allein), Nasdaq-100 (S&P-Sektor, sonst „Not in the S&P 500“), DAX 40 (ungruppiert), STOXX Europe 600 (nach Land). Klick auf einen Gruppenkopf zoomt hinein, Klick auf eine Kachel öffnet `<Ticker> GP`.
+- **Kachelgröße:** Marktkapitalisierung von Yahoo (v7 quote, 50 Titel je Anfrage, einen Tag gespeichert in `data/heat-caps.json`; dauert der erste Abruf über 20 s, zeichnet die Karte mit dem Gespeicherten und der Abruf läuft im Hintergrund weiter). STOXX 600: iShares-Indexgewicht aus der Mitgliederliste (Streubesitz). Ohne Wert: Mediangröße.
+- **Farbe:** Veränderung über den Zeitraum aus den Tageskursen des OHLC-Caches (`history()`, bis 15 Minuten verzögert): n Handelstage zurück (1D=1, 1W=5, 1M=21, 3M=63, 1Y=252), YTD gegen den letzten Schluss des Vorjahres. Volles Rot/Grün bei ±3 % (1D), ±6 % (1W), ±10 % (1M), ±15 % (3M), ±30 % (YTD, 1Y). Europäische Kurse mit `repairBars` bereinigt; Veränderung in Landeswährung (keine EUR-Umrechnung).
+- Alle Zeiträume kommen in einer Antwort, der Wechsel des Zeitraums lädt nicht neu. Universum und Zeitraum werden gemerkt (`/api/settings`, Tool HEAT). Gruppenkopf und Kopfzeile zeigen die nach Gewicht gemittelte Veränderung.
+- Server: `lib/fn/heat.js`, Screen: `public/js/fn/heat.js` (squarified Treemap), Tests: `test/heat.test.js`.
 
 ## RRG: JdK-style approximation, not proprietary JdK
 

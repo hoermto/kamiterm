@@ -292,6 +292,13 @@ const FN = {
     what: "Buy-write scanner over the coming ex-dividend dates (US stocks): weekly options, an expiry a few days after the entry, the first call above the price with its premium, and the stock's past ex-dates at today's terms (return per trade, win rate)",
     source: "Nasdaq dividend calendar, CBOE delayed option quotes, Yahoo dividends and prices",
   },
+  HEAT: {
+    file: "heat",
+    arg: "universe",
+    argHint: "SPX (default), NDX, DAX or SXXP (STOXX Europe 600)",
+    what: "Market heatmap data: every stock of the index with its group (S&P sector, country for STOXX 600), market cap or index weight and the price change over 1D, 1W, 1M, 3M, YTD and 1Y",
+    source: "Yahoo daily prices via the OHLC cache, Yahoo market caps, iShares STOXX 600 weights",
+  },
   ERN: {
     arg: "days",
     argHint: "days ahead, default 5",
