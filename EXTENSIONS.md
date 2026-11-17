@@ -415,7 +415,7 @@ haben anfangs wenig Open Interest. Zeitbudget 120 s, 4 Ketten parallel.
 - Alle Zeiträume kommen in einer Antwort, der Wechsel des Zeitraums lädt nicht neu. Universum und Zeitraum werden gemerkt (`/api/settings`, Tool HEAT). Gruppenkopf und Kopfzeile zeigen die nach Gewicht gemittelte Veränderung.
 - Server: `lib/fn/heat.js`, Screen: `public/js/fn/heat.js` (squarified Treemap), Tests: `test/heat.test.js`.
 
-## FV / FVSCAN: Fair Value (seit v1.5.0)
+## FV / FVSCAN: Fair Value (seit v1.6.0)
 
 Nach dem Vorbild von ValueLens („Kamikaze-Trader“) und FAST Graphs, mit eigenen Daten (kein Login).
 
