@@ -40,6 +40,8 @@ it. After backend changes restart this copy; after UI changes refresh the browse
 | `DSCAN SPX` / `DSCAN ALL DAYS=21 MINOI=0` | Buy-write-Scanner über die kommenden Ex-Tage (US), siehe „DSCAN“ unten |
 | `W` / `W TECH` / `W NEW TECH` / `W TECH ADD NVDA` / `W RENAME TECH CHIPS` / `W DROP TECH` | Mehrere Watchlists: Reiter je Liste; `W ADD`/`W DEL` gelten für die offene Liste. Gespeichert in `data/state.json` (`amberWatch.lists`, `active`) |
 | `HEAT SPX` / `HEAT SPX XLK 1W` / `HEAT SXXP Germany YTD` / `HEAT DAX` | Markt-Heatmap, siehe „HEAT“ unten |
+| `KO FV` / `KO FV FCF` / `SAP.DE FV PE=18` | Fair-Value-Analyse einer Aktie, siehe „FV / FVSCAN“ unten |
+| `FVSCAN SPX` / `FVSCAN NDX FILTER=QUALITY SORT=YIELD` / `FVSCAN W:TECH BASIS=OE` | Fair-Value-Scanner über S&P 500, Nasdaq-100, DAX, STOXX 600 oder eine Watchlist |
 | `KO DMOV` / `SAP.DE DMOV 5Y` | Kursbewegung um vergangene Ex-Dividenden-Tage (US und Europa), Zeitraum 1Y/2Y/3Y/5Y/ALL, siehe „DMOV“ unten |
 | `RSL26 … MASKIP=0` | „M&A ignorieren“ aus (Standard `MASKIP=1`: M&A-Titel zählen nicht zum Kauf-Fenster). `HIDEMA` ist entfallen und wird ignoriert |
 | `RSLBT SPX START=10000 SIZE=EQUITY FRACTIONAL=1` | Backtest-Startkapital, Budget=Equity/n, Bruchstücke (Defaults) |
@@ -412,6 +414,24 @@ haben anfangs wenig Open Interest. Zeitbudget 120 s, 4 Ketten parallel.
 - **Farbe:** Veränderung über den Zeitraum aus den Tageskursen des OHLC-Caches (`history()`, bis 15 Minuten verzögert): n Handelstage zurück (1D=1, 1W=5, 1M=21, 3M=63, 1Y=252), YTD gegen den letzten Schluss des Vorjahres. Volles Rot/Grün bei ±3 % (1D), ±6 % (1W), ±10 % (1M), ±15 % (3M), ±30 % (YTD, 1Y). Europäische Kurse mit `repairBars` bereinigt; Veränderung in Landeswährung (keine EUR-Umrechnung).
 - Alle Zeiträume kommen in einer Antwort, der Wechsel des Zeitraums lädt nicht neu. Universum und Zeitraum werden gemerkt (`/api/settings`, Tool HEAT). Gruppenkopf und Kopfzeile zeigen die nach Gewicht gemittelte Veränderung.
 - Server: `lib/fn/heat.js`, Screen: `public/js/fn/heat.js` (squarified Treemap), Tests: `test/heat.test.js`.
+
+## FV / FVSCAN: Fair Value (seit v1.5.0)
+
+Nach dem Vorbild von ValueLens („Kamikaze-Trader“) und FAST Graphs, mit eigenen Daten (kein Login).
+
+`<Aktie> FV [EPS|FCF|OE] [PE=15]` und `FVSCAN [SPX|NDX|DAX|SXXP|W:<Liste>] [BASIS=] [PE=] [FILTER=] [SORT=]`.
+
+- **Daten** (`lib/fundamentals.js`, Cache `data/cache/fundamentals/`): US-Aktien aus den SEC Company Facts (10-K, bis 20 Jahre; je Feld eine Liste von US-GAAP-Tags, pro Geschäftsjahr gewinnt der erste mit Wert; Wert aus der neuesten Einreichung, „bekannt seit“ = erste Einreichung; EPS und Aktienzahl gegen Yahoos Splits bereinigt, wenn vor dem Split eingereicht). Andere Aktien und 20-F-Filer ohne US-GAAP: Yahoo-Jahreszeitreihe (4 Jahre, „bekannt“ 75 Tage nach Jahresende). Kurse, Dividenden, Splits: ein Yahoo-Chart-Abruf monatlich über die ganze Historie (`period1=0`; `range=max` lässt Jahre aus). Kurs, TTM- und Forward-EPS: Yahoo v7 quote. Berichtswährung ≠ Kurswährung (Shell: USD/GBp): Umrechnung zum heutigen Kurs. Cache: Jahreszahlen 14 Tage, Chart 2 Tage, Analystenprofil 1 Tag.
+- **Basis:** EPS (GAAP verwässert), FCF je Aktie (operativer Cashflow − Capex) oder Owner Earnings (FCF − aktienbasierte Vergütung). „Jetzt“: TTM-EPS (nur SEC-Aktien; Yahoos TTM für Auslandslistings ist teils je ADR oder in gemischter Währung), sonst letztes Geschäftsjahr. TTM über 1,3 × Forward-EPS gilt als Einmaleffekt → Forward-EPS.
+- **Fair Value** = Basis × fairer KGV (Standard 15). **Normal-KGV** = Median der Monats-KGVs der letzten 15 Jahre, je Monat mit dem zuletzt veröffentlichten Jahreswert (point in time), nur positive, KGV < 200, mindestens 12 Monate. **Wert bei Normal-KGV** = Basis × Normal-KGV. Bewertung: ≤ −10 % „below normal“, bis +10 % „near normal“, darüber „above normal“; unter 5 Jahren Historie mit „(short history)“.
+- **Wachstum:** Median des Wachstums zwischen allen Jahrespaaren der letzten 10 Jahre (Theil-Sen auf den Logarithmen; ein Ausreißerjahr kippt es nicht; höchstens ein Verlustjahr), sonst 5-Jahres-CAGR (nur über sechs positive Jahre), sonst Analysten nächstes Jahr, danach 6 % (ein Jahr ist keine 5-Jahres-Rate). Begrenzt auf −10 … +25 %.
+- **Erwartete Rendite (5 Jahre, p. a.):** Basis wächst mit g, KGV am Ende = Normal-KGV (höchstens 30; bei kurzer Historie höchstens das heutige), Dividenden wachsen mit g. Dazu dieselbe Rechnung mit KGV 15 und mit Analystenwachstum. FVSCAN rangiert nach dem kleineren der beiden Werte (eigene Historie, Analysten). **Erratisch:** ≥ 2 Verlustjahre unter den letzten 10 → keine erwartete Rendite im Scanner, Warnung in FV.
+- **Qualität:** ROE (Durchschnitts-Eigenkapital), ROA, ROIC (operatives Ergebnis nach Steuern / (EK + Schulden − Cash)), Margen, Schulden/Kapital, Nettoschulden/EBITDA, Zinsdeckung, Current Ratio, Piotroski F (9 Kriterien), Altman Z (original; nicht für Banken, Versicherer, Immobilien). Ausschüttung zu Gewinn und FCF, FCF/Dividende über 5 Jahre.
+- **Dividende** (aus Yahoos Zahlungen): Sonderdividenden und Yahoos doppelte Einträge fallen raus (≥ 1,75 × Median der zwei Jahre drumherum). Jahre erhöht = höchste reguläre Zahlung je Kalenderjahr über der des Vorjahres, in Folge bis zum Vorjahr. Champion ≥ 25, Contender 10–24, Challenger 5–9. Yield Theory: heutige Dividende / Durchschnittsrendite der letzten 10 Jahre (mindestens 36 Monate).
+- **Momentum:** RSL26 (Levy) aus dem OHLC-Cache; „cheap+mom“ = unter Normalwert und RSL > 1.
+- **Backtest (FV):** jeder Monat ab dem vierten Jahr: Kurs / (Basis damals × Normal-KGV aus den Monaten davor), Rendite der nächsten 12 Monate mit Dividenden, gruppiert (> 20 % darunter, 0–20 % darunter, 0–20 % darüber, > 20 % darüber). Überlappende Fenster, vor Kosten und Steuern.
+- **FVSCAN-Filter** (wie ValueLens): ALL, UNDER, NORMAL, RET10, DIV10, ROE15, DEBT50, FCFDIV, QUALITY (ROE ≥ 15, Schulden/Kapital ≤ 50, FCF deckt Dividende, unter Normal), CHAMP / CONTENDER / CHALLENGER (fair bewertet = höchstens 10 % über Normalwert), GROWTH (g ≥ 10, fair, Rendite ≥ 10, PEG ≤ 1,5), GROWTHRET (g ≥ 15, fair), CHEAPMOM. Sortierung: RET, RETHIST, NORMAL, FAIR, YIELD, RAISED, ROE, RSL, F. Universum, Basis, KGV, Filter und Sortierung werden gemerkt (Tool FVSCAN). Zeitbudget 100 s; was nicht fertig wird, lädt im Hintergrund weiter (S&P 500 kalt rund 45 s).
+- Server: `lib/fundamentals.js`, `lib/valuation.js`, `lib/fn/fv.js`, `lib/fn/fvscan.js`; Screen: `public/js/fn/fv.js`; Tests: `test/fv.test.js`.
 
 ## RRG: JdK-style approximation, not proprietary JdK
 
