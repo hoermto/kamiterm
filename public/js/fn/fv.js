@@ -174,7 +174,7 @@ async function fv(ctx) {
 }
 
 // ---------------- FVSCAN ----------------
-const UNIS = ["SPX", "NDX", "RUT", "DAX", "SXXP"];
+const UNIS = ["SPX", "NDX", "DAX", "SXXP"];
 const CAT_SHORT = { Champion: "Champ", Contender: "Cont", Challenger: "Chall" };
 const fair = (r) => finite(r.vsNormalPct) && r.vsNormalPct <= 10;
 /** The presets (as in ValueLens' list view), plus cheap with momentum. */

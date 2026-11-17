@@ -310,7 +310,7 @@ const FN = {
   FVSCAN: {
     file: "fvscan",
     arg: "universe",
-    argHint: "SPX (default), NDX, RUT (Russell 2000), DAX, SXXP or W:<watchlist>; basis=EPS|FCF|OE pe=15",
+    argHint: "SPX (default), NDX, DAX, SXXP or W:<watchlist>; basis=EPS|FCF|OE pe=15",
     what: "Fair value scanner: the FV numbers (P/E, normal P/E, price vs normal and fair value, expected return, growth, PEG, yield, years of dividend raises, ROE, debt/capital, FCF/dividend cover, Piotroski, RSL26) for every stock of a universe or watchlist, ranked by expected return",
     source: "SEC company facts (US), Yahoo annual figures, prices, dividends and estimates",
   },

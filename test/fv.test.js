@@ -248,22 +248,3 @@ test("FVSCAN presets combine: all chosen must hold, ALL or nothing valid = no pr
   assert.equal(filterRows(rows, "ALL", "ROE").length, 3);
 });
 
-test("Russell 2000: roster as a universe, Excel sheet reader", async () => {
-  const u = fvUniverse("RUSSELL2000");
-  assert.equal(u.key, "RUT");
-  assert.ok(u.tickers.length > 1500);
-  assert.ok(u.tickers.every((t) => /^[A-Z][A-Z0-9.-]*$/.test(t)));
-  const fs = await import("node:fs");
-  const os = await import("node:os");
-  const path = await import("node:path");
-  const { readSheet } = await import("../scripts/update-rut.mjs");
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "xlsx-"));
-  fs.mkdirSync(path.join(dir, "xl", "worksheets"), { recursive: true });
-  fs.writeFileSync(path.join(dir, "xl", "sharedStrings.xml"), "<sst><si><t>ISIN</t></si><si><t>A &amp; B Corp</t></si></sst>");
-  fs.writeFileSync(path.join(dir, "xl", "worksheets", "sheet1.xml"), '<sheetData><row r="1"><c r="A1" t="s"><v>0</v></c></row><row r="2"><c r="B2" t="s"><v>1</v></c><c r="AA2" t="n"><v>0.5</v></c></row></sheetData>');
-  const rows = readSheet(dir);
-  fs.rmSync(dir, { recursive: true, force: true });
-  assert.equal(rows[0][0], "ISIN");
-  assert.equal(rows[1][1], "A & B Corp");
-  assert.equal(rows[1][26], "0.5");
-});

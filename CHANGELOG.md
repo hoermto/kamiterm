@@ -9,7 +9,7 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 - **FVSCAN – Fair-Value-Scanner** (`FVSCAN SPX`, `NDX`, `DAX`, `SXXP`, `W:<Liste>`): die FV-Zahlen für jede Aktie, Filter wie in ValueLens (unter Fair Value, unter Normal-KGV, Rendite 10 %+, Qualität, Dividenden-Champions/Contender/Challenger, Wachstum) plus „cheap + RSL > 1“, Sortierung wählbar, Klick öffnet FV. Beides auch über den MCP-Server.
 - **FVSCAN › Voreinstellungen kombinierbar:** ein Klick schaltet eine zu oder ab, alle gewählten müssen gelten, „All“ löscht sie (`FILTER=QUALITY,CHAMP`).
 - **FVSCAN › More filters:** frei kombinierbare Schwellen zusätzlich zur Voreinstellung, gemerkt: zahlt Dividende, mindestens n Jahre gezahlt / in Folge erhöht, Rendite, Dividendenwachstum, Ausschüttung, FCF-Deckung, KGV, vs Normal/Fair, erwartete Rendite, Wachstum, PEG, ROE, ROIC, Marge, Schulden, Piotroski, RSL26 und Ausschlüsse (Banken/Immobilien, erratische Gewinne, kurze Historie). Auch per Befehl (`FVSCAN SPX PAYER=1 MINRAISED=10`).
-- **FVSCAN › Russell 2000** (`FVSCAN RUT`): Liste aus den Beständen des SPDR Russell 2000 UCITS ETF (Tickers über OpenFIGI), erneuern mit `node scripts/update-rut.mjs`. SEC-Abrufe sind jetzt auf 4 je Sekunde begrenzt (SEC sperrt über 10 je Sekunde für rund 10 Minuten), nach einem 429 eine Minute Pause.
+- **SEC-Abrufe gedrosselt:** SEC-Abrufe sind jetzt auf 4 je Sekunde begrenzt (SEC sperrt über 10 je Sekunde für rund 10 Minuten), nach einem 429 eine Minute Pause.
 - **DES verlinkt FV** („FV fair value“ in der Zeile „Next:“).
 
 ## [1.5.0] – in Arbeit
