@@ -232,3 +232,18 @@ test("FVSCAN more filters: set thresholds combine with the preset, missing value
   assert.deepEqual(filterRows(rows, "ALL", "ROE", { payer: true }).map((r) => r.t), ["KO", "BAC"]);
   assert.match(customText(c), /pays a dividend, raised at least 10/);
 });
+
+test("FVSCAN presets combine: all chosen must hold, ALL or nothing valid = no preset", async () => {
+  const { parseFilters } = await import("../public/js/fn/fv.js");
+  assert.deepEqual(parseFilters("quality,champ"), ["QUALITY", "CHAMP"]);
+  assert.deepEqual(parseFilters("ALL"), []);
+  assert.deepEqual(parseFilters("NOPE+ROE15"), ["ROE15"]);
+  const rows = [
+    { t: "A", roe: 20, raisedYears: 30, vsNormalPct: -5 },
+    { t: "B", roe: 20, raisedYears: 2, vsNormalPct: -5 },
+    { t: "C", roe: 5, raisedYears: 30, vsNormalPct: -5 },
+  ];
+  assert.deepEqual(filterRows(rows, "ROE15,DIV10", "ROE").map((r) => r.t), ["A"]);
+  assert.deepEqual(filterRows(rows, ["ROE15"], "ROE").map((r) => r.t).sort(), ["A", "B"]);
+  assert.equal(filterRows(rows, "ALL", "ROE").length, 3);
+});

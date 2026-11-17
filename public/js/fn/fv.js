@@ -1,5 +1,5 @@
 // FV: fair value analysis of one stock. FVSCAN: the same numbers for a whole universe, with filters.
-//   KO FV · KO FV FCF · SAP.DE FV PE=18 · FVSCAN SPX · FVSCAN NDX FILTER=QUALITY · FVSCAN W:TECH SORT=YIELD
+//   KO FV · KO FV FCF · SAP.DE FV PE=18 · FVSCAN SPX · FVSCAN NDX FILTER=QUALITY,CHAMP · FVSCAN W:TECH SORT=YIELD
 // Fair value = earnings (or free cash flow, or owner earnings) per share x a fair P/E (default 15). The normal
 // P/E is the stock's own median over up to 15 years. The expected return assumes 5 years of growth, the P/E
 // back at normal (at most 30) and the dividends. Maths on the server: lib/valuation.js, lib/fn/fv.js, lib/fn/fvscan.js.
@@ -257,8 +257,14 @@ export function customTest(r, c = {}) {
 export const customText = (c = {}) =>
   CUSTOM.filter(([key]) => c[key] != null).map(([key, label, kind]) => (kind === "bool" ? label.toLowerCase() : `${label.replace(/ \(.*\)$/, "").toLowerCase()} ${c[key]}`)).join(", ");
 
+/** Presets to combine: "QUALITY,CHAMP" or an array -> the valid keys (none = ALL). */
+export const parseFilters = (f) =>
+  [...new Set((Array.isArray(f) ? f : String(f || "").split(/[,+]/)).map((x) => String(x).trim().toUpperCase()))].filter((x) => FILTERS[x] && x !== "ALL");
+const filterLabel = (f) => parseFilters(f).map((k) => FILTERS[k][0]).join(" + ") || "All";
+
 export function filterRows(rows, filter, sort, custom = {}) {
-  const f = (FILTERS[filter] || FILTERS.ALL)[1];
+  const fs = parseFilters(filter).map((k) => FILTERS[k][1]);
+  const f = (r) => fs.every((t) => t(r));
   const s = (SORTS[sort] || SORTS.RET)[1];
   return rows.filter((r) => f(r) && customTest(r, custom)).sort((a, b) => (s(b) ?? -1e9) - (s(a) ?? -1e9));
 }
@@ -306,7 +312,7 @@ async function fvscan(ctx) {
   // more filters: saved ones, overridden by the command line (MINRAISED=10 PAYER=1, CLEAR=1 drops them)
   const cli = Object.fromEntries(CUSTOM.filter(([key]) => k[key.toLowerCase()] != null).map(([key]) => [key, k[key.toLowerCase()]]));
   v.custom = cleanCustom(k.clear === "1" ? cli : { ...(saved.custom || {}), ...cli });
-  if (!FILTERS[v.filter]) v.filter = "ALL";
+  v.filter = parseFilters(v.filter).join(",") || "ALL";
   if (!SORTS[v.sort]) v.sort = "RET";
   const cmd = (o) => { const x = { ...v, ...o }; return `FVSCAN ${x.universe} BASIS=${x.basis} PE=${x.pe} FILTER=${x.filter} SORT=${x.sort}`; };
   ctx.el.replaceChildren(html(`<p class="hint">Scanning ${esc(v.universe)}: annual figures, prices and dividends per stock. The first scan of a universe can take a few minutes; what is not done keeps loading in the background.</p>`));
@@ -317,10 +323,21 @@ async function fvscan(ctx) {
 
   const uniTabs = tabs([...UNIS, ...(d.lists || []).map((l) => `W:${l}`)], d.universe, (u) => ctx.go(cmd({ universe: u })));
   for (const b of uniTabs.children) b.title = d.universes?.[b.textContent] || `Watchlist ${b.textContent.slice(2)}`;
-  const filterTabs = tabs(Object.keys(FILTERS), v.filter, (f) => { v.filter = f; saveSettings("FVSCAN", v); draw(); markTabs(); });
+  // Presets combine: a click adds or removes one (all chosen must hold), All clears them.
+  const filterTabs = tabs(Object.keys(FILTERS), null, (f) => {
+    const on = parseFilters(v.filter);
+    v.filter = f === "ALL" ? "ALL" : (on.includes(f) ? on.filter((x) => x !== f) : [...on, f]).join(",") || "ALL";
+    saveSettings("FVSCAN", v);
+    draw();
+    markTabs();
+  });
   for (const b of filterTabs.children) { b.title = FILTERS[b.textContent][0]; b.textContent = FILTERS[b.textContent][0]; }
   const filterKeys = Object.keys(FILTERS);
-  const markTabs = () => [...filterTabs.children].forEach((b, i) => b.classList.toggle("on", filterKeys[i] === v.filter));
+  const markTabs = () => {
+    const on = parseFilters(v.filter);
+    [...filterTabs.children].forEach((b, i) => b.classList.toggle("on", filterKeys[i] === "ALL" ? !on.length : on.includes(filterKeys[i])));
+  };
+  markTabs();
   const form = html(`<form class="wform" autocomplete="off">
     <label>Basis <select name="basis">${BASES.map((b) => `<option value="${b}"${b === v.basis ? " selected" : ""} title="${esc(BASIS_TIPS[b])}">${b}</option>`).join("")}</select></label>
     <label>Fair P/E <input name="pe" type="number" min="5" max="40" step="0.5" style="width:56px" value="${esc(v.pe)}"></label>
@@ -339,7 +356,7 @@ async function fvscan(ctx) {
   function draw() {
     const rows = filterRows(d.rows, v.filter, v.sort, v.custom);
     const extra = customText(v.custom);
-    const what = `${esc(FILTERS[v.filter][0])}${extra ? ` + ${esc(extra)}` : ""}`;
+    const what = `${esc(filterLabel(v.filter))}${extra ? ` + ${esc(extra)}` : ""}`;
     more.querySelector("summary").textContent = `More filters${Object.keys(v.custom).length ? ` (${Object.keys(v.custom).length} on)` : ""}`;
     out.replaceChildren();
     if (!rows.length) { out.append(html(`<p class="hint">No stock passes ${what}.</p>`)); return; }
