@@ -248,3 +248,21 @@ test("FVSCAN presets combine: all chosen must hold, ALL or nothing valid = no pr
   assert.equal(filterRows(rows, "ALL", "ROE").length, 3);
 });
 
+
+test("FVSCAN strategies: valid filter keys and sorts; 'buy now' needs the turn, 'still falling' the opposite", async () => {
+  const { STRATEGIES, CUSTOM, SORTS, cleanCustom } = await import("../public/js/fn/fv.js");
+  const keys = new Set(CUSTOM.map((c) => c[0]));
+  for (const [k, s] of Object.entries(STRATEGIES)) {
+    assert.ok(SORTS[s.sort], `${k} sort`);
+    assert.ok(s.label && s.tip, `${k} label`);
+    for (const f of Object.keys(s.custom)) assert.ok(keys.has(f), `${k}: unknown filter ${f}`);
+    assert.deepEqual(cleanCustom(s.custom), s.custom, `${k}: values survive cleanCustom`);
+  }
+  const mkc = { t: "MKC", yieldPct: 4.3, raisedYears: 38, fcfDivCover5: 1.56, fcfPayoutPct: 65, roe: 14.3, debtToCapital: 41, piotroski: 7, erratic: false, vsNormalPct: -48, rsl: 0.92 };
+  const run = (k, r) => filterRows([r], "ALL", STRATEGIES[k].sort, STRATEGIES[k].custom).length;
+  assert.equal(run("DIVBUY", mkc), 0);
+  assert.equal(run("DIVWATCH", mkc), 1);
+  assert.equal(run("DIVBUY", { ...mkc, rsl: 1.04 }), 1);
+  assert.equal(run("DIVWATCH", { ...mkc, rsl: 1.04 }), 0);
+  assert.equal(run("DIVBUY", { ...mkc, rsl: 1.04, fcfDivCover5: 0.9 }), 0);
+});

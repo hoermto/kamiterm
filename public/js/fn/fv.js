@@ -232,6 +232,7 @@ export const CUSTOM = [
   ["maxDebt", "Debt / capital at most (%)", "max", (r) => r.debtToCapital, "Quality"],
   ["minF", "Piotroski at least (0-9)", "min", (r) => r.piotroski, "Quality"],
   ["minRsl", "RSL26 at least", "min", (r) => r.rsl, "Momentum"],
+  ["maxRsl", "RSL26 at most", "max", (r) => r.rsl, "Momentum"],
   ["noFin", "No banks, insurers, real estate", "bool", (r) => !r.financial, "Exclude"],
   ["noErratic", "No erratic earnings", "bool", (r) => !r.erratic, "Exclude"],
   ["noShort", "No short history (Yahoo, 4 years)", "bool", (r) => !r.shortHistory, "Exclude"],
@@ -256,6 +257,68 @@ export function customTest(r, c = {}) {
 }
 export const customText = (c = {}) =>
   CUSTOM.filter(([key]) => c[key] != null).map(([key, label, kind]) => (kind === "bool" ? label.toLowerCase() : `${label.replace(/ \(.*\)$/, "").toLowerCase()} ${c[key]}`)).join(", ");
+
+/**
+ * Strategies: a whole screen in one click (More filters + sort; the preset tabs go to All). The user can change
+ * any filter afterwards; then it is "own filters". Thresholds checked against an S&P 500 scan (Nov 2026).
+ */
+const QUALITY_DIV = { payer: true, minRaised: 10, minYield: 2, minFcfCover: 1.2, maxFcfPayout: 80, minRoe: 12, maxDebt: 65, minF: 5, noErratic: true };
+export const STRATEGIES = {
+  DIVBUY: {
+    label: "Dividend quality, buy now",
+    tip: "Raised the dividend 10+ years, yield 2%+, covered 1.2x by free cash flow (payout up to 80%), ROE 12%+, debt/capital up to 65%, Piotroski 5+, steady earnings; at least 10% below its normal value AND the trend has turned up (RSL26 1+).",
+    custom: { ...QUALITY_DIV, maxVsNormal: -10, minRsl: 1 },
+    sort: "RET",
+  },
+  DIVWATCH: {
+    label: "Dividend quality, cheap, still falling",
+    tip: "Same quality as 'buy now' and at least 10% below the normal value, but still in a downtrend (RSL26 below 1): a watchlist, buy when the trend turns or in steps.",
+    custom: { ...QUALITY_DIV, maxVsNormal: -10, maxRsl: 0.9999 },
+    sort: "NORMAL",
+  },
+  DIVGROW: {
+    label: "Dividend growers",
+    tip: "Yield 1%+, raised 5+ years, dividend up 7%+ a year over 5 years, payout up to 60% of earnings, FCF covers it 1.3x, ROE 15%+, at most 10% above the normal value.",
+    custom: { payer: true, minYield: 1, minRaised: 5, minDivGrowth: 7, maxPayout: 60, minFcfCover: 1.3, minRoe: 15, maxVsNormal: 10, noErratic: true },
+    sort: "RET",
+  },
+  HIGHYIELD: {
+    label: "High yield, covered",
+    tip: "Yield 4%+, raised 5+ years, FCF covers it 1.2x (payout up to 80%), debt/capital up to 65%, steady earnings. High yields are often a warning: check the FV page.",
+    custom: { payer: true, minYield: 4, minRaised: 5, minFcfCover: 1.2, maxFcfPayout: 80, maxDebt: 65, noErratic: true },
+    sort: "YIELD",
+  },
+  QUALFAIR: {
+    label: "Quality at a fair price",
+    tip: "ROE 15%+, ROIC 12%+, net margin 10%+, debt/capital up to 50%, Piotroski 6+, steady earnings, at or below the normal value, expected return 8%+. With or without a dividend.",
+    custom: { minRoe: 15, minRoic: 12, minMargin: 10, maxDebt: 50, minF: 6, maxVsNormal: 0, minRet: 8, noErratic: true },
+    sort: "RET",
+  },
+  GARP: {
+    label: "Growth at a reasonable price",
+    tip: "Earnings growth 10%+, PEG up to 1.5, ROE 15%+, Piotroski 6+, at most 10% above the normal value, expected return 12%+, steady earnings.",
+    custom: { minGrowth: 10, maxPeg: 1.5, minRoe: 15, minF: 6, maxVsNormal: 10, minRet: 12, noErratic: true },
+    sort: "RET",
+  },
+  DEEPVALUE: {
+    label: "Deep value, sound balance",
+    tip: "P/E at or below the fair 15, at least 25% below the normal value, expected return 8%+, Piotroski 6+, debt/capital up to 60%, steady earnings, no banks. Cheap for a reason more often than not: read the FV page.",
+    custom: { maxVsFair: 0, maxVsNormal: -25, minRet: 8, minF: 6, maxDebt: 60, noErratic: true, noFin: true },
+    sort: "NORMAL",
+  },
+  TURN: {
+    label: "Turnaround: cheap and turning",
+    tip: "At least 20% below the normal value, RSL26 between 1.00 and 1.10 (just turned up), expected return 8%+, Piotroski 5+, steady earnings.",
+    custom: { maxVsNormal: -20, minRsl: 1, maxRsl: 1.1, minRet: 8, minF: 5, noErratic: true },
+    sort: "NORMAL",
+  },
+  TREND: {
+    label: "Quality in an uptrend",
+    tip: "ROE 15%+, Piotroski 6+, steady earnings, RSL26 1.05+ (rising), at most 20% above the normal value, expected return 8%+.",
+    custom: { minRoe: 15, minF: 6, minRsl: 1.05, maxVsNormal: 20, minRet: 8, noErratic: true },
+    sort: "RSL",
+  },
+};
 
 /** Presets to combine: "QUALITY,CHAMP" or an array -> the valid keys (none = ALL). */
 export const parseFilters = (f) =>
@@ -314,6 +377,15 @@ async function fvscan(ctx) {
   v.custom = cleanCustom(k.clear === "1" ? cli : { ...(saved.custom || {}), ...cli });
   v.filter = parseFilters(v.filter).join(",") || "ALL";
   if (!SORTS[v.sort]) v.sort = "RET";
+  // STRATEGY=DIVBUY on the command line sets the whole screen; a saved strategy name is shown until changed.
+  const applyStrategy = (key) => {
+    const s = STRATEGIES[key];
+    if (!s) return false;
+    Object.assign(v, { strategy: key, filter: "ALL", custom: cleanCustom(s.custom), sort: s.sort });
+    return true;
+  };
+  v.strategy = STRATEGIES[saved.strategy] ? saved.strategy : "";
+  if (k.strategy) applyStrategy(k.strategy.toUpperCase());
   const cmd = (o) => { const x = { ...v, ...o }; return `FVSCAN ${x.universe} BASIS=${x.basis} PE=${x.pe} FILTER=${x.filter} SORT=${x.sort}`; };
   ctx.el.replaceChildren(html(`<p class="hint">Scanning ${esc(v.universe)}: annual figures, prices and dividends per stock. The first scan of a universe can take a few minutes; what is not done keeps loading in the background.</p>`));
   const d = await api.fn("fvscan", { universe: v.universe, basis: v.basis, pe: v.pe });
@@ -327,6 +399,7 @@ async function fvscan(ctx) {
   const filterTabs = tabs(Object.keys(FILTERS), null, (f) => {
     const on = parseFilters(v.filter);
     v.filter = f === "ALL" ? "ALL" : (on.includes(f) ? on.filter((x) => x !== f) : [...on, f]).join(",") || "ALL";
+    ownFilters();
     saveSettings("FVSCAN", v);
     draw();
     markTabs();
@@ -345,18 +418,35 @@ async function fvscan(ctx) {
     <label>Sort <select name="sort">${Object.entries(SORTS).map(([key, [lab]]) => `<option value="${key}"${key === v.sort ? " selected" : ""}>${esc(lab)}</option>`).join("")}</select></label>
   </form>`);
   form.onsubmit = (e) => { e.preventDefault(); const f = new FormData(form); ctx.go(cmd({ basis: f.get("basis"), pe: Number(f.get("pe")) || 15 })); };
-  form.sort.onchange = () => { v.sort = form.sort.value; saveSettings("FVSCAN", v); draw(); };
+  form.sort.onchange = () => { v.sort = form.sort.value; ownFilters(); saveSettings("FVSCAN", v); draw(); };
+  // Strategy picker: sets More filters and sort, clears the preset tabs; any manual change makes it "own filters".
+  const strat = html(`<form class="wform" autocomplete="off"><label>Strategy <select name="s"><option value="">— own filters —</option>${Object.entries(STRATEGIES).map(([key, s]) => `<option value="${key}"${key === v.strategy ? " selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label> <span class="hint" data-tip></span></form>`);
+  const showTip = () => { strat.querySelector("[data-tip]").textContent = STRATEGIES[v.strategy]?.tip || ""; strat.s.value = v.strategy || ""; };
+  function ownFilters() { if (v.strategy) { v.strategy = ""; showTip(); } }
+  strat.s.onchange = () => {
+    if (!applyStrategy(strat.s.value)) { v.strategy = ""; showTip(); saveSettings("FVSCAN", v); return; }
+    const fresh = moreFilters(v, onMore);
+    more.replaceWith(fresh);
+    more = fresh;
+    form.sort.value = v.sort;
+    markTabs();
+    showTip();
+    saveSettings("FVSCAN", v);
+    draw();
+  };
+  showTip();
   const c = d.coverage;
   const info = html(`<p class="hint">${esc(d.label)} · ${c.loaded} of ${c.stocks} stocks${c.loading ? ` · <span class="amber">${c.loading} still loading in the background: scan again in a few minutes</span>` : ""}${d.errors.length ? ` · ${d.errors.length} without data` : ""} · basis ${esc(d.basis)}, fair P/E ${d.pe}</p>`);
   if (d.errors.length) info.title = d.errors.map((e) => `${e.ticker}: ${e.error}`).join("\n");
   const out = document.createElement("div");
-  const more = moreFilters(v, () => { saveSettings("FVSCAN", v); draw(); });
-  ctx.el.replaceChildren(sect(`FV scanner · ${d.label}`), uniTabs, filterTabs, form, more, info, out);
+  const onMore = () => { ownFilters(); saveSettings("FVSCAN", v); draw(); };
+  let more = moreFilters(v, onMore);
+  ctx.el.replaceChildren(sect(`FV scanner · ${d.label}`), uniTabs, strat, filterTabs, form, more, info, out);
 
   function draw() {
     const rows = filterRows(d.rows, v.filter, v.sort, v.custom);
     const extra = customText(v.custom);
-    const what = `${esc(filterLabel(v.filter))}${extra ? ` + ${esc(extra)}` : ""}`;
+    const what = v.strategy ? `strategy "${esc(STRATEGIES[v.strategy].label)}"` : `${esc(filterLabel(v.filter))}${extra ? ` + ${esc(extra)}` : ""}`;
     more.querySelector("summary").textContent = `More filters${Object.keys(v.custom).length ? ` (${Object.keys(v.custom).length} on)` : ""}`;
     out.replaceChildren();
     if (!rows.length) { out.append(html(`<p class="hint">No stock passes ${what}.</p>`)); return; }
