@@ -216,3 +216,19 @@ test("analyse: two loss years in ten mark the earnings erratic; no 5-year CAGR f
   assert.equal(a.losses, 2);
   assert.equal(a.growth.cagr5, null);
 });
+
+test("FVSCAN more filters: set thresholds combine with the preset, missing values fail, flags", async () => {
+  const { customTest, cleanCustom, customText } = await import("../public/js/fn/fv.js");
+  const rows = [
+    { t: "KO", yieldPct: 3, paidYears: 50, raisedYears: 55, roe: 40, financial: false },
+    { t: "BAC", yieldPct: 2.3, paidYears: 40, raisedYears: 5, roe: 10, financial: true },
+    { t: "AMZN", yieldPct: null, paidYears: 0, raisedYears: 0, roe: 22 },
+  ];
+  const c = cleanCustom({ payer: "on", minRaised: "10", minYield: "", noFin: false, junk: 5 });
+  assert.deepEqual(c, { payer: true, minRaised: 10 });
+  assert.deepEqual(rows.filter((r) => customTest(r, c)).map((r) => r.t), ["KO"]);
+  assert.deepEqual(rows.filter((r) => customTest(r, { minPaid: 30, noFin: true })).map((r) => r.t), ["KO"]);
+  assert.deepEqual(rows.filter((r) => customTest(r, {})).length, 3);
+  assert.deepEqual(filterRows(rows, "ALL", "ROE", { payer: true }).map((r) => r.t), ["KO", "BAC"]);
+  assert.match(customText(c), /pays a dividend, raised at least 10/);
+});

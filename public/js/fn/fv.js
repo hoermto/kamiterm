@@ -206,10 +206,90 @@ export const SORTS = {
   RSL: ["RSL26", (r) => r.rsl],
   F: ["Piotroski", (r) => r.piotroski],
 };
-export function filterRows(rows, filter, sort) {
+/**
+ * "More filters": thresholds on top of the preset, all that are set must hold (a stock without the value fails).
+ * [key, label, kind (min | max | bool), value]. Also on the command line: FVSCAN SPX MINRAISED=10 PAYER=1.
+ */
+export const CUSTOM = [
+  ["payer", "Pays a dividend", "bool", (r) => r.yieldPct > 0, "Dividend"],
+  ["minPaid", "Paid at least (years)", "min", (r) => r.paidYears, "Dividend"],
+  ["minRaised", "Raised at least (years in a row)", "min", (r) => r.raisedYears, "Dividend"],
+  ["minYield", "Yield at least (%)", "min", (r) => r.yieldPct, "Dividend"],
+  ["maxYield", "Yield at most (%)", "max", (r) => r.yieldPct, "Dividend"],
+  ["minDivGrowth", "Dividend growth 5y at least (%)", "min", (r) => r.divGrowth5, "Dividend"],
+  ["maxPayout", "Payout of earnings at most (%)", "max", (r) => r.payoutPct, "Dividend"],
+  ["maxFcfPayout", "Payout of FCF at most (%)", "max", (r) => r.fcfPayoutPct, "Dividend"],
+  ["minFcfCover", "FCF / dividends 5y at least (x)", "min", (r) => r.fcfDivCover5, "Dividend"],
+  ["maxPe", "P/E at most", "max", (r) => r.pe, "Valuation"],
+  ["maxVsNormal", "vs normal at most (%)", "max", (r) => r.vsNormalPct, "Valuation"],
+  ["maxVsFair", "vs fair value at most (%)", "max", (r) => r.vsFairPct, "Valuation"],
+  ["minRet", "Exp. return at least (%)", "min", (r) => r.expectedReturnLow, "Valuation"],
+  ["minGrowth", "Growth at least (%)", "min", (r) => r.growth, "Valuation"],
+  ["maxPeg", "PEG at most", "max", (r) => r.peg, "Valuation"],
+  ["minRoe", "ROE at least (%)", "min", (r) => r.roe, "Quality"],
+  ["minRoic", "ROIC at least (%)", "min", (r) => r.roic, "Quality"],
+  ["minMargin", "Net margin at least (%)", "min", (r) => r.margin, "Quality"],
+  ["maxDebt", "Debt / capital at most (%)", "max", (r) => r.debtToCapital, "Quality"],
+  ["minF", "Piotroski at least (0-9)", "min", (r) => r.piotroski, "Quality"],
+  ["minRsl", "RSL26 at least", "min", (r) => r.rsl, "Momentum"],
+  ["noFin", "No banks, insurers, real estate", "bool", (r) => !r.financial, "Exclude"],
+  ["noErratic", "No erratic earnings", "bool", (r) => !r.erratic, "Exclude"],
+  ["noShort", "No short history (Yahoo, 4 years)", "bool", (r) => !r.shortHistory, "Exclude"],
+];
+/** Only the set entries of a custom filter object (numbers as numbers, flags as true). */
+export function cleanCustom(c = {}) {
+  const out = {};
+  for (const [key, , kind] of CUSTOM) {
+    const v = c[key];
+    if (kind === "bool") { if (v === true || v === 1 || v === "1" || v === "on" || v === "true") out[key] = true; }
+    else if (v !== "" && v != null && Number.isFinite(Number(v))) out[key] = Number(v);
+  }
+  return out;
+}
+export function customTest(r, c = {}) {
+  for (const [key, , kind, get] of CUSTOM) {
+    if (c[key] == null) continue;
+    const v = get(r);
+    if (kind === "bool" ? !v : !finite(v) || (kind === "min" ? v < c[key] : v > c[key])) return false;
+  }
+  return true;
+}
+export const customText = (c = {}) =>
+  CUSTOM.filter(([key]) => c[key] != null).map(([key, label, kind]) => (kind === "bool" ? label.toLowerCase() : `${label.replace(/ \(.*\)$/, "").toLowerCase()} ${c[key]}`)).join(", ");
+
+export function filterRows(rows, filter, sort, custom = {}) {
   const f = (FILTERS[filter] || FILTERS.ALL)[1];
   const s = (SORTS[sort] || SORTS.RET)[1];
-  return rows.filter(f).sort((a, b) => (s(b) ?? -1e9) - (s(a) ?? -1e9));
+  return rows.filter((r) => f(r) && customTest(r, custom)).sort((a, b) => (s(b) ?? -1e9) - (s(a) ?? -1e9));
+}
+
+/** The "More filters" panel: one field per CUSTOM entry, grouped; Apply and Clear filter without a new scan. */
+function moreFilters(v, onChange) {
+  const groups = [...new Set(CUSTOM.map((c) => c[4]))];
+  const field = ([key, label, kind]) =>
+    kind === "bool"
+      ? `<label><input type="checkbox" name="${key}"${v.custom[key] ? " checked" : ""}> ${esc(label)}</label>`
+      : `<label>${esc(label)} <input name="${key}" type="number" step="any" style="width:64px" value="${v.custom[key] ?? ""}"></label>`;
+  const el = html(`<details class="fv-more" style="margin:4px 0"${Object.keys(v.custom).length ? " open" : ""}><summary style="cursor:pointer">More filters</summary>
+    <form class="wform" autocomplete="off" style="flex-direction:column;align-items:flex-start;gap:4px">
+      ${groups.map((g) => `<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><b style="min-width:80px">${esc(g)}</b>${CUSTOM.filter((c) => c[4] === g).map(field).join("")}</div>`).join("")}
+      <div><button type="submit">Apply</button> <button type="button" data-clear>Clear</button></div>
+    </form></details>`);
+  const f = el.querySelector("form");
+  f.onsubmit = (e) => {
+    e.preventDefault();
+    const raw = {};
+    for (const [key, , kind] of CUSTOM) raw[key] = kind === "bool" ? f[key].checked : f[key].value;
+    v.custom = cleanCustom(raw);
+    onChange();
+  };
+  el.querySelector("[data-clear]").onclick = () => {
+    f.reset();
+    for (const [key, , kind] of CUSTOM) if (kind === "bool") f[key].checked = false; else f[key].value = "";
+    v.custom = {};
+    onChange();
+  };
+  return el;
 }
 
 async function fvscan(ctx) {
@@ -223,6 +303,9 @@ async function fvscan(ctx) {
     filter: (k.filter || saved.filter || "ALL").toUpperCase(),
     sort: (k.sort || saved.sort || "RET").toUpperCase(),
   };
+  // more filters: saved ones, overridden by the command line (MINRAISED=10 PAYER=1, CLEAR=1 drops them)
+  const cli = Object.fromEntries(CUSTOM.filter(([key]) => k[key.toLowerCase()] != null).map(([key]) => [key, k[key.toLowerCase()]]));
+  v.custom = cleanCustom(k.clear === "1" ? cli : { ...(saved.custom || {}), ...cli });
   if (!FILTERS[v.filter]) v.filter = "ALL";
   if (!SORTS[v.sort]) v.sort = "RET";
   const cmd = (o) => { const x = { ...v, ...o }; return `FVSCAN ${x.universe} BASIS=${x.basis} PE=${x.pe} FILTER=${x.filter} SORT=${x.sort}`; };
@@ -250,13 +333,17 @@ async function fvscan(ctx) {
   const info = html(`<p class="hint">${esc(d.label)} · ${c.loaded} of ${c.stocks} stocks${c.loading ? ` · <span class="amber">${c.loading} still loading in the background: scan again in a few minutes</span>` : ""}${d.errors.length ? ` · ${d.errors.length} without data` : ""} · basis ${esc(d.basis)}, fair P/E ${d.pe}</p>`);
   if (d.errors.length) info.title = d.errors.map((e) => `${e.ticker}: ${e.error}`).join("\n");
   const out = document.createElement("div");
-  ctx.el.replaceChildren(sect(`FV scanner · ${d.label}`), uniTabs, filterTabs, form, info, out);
+  const more = moreFilters(v, () => { saveSettings("FVSCAN", v); draw(); });
+  ctx.el.replaceChildren(sect(`FV scanner · ${d.label}`), uniTabs, filterTabs, form, more, info, out);
 
   function draw() {
-    const rows = filterRows(d.rows, v.filter, v.sort);
+    const rows = filterRows(d.rows, v.filter, v.sort, v.custom);
+    const extra = customText(v.custom);
+    const what = `${esc(FILTERS[v.filter][0])}${extra ? ` + ${esc(extra)}` : ""}`;
+    more.querySelector("summary").textContent = `More filters${Object.keys(v.custom).length ? ` (${Object.keys(v.custom).length} on)` : ""}`;
     out.replaceChildren();
-    if (!rows.length) { out.append(html(`<p class="hint">No stock passes "${esc(FILTERS[v.filter][0])}".</p>`)); return; }
-    out.append(html(`<p class="hint">${rows.length} stocks · ${esc(FILTERS[v.filter][0])} · sorted by ${esc(SORTS[v.sort][0].toLowerCase())}</p>`), table(rows, [
+    if (!rows.length) { out.append(html(`<p class="hint">No stock passes ${what}.</p>`)); return; }
+    out.append(html(`<p class="hint">${rows.length} stocks · ${what} · sorted by ${esc(SORTS[v.sort][0].toLowerCase())}</p>`), table(rows, [
       { key: "t", label: "Ticker", left: true, lbl: true },
       { key: "name", label: "Name", left: true, fmt: (x) => String(x || "").slice(0, 26) },
       { key: "price", label: "Price", fmt: (x, r) => `${px(x)} ${r.currency || ""}` },
