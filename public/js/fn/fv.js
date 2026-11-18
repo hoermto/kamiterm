@@ -447,7 +447,10 @@ async function fvscan(ctx) {
   };
   v.strategy = STRATEGIES[saved.strategy] ? saved.strategy : "";
   if (k.strategy) applyStrategy(k.strategy.toUpperCase());
-  const cmd = (o) => { const x = { ...v, ...o }; return `FVSCAN ${x.universe} BASIS=${x.basis} PE=${x.pe} FILTER=${x.filter} SORT=${x.sort}`; };
+  // Filters, sort and strategy live in the saved settings, not in the command: the panel history (ESC back from FV,
+  // restore at start) then shows the screen as last left, not as first typed.
+  const cmd = (o) => { const x = { ...v, ...o }; return `FVSCAN ${x.universe} BASIS=${x.basis} PE=${x.pe}`; };
+  saveSettings("FVSCAN", v);
   ctx.el.replaceChildren(html(`<p class="hint">Scanning ${esc(v.universe)}: annual figures, prices and dividends per stock. The first scan of a universe can take a few minutes; what is not done keeps loading in the background.</p>`));
   // The server keeps a finished scan 15 minutes; the page keeps the last one too, so ESC back from FV is instant.
   const memoKey = `${v.universe}|${v.basis}|${v.pe}`;
@@ -460,6 +463,7 @@ async function fvscan(ctx) {
   if (!ctx.live()) return;
   v.universe = d.universe;
   saveSettings("FVSCAN", v);
+  ctx.setCmd(cmd({}));
 
   const uniTabs = tabs([...UNIS, ...(d.lists || []).map((l) => `W:${l}`)], d.universe, (u) => ctx.go(cmd({ universe: u })));
   for (const b of uniTabs.children) b.title = d.universes?.[b.textContent] || `Watchlist ${b.textContent.slice(2)}`;
