@@ -320,6 +320,65 @@ export const STRATEGIES = {
   },
 };
 
+/** What each preset tab checks (tooltip and Guide). */
+const FILTER_TIPS = {
+  ALL: "No preset: every stock (More filters and strategies still apply). Clears the other tabs.",
+  UNDER: "Price below the basis x fair P/E (default 15).",
+  NORMAL: "Price below the value at the stock's own normal P/E (median of 15 years).",
+  RET10: "Expected return 10%+ a year over 5 years (the lower of own and analysts' growth).",
+  DIV10: "Dividend raised 10 or more years in a row.",
+  ROE15: "Return on equity 15%+.",
+  DEBT50: "Debt at most 50% of capital (debt + equity).",
+  FCFDIV: "Free cash flow of the last 5 years at least as large as the dividends paid.",
+  QUALITY: "ROE 15%+, debt/capital up to 50%, FCF covers the dividend (if any) and below the normal value.",
+  CHAMP: "Dividend raised 25+ years, at most 10% above the normal value.",
+  CONTENDER: "Dividend raised 10-24 years, at most 10% above the normal value.",
+  CHALLENGER: "Dividend raised 5-9 years, at most 10% above the normal value.",
+  GROWTH: "Growth 10%+, PEG up to 1.5, expected return 10%+, at most 10% above the normal value.",
+  GROWTHRET: "Growth 15%+, at most 10% above the normal value.",
+  CHEAPMOM: "Below the normal value and RSL26 above 1 (the price is above its 26-week average).",
+};
+
+/** The terms the screen uses, for the Guide. */
+const TERMS = [
+  ["Fair value", "Basis (EPS, FCF or owner earnings per share) x the fair P/E, 15 by default. A fixed yardstick, the same for every stock."],
+  ["Normal P/E / normal value", "Median of the stock's own monthly P/E over up to 15 years, as known at the time; normal value = basis x normal P/E. * = short history (Yahoo, 4 years): treat with care."],
+  ["vs normal / vs fair", "How far the price is above (+) or below (-) that value. -20% = 20% cheaper than usual."],
+  ["Exp. return", "Return a year over 5 years: earnings grow at the stock's own past rate or the analysts' rate (whichever is lower), the P/E moves to its normal level (at most 30), plus dividends. Empty for erratic earnings."],
+  ["Growth / PEG", "Earnings growth fitted over up to 10 years (else analysts', faded to 6%), capped -10..25%. PEG = P/E / growth; below 1.5 is reasonable."],
+  ["Years raised", "Dividend raised every calendar year in a row (specials ignored). Champ 25+, Cont 10-24, Chall 5-9."],
+  ["Payout / FCF/div 5y", "Share of earnings or free cash flow paid out; FCF/div = free cash flow of 5 years over dividends of 5 years (1.2x+ = safely covered)."],
+  ["ROE, ROIC, Debt/capital", "Return on equity and on invested capital (15%+ is strong); debt as a share of debt + equity (above 70% is red)."],
+  ["F (Piotroski)", "0-9 points for profit, cash flow, falling debt, liquidity, no dilution, margin and turnover improving. 7+ strong, 3- weak."],
+  ["RSL26", "Price over its 26-week average (Levy). Above 1 = uptrend, below 1 = still falling. Cheap and RSL above 1 = the turn may be in."],
+  ["Note column", "fin = bank/insurer/real estate (P/E and FCF say less); one-off = TTM EPS far above next year's estimate, valued on the estimate; erratic = 2+ loss years in 10."],
+];
+
+/** Collapsible guide: how to use the screen, strategies (with a Use button), presets and terms. Open state kept per browser. */
+function guideBlock(onStrategy) {
+  const KEY = "amber.fvscan.guide";
+  const row = (k, v, extra = "") => `<tr><th style="text-align:left;vertical-align:top;padding:3px 10px 3px 0;white-space:nowrap">${esc(k)}${extra}</th><td style="padding:3px 0">${esc(v)}</td></tr>`;
+  const h = (t) => `<div style="margin:10px 0 4px;color:var(--amber);font-weight:600">${esc(t)}</div>`;
+  const el = html(`<details class="fv-guide" style="margin:4px 0"><summary style="cursor:pointer">Guide: strategies, presets, terms</summary>
+    <div style="margin:4px 0 8px;padding:6px 10px;border:1px solid var(--line);max-width:1000px;font-size:13px">
+      ${h("How to use")}
+      <p style="margin:2px 0">1. Pick a universe (S&amp;P 500, Nasdaq-100, DAX, STOXX 600 or a watchlist). 2. Pick a strategy, or combine preset tabs and More filters yourself. 3. Click a row for the FV page: check the notes, the chart and the backtest before buying.
+      A strategy sets More filters and the sort; changing anything afterwards makes it "own filters". Preset tabs combine: every one chosen must hold.</p>
+      ${h("Strategies")}
+      <table style="border-collapse:collapse">${Object.entries(STRATEGIES).map(([key, s]) => row(s.label, s.tip, ` <button type="button" data-use="${key}" title="Apply this strategy">Use</button>`)).join("")}</table>
+      ${h("Presets (tabs)")}
+      <table style="border-collapse:collapse">${Object.keys(FILTERS).map((k) => row(FILTERS[k][0], FILTER_TIPS[k] || "")).join("")}</table>
+      ${h("Columns and terms")}
+      <table style="border-collapse:collapse">${TERMS.map(([k, v]) => row(k, v)).join("")}</table>
+      ${h("Keep in mind")}
+      <p style="margin:2px 0">The numbers are a screen, not a verdict: a stock far below its normal P/E is often cheap for a reason (falling earnings, debt, a changed business). US figures come from SEC 10-K filings (up to 20 years); European ones from Yahoo (4 years), so their normal P/E and growth rest on little history. Strategy results change with prices, especially the trend condition.</p>
+    </div></details>`);
+  try { el.open = localStorage.getItem(KEY) === "1"; } catch {}
+  el.addEventListener("toggle", () => { try { localStorage.setItem(KEY, el.open ? "1" : "0"); } catch {} });
+  for (const b of el.querySelectorAll("[data-use]")) b.onclick = () => onStrategy(b.dataset.use);
+  return el;
+}
+
 /** Presets to combine: "QUALITY,CHAMP" or an array -> the valid keys (none = ALL). */
 export const parseFilters = (f) =>
   [...new Set((Array.isArray(f) ? f : String(f || "").split(/[,+]/)).map((x) => String(x).trim().toUpperCase()))].filter((x) => FILTERS[x] && x !== "ALL");
@@ -361,6 +420,8 @@ function moreFilters(v, onChange) {
   return el;
 }
 
+let scanMemo = null;
+let forceFresh = false; // Rescan button: next run skips both caches without putting FRESH into the command
 async function fvscan(ctx) {
   const saved = await loadSaved("FVSCAN");
   const k = keys(ctx.args);
@@ -388,7 +449,14 @@ async function fvscan(ctx) {
   if (k.strategy) applyStrategy(k.strategy.toUpperCase());
   const cmd = (o) => { const x = { ...v, ...o }; return `FVSCAN ${x.universe} BASIS=${x.basis} PE=${x.pe} FILTER=${x.filter} SORT=${x.sort}`; };
   ctx.el.replaceChildren(html(`<p class="hint">Scanning ${esc(v.universe)}: annual figures, prices and dividends per stock. The first scan of a universe can take a few minutes; what is not done keeps loading in the background.</p>`));
-  const d = await api.fn("fvscan", { universe: v.universe, basis: v.basis, pe: v.pe });
+  // The server keeps a finished scan 15 minutes; the page keeps the last one too, so ESC back from FV is instant.
+  const memoKey = `${v.universe}|${v.basis}|${v.pe}`;
+  const fresh = k.fresh === "1" || forceFresh;
+  forceFresh = false;
+  const d = !fresh && scanMemo?.key === memoKey && Date.now() - scanMemo.at < 15 * 60e3
+    ? scanMemo.d
+    : await api.fn("fvscan", { universe: v.universe, basis: v.basis, pe: v.pe, fresh: fresh ? 1 : undefined });
+  if (!d.coverage.loading && !d.coverage.partial && scanMemo?.d !== d) scanMemo = { key: memoKey, at: d.cachedAt || Date.now(), d };
   if (!ctx.live()) return;
   v.universe = d.universe;
   saveSettings("FVSCAN", v);
@@ -404,7 +472,7 @@ async function fvscan(ctx) {
     draw();
     markTabs();
   });
-  for (const b of filterTabs.children) { b.title = FILTERS[b.textContent][0]; b.textContent = FILTERS[b.textContent][0]; }
+  for (const b of filterTabs.children) { b.title = FILTER_TIPS[b.textContent] || FILTERS[b.textContent][0]; b.textContent = FILTERS[b.textContent][0]; }
   const filterKeys = Object.keys(FILTERS);
   const markTabs = () => {
     const on = parseFilters(v.filter);
@@ -417,7 +485,13 @@ async function fvscan(ctx) {
     <button type="submit">Scan</button>
     <label>Sort <select name="sort">${Object.entries(SORTS).map(([key, [lab]]) => `<option value="${key}"${key === v.sort ? " selected" : ""}>${esc(lab)}</option>`).join("")}</select></label>
   </form>`);
-  form.onsubmit = (e) => { e.preventDefault(); const f = new FormData(form); ctx.go(cmd({ basis: f.get("basis"), pe: Number(f.get("pe")) || 15 })); };
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const o = { basis: f.get("basis"), pe: Number(f.get("pe")) || 15 };
+    if (o.basis === v.basis && o.pe === v.pe) forceFresh = true; // Scan with the same settings = scan again
+    ctx.go(cmd(o));
+  };
   form.sort.onchange = () => { v.sort = form.sort.value; ownFilters(); saveSettings("FVSCAN", v); draw(); };
   // Strategy picker: sets More filters and sort, clears the preset tabs; any manual change makes it "own filters".
   const strat = html(`<form class="wform" autocomplete="off"><label>Strategy <select name="s"><option value="">— own filters —</option>${Object.entries(STRATEGIES).map(([key, s]) => `<option value="${key}"${key === v.strategy ? " selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label> <span class="hint" data-tip></span></form>`);
@@ -436,12 +510,14 @@ async function fvscan(ctx) {
   };
   showTip();
   const c = d.coverage;
-  const info = html(`<p class="hint">${esc(d.label)} · ${c.loaded} of ${c.stocks} stocks${c.loading ? ` · <span class="amber">${c.loading} still loading in the background: scan again in a few minutes</span>` : ""}${d.errors.length ? ` · ${d.errors.length} without data` : ""} · basis ${esc(d.basis)}, fair P/E ${d.pe}</p>`);
+  const info = html(`<p class="hint">${esc(d.label)} · ${c.loaded} of ${c.stocks} stocks${c.loading ? ` · <span class="amber">${c.loading} still loading in the background: scan again in a few minutes</span>` : ""}${d.errors.length ? ` · ${d.errors.length} without data` : ""} · basis ${esc(d.basis)}, fair P/E ${d.pe} · as of ${new Date(scanMemo?.d === d ? scanMemo.at : d.cachedAt || Date.now()).toTimeString().slice(0, 5)} <button type="button" data-rescan title="Scan again with fresh prices (results are kept 15 minutes)">Rescan</button></p>`);
   if (d.errors.length) info.title = d.errors.map((e) => `${e.ticker}: ${e.error}`).join("\n");
+  info.querySelector("[data-rescan]").onclick = () => { forceFresh = true; scanMemo = null; ctx.go(cmd({})); };
   const out = document.createElement("div");
   const onMore = () => { ownFilters(); saveSettings("FVSCAN", v); draw(); };
   let more = moreFilters(v, onMore);
-  ctx.el.replaceChildren(sect(`FV scanner · ${d.label}`), uniTabs, strat, filterTabs, form, more, info, out);
+  const guide = guideBlock((key) => { strat.s.value = key; strat.s.onchange(); strat.scrollIntoView({ block: "nearest" }); });
+  ctx.el.replaceChildren(sect(`FV scanner · ${d.label}`), uniTabs, strat, filterTabs, form, more, guide, info, out);
 
   function draw() {
     const rows = filterRows(d.rows, v.filter, v.sort, v.custom);
