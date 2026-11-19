@@ -4,7 +4,9 @@
 // P/E is the stock's own median over up to 15 years. The expected return assumes 5 years of growth, the P/E
 // back at normal (at most 30) and the dividends. Maths on the server: lib/valuation.js, lib/fn/fv.js, lib/fn/fvscan.js.
 import { api, esc, num, px, big } from "../api.js";
-import { table, sect, tabs, html, lineChart } from "../ui.js";
+import { table, sortRows, sect, tabs, html, lineChart } from "../ui.js";
+import { watchAdd, activeWatch } from "./workspace.js";
+import { toSecurity, bbgCode, yahooWords } from "../securities.js";
 
 const finite = (v) => typeof v === "number" && Number.isFinite(v);
 const BASES = ["EPS", "FCF", "OE"];
@@ -438,11 +440,13 @@ async function fvscan(ctx) {
   v.custom = cleanCustom(k.clear === "1" ? cli : { ...(saved.custom || {}), ...cli });
   v.filter = parseFilters(v.filter).join(",") || "ALL";
   if (!SORTS[v.sort]) v.sort = "RET";
+  // a table column clicked as sort (header), kept like the rest; SORT= on the command line goes back to the menu
+  v.colSort = !k.sort && saved.colSort?.id && /^(asc|desc)$/.test(saved.colSort.dir) ? saved.colSort : null;
   // STRATEGY=DIVBUY on the command line sets the whole screen; a saved strategy name is shown until changed.
   const applyStrategy = (key) => {
     const s = STRATEGIES[key];
     if (!s) return false;
-    Object.assign(v, { strategy: key, filter: "ALL", custom: cleanCustom(s.custom), sort: s.sort });
+    Object.assign(v, { strategy: key, filter: "ALL", custom: cleanCustom(s.custom), sort: s.sort, colSort: null });
     return true;
   };
   v.strategy = STRATEGIES[saved.strategy] ? saved.strategy : "";
@@ -496,7 +500,7 @@ async function fvscan(ctx) {
     if (o.basis === v.basis && o.pe === v.pe) forceFresh = true; // Scan with the same settings = scan again
     ctx.go(cmd(o));
   };
-  form.sort.onchange = () => { v.sort = form.sort.value; ownFilters(); saveSettings("FVSCAN", v); draw(); };
+  form.sort.onchange = () => { v.sort = form.sort.value; v.colSort = null; ownFilters(); saveSettings("FVSCAN", v); draw(); };
   // Strategy picker: sets More filters and sort, clears the preset tabs; any manual change makes it "own filters".
   const strat = html(`<form class="wform" autocomplete="off"><label>Strategy <select name="s"><option value="">— own filters —</option>${Object.entries(STRATEGIES).map(([key, s]) => `<option value="${key}"${key === v.strategy ? " selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label> <span class="hint" data-tip></span></form>`);
   const showTip = () => { strat.querySelector("[data-tip]").textContent = STRATEGIES[v.strategy]?.tip || ""; strat.s.value = v.strategy || ""; };
@@ -523,14 +527,60 @@ async function fvscan(ctx) {
   const guide = guideBlock((key) => { strat.s.value = key; strat.s.onchange(); strat.scrollIntoView({ block: "nearest" }); });
   ctx.el.replaceChildren(sect(`FV scanner · ${d.label}`), uniTabs, strat, filterTabs, form, more, guide, info, out);
 
+  // Watchlist: the active list's codes, to mark rows already on it; + adds one row, "Add all" every shown row.
+  const codeOf = (t) => bbgCode(toSecurity(yahooWords(t)));
+  let watch = await activeWatch().catch(() => null);
+  if (!ctx.live()) return;
+  async function addToWatch(rows) {
+    const r = await watchAdd(rows.map((x) => ({ words: yahooWords(x.t), name: x.name })));
+    watch = await activeWatch().catch(() => watch);
+    const parts = [r.added.length && `Added ${r.added.length} to ${r.list}`, r.already.length && `${r.already.length} already there`, r.errors[0]].filter(Boolean);
+    ctx.toast(parts.join(" · ") || "Nothing to add", !r.added.length && !!r.errors.length);
+    draw();
+  }
+  // Header click sorts by that column (again: the other way); the Sort menu or a strategy goes back to it.
+  // Default stays the Sort menu (expected return).
+  out.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-add]");
+    if (!b) return;
+    e.stopPropagation(); // not the row click (FV)
+    const r = d.rows.find((x) => x.t === b.dataset.add);
+    if (r) addToWatch([r]);
+  }, { capture: true });
+
   function draw() {
-    const rows = filterRows(d.rows, v.filter, v.sort, v.custom);
+    let rows = filterRows(d.rows, v.filter, v.sort, v.custom);
     const extra = customText(v.custom);
     const what = v.strategy ? `strategy "${esc(STRATEGIES[v.strategy].label)}"` : `${esc(filterLabel(v.filter))}${extra ? ` + ${esc(extra)}` : ""}`;
     more.querySelector("summary").textContent = `More filters${Object.keys(v.custom).length ? ` (${Object.keys(v.custom).length} on)` : ""}`;
     out.replaceChildren();
     if (!rows.length) { out.append(html(`<p class="hint">No stock passes ${what}.</p>`)); return; }
-    out.append(html(`<p class="hint">${rows.length} stocks · ${what} · sorted by ${esc(SORTS[v.sort][0].toLowerCase())}</p>`), table(rows, [
+    const cols = columns();
+    const ci = v.colSort ? cols.findIndex((c) => c.id === v.colSort.id) : -1;
+    if (ci >= 0) rows = sortRows(rows, cols[ci], v.colSort.dir);
+    const sortedBy = ci >= 0 ? `${String(cols[ci].label).replace(/\n/g, " ").toLowerCase()} ${v.colSort.dir === "asc" ? "▲" : "▼"}` : esc(SORTS[v.sort][0].toLowerCase());
+    const missing = watch ? rows.filter((r) => !watch.codes.has(codeOf(r.t))) : [];
+    const head = html(`<p class="hint">${rows.length} stocks · ${what} · sorted by ${sortedBy}${watch ? ` · <button type="button" data-addall${missing.length ? "" : " disabled"} title="Add every stock shown to the watchlist ${esc(watch.name)}">${!missing.length ? `All on ${esc(watch.name)}` : `Add ${missing.length === rows.length ? "all" : `${missing.length} missing`} to ${esc(watch.name)}`}</button>` : ""}</p>`);
+    head.querySelector("[data-addall]")?.addEventListener("click", () => {
+      if (missing.length > 25 && !confirm(`Add ${missing.length} stocks to the watchlist ${watch.name}?`)) return;
+      addToWatch(missing);
+    });
+    out.append(head, table(rows, cols, {
+      sorted: ci >= 0 ? { col: ci, dir: v.colSort.dir } : null,
+      onSort: (i) => {
+        const c = cols[i];
+        const first = c.left ? "asc" : "desc";
+        v.colSort = v.colSort?.id === c.id ? { id: c.id, dir: v.colSort.dir === "asc" ? "desc" : "asc" } : { id: c.id, dir: first };
+        saveSettings("FVSCAN", v);
+        draw();
+      },
+      onRow: (r) => ctx.go(`${r.t} FV${d.basis !== "EPS" ? ` ${d.basis}` : ""}${d.pe !== 15 ? ` PE=${d.pe}` : ""}`),
+    }));
+  }
+  function columns() {
+    return [
+      { id: "w", key: (r) => (watch?.codes.has(codeOf(r.t)) ? 1 : 0), label: "W", html: true, sort: false, title: watch ? `On the watchlist ${watch.name}? + adds it` : "Watchlist",
+        fmt: (x, r) => (x ? `<span class="dim" title="On ${esc(watch.name)}">✓</span>` : `<button type="button" class="ibtn" data-add="${esc(r.t)}" title="Add ${esc(r.t)} to the watchlist ${esc(watch?.name || "")}" aria-label="Add to watchlist">+</button>`) },
       { key: "t", label: "Ticker", left: true, lbl: true },
       { key: "name", label: "Name", left: true, fmt: (x) => String(x || "").slice(0, 26) },
       { key: "price", label: "Price", fmt: (x, r) => `${px(x)} ${r.currency || ""}` },
@@ -549,8 +599,8 @@ async function fvscan(ctx) {
       { key: "fcfDivCover5", label: "FCF/div\n5y", fmt: (x) => x1(x), cls: (x) => (finite(x) ? (x >= 1 ? "up" : "down") : "") },
       { key: "piotroski", label: "F", title: "Piotroski F-score (0-9)" },
       { key: "rsl", label: "RSL26", fmt: (x) => (finite(x) ? x.toFixed(2) : "—"), cls: (x) => (finite(x) ? (x > 1 ? "up" : "down") : "") },
-      { key: (r) => [r.financial && "fin", r.oneOff && "one-off", r.erratic && "erratic", r.cheapMomentum && "cheap+mom"].filter(Boolean).join(" "), label: "Note", left: true, title: "fin = bank/insurer/real estate (P/E says less); one-off = TTM EPS well above next year's estimate, valued on the estimate; erratic = 2+ loss years in 10, no expected return; cheap+mom = below normal and RSL above 1" },
-    ], { onRow: (r) => ctx.go(`${r.t} FV${d.basis !== "EPS" ? ` ${d.basis}` : ""}${d.pe !== 15 ? ` PE=${d.pe}` : ""}`) }));
+      { id: "note", key: (r) => [r.financial && "fin", r.oneOff && "one-off", r.erratic && "erratic", r.cheapMomentum && "cheap+mom"].filter(Boolean).join(" "), label: "Note", left: true, title: "fin = bank/insurer/real estate (P/E says less); one-off = TTM EPS well above next year's estimate, valued on the estimate; erratic = 2+ loss years in 10, no expected return; cheap+mom = below normal and RSL above 1" },
+    ].map((c) => ({ id: c.key, ...c }));
   }
   draw();
   ctx.el.append(html(`<p class="hint">Click a row for the FV analysis. "Exp. return": earnings grow at the stock's past rate (or analysts', whichever is lower), the P/E moves to its normal level (at most 30) over 5 years, plus dividends. Fairly valued (Champions, Contenders, Challengers, Growth) = at most 10% above the normal value. US stocks: SEC 10-K figures up to 20 years; Europe: Yahoo, 4 years (* normal P/E).</p>`));

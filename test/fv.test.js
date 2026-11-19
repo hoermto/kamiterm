@@ -266,3 +266,19 @@ test("FVSCAN strategies: valid filter keys and sorts; 'buy now' needs the turn, 
   assert.equal(run("DIVWATCH", { ...mkc, rsl: 1.04 }), 0);
   assert.equal(run("DIVBUY", { ...mkc, rsl: 1.04, fcfDivCover5: 0.9 }), 0);
 });
+
+test("FVSCAN: Yahoo symbols become watchlist codes, table columns sort with empty values last", async () => {
+  const { yahooWords, toSecurity, bbgCode } = await import("../public/js/securities.js");
+  const code = (t) => bbgCode(toSecurity(yahooWords(t)));
+  assert.equal(code("SAP.DE"), "SAP GR EQUITY");
+  assert.equal(code("VOD.L"), "VOD LN EQUITY");
+  assert.equal(code("AAPL"), "AAPL US EQUITY");
+  assert.equal(code("BF-B"), "BF-B US EQUITY");
+  // a Yahoo symbol with a dot the terminal has no exchange for stays as it is
+  assert.deepEqual(yahooWords("ABC.ZZ"), ["ABC.ZZ"]);
+  const { sortRows } = await import("../public/js/ui.js");
+  const rows = [{ t: "B", y: 2 }, { t: "A", y: null }, { t: "C", y: 5 }];
+  assert.deepEqual(sortRows(rows, { key: "y" }, "desc").map((r) => r.t), ["C", "B", "A"]);
+  assert.deepEqual(sortRows(rows, { key: "y" }, "asc").map((r) => r.t), ["B", "C", "A"]);
+  assert.deepEqual(sortRows(rows, { key: (r) => r.t }, "asc").map((r) => r.t), ["A", "B", "C"]);
+});
