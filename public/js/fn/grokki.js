@@ -937,7 +937,7 @@ async function rsl(ctx) {
       return otherTag||'';
     }};
     const rankTable=table(rankRows,[
-      col('rank','#',fmt0),statusCol,col('ticker','Ticker'),maCol,col('price',d.eu?'Close €':'Close',px),
+      col('rank','#',fmt0),col('ticker','Ticker'),statusCol,maCol,col('price',d.eu?'Close €':'Close',px),
       ...(d.eu?[{key:'priceLocal',label:'Lokal',html:true,fmt:(v,r)=>r.cur&&r.cur!=='EUR'&&Number.isFinite(v)?`<span title="Letzter Kurs in Handelswährung; Rangliste/Stops rechnen in EUR">${esc(px(v))} ${esc(r.cur)}</span>`:'<span class="hint" style="margin:0">EUR</span>'}]:[]),
       ...(rankingVal(d.ranking)==='MOM52_4'?[{key:'score',label:'Mom\n12-1 %',html:true,fmt:v=>Number.isFinite(v)?`<b title="Rendite Wochenschluss vor 52 Wo. → vor 4 Wo. (Rangkriterium)">${(100*v).toFixed(2).replace('.',',')} %</b>`:'—'}]
         :rankingVal(d.ranking)==='RSL39'?[{key:'score',label:'RSL39',html:true,fmt:v=>Number.isFinite(v)?`<b title="Wochenschluss / SMA 39 Wochenschlüsse (Rangkriterium)">${fmt(v,4)}</b>`:'—'}]:[]),
