@@ -44,6 +44,7 @@ async function renderSec(ctx, box, msg = "") {
   const save = async (contact, done) => {
     try {
       await api.put("/api/sec/contact", { contact });
+      dispatchEvent(new Event("amber:sec-contact")); // screens check again whether one is set
       renderSec(ctx, box, done);
     } catch (e) {
       ctx.toast(`Not saved: ${e.message}`, true);
@@ -58,7 +59,7 @@ async function renderSec(ctx, box, msg = "") {
     save(new FormData(form).get("contact"), "Saved");
   };
   box.replaceChildren(
-    html(`<p class="para dim">SEC EDGAR asks every program that downloads its data to name a contact email. It is saved in data/settings.json on this computer and sent only to sec.gov, in the request header. Without it, filings and insider trades still work under the generic Amber Terminal name, but the earnings history (8-K dates) needs it.</p>`),
+    html(`<p class="para dim">SEC EDGAR asks every program that downloads its data to name a contact email; there is no default. It is saved in data/settings.json on this computer and sent only to sec.gov, in the request header. It is used by CF (company filings), INSD (insider trades, Form 4), DS (document search), FV and FVSCAN (annual figures of US stocks, SEC company facts) and the M&amp;A check in RSL26. Without it, requests go out under the generic Amber Terminal name: they mostly work, but SEC may slow them down or refuse them (403/429), most likely in a large FVSCAN scan, and those screens then say so.</p>`),
     form,
     html(`<p class="para">${c.contact ? `Requests name <b>${esc(c.contact)}</b>` : "No address set: generic name"}${msg ? ` · <span class="dim">${esc(msg)}</span>` : ""}</p>`),
   );

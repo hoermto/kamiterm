@@ -86,6 +86,7 @@ export default [
     id: "DS",
     name: "Document search",
     group: "Equities",
+    sec: true,
     source: "SEC EDGAR full-text search, every filing since 2001",
     async render(ctx) {
       const sec = companyFor(ctx.panel, ctx.named);

@@ -47,6 +47,8 @@ async function fv(ctx) {
   ctx.el.replaceChildren(html(`<p class="hint">Loading annual figures, prices and dividends (the first time for a stock takes a few seconds)…</p>`));
   const d = await api.fn("fv", { symbol: ctx.sec.id, basis, pe });
   if (!ctx.live()) return;
+  // SEC company facts only for US stocks (or when SEC was asked and failed)
+  ctx.usesSec?.(d.dataSource === "sec" || d.notes?.some((n) => /^SEC did not answer/.test(n)) || !/\.[A-Z]{1,3}$/.test(d.symbol));
   saveSettings("FV", { basis, pe });
   const cur = d.currency;
   const go = (b, p) => ctx.go(`${ctx.sec.id} FV ${b}${p !== 15 ? ` PE=${p}` : ""}`);
@@ -470,6 +472,7 @@ async function fvscan(ctx) {
   saveSettings("FVSCAN", v);
   ctx.setCmd(cmd({}));
   ctx.follow?.(d.live);
+  ctx.usesSec?.(!["DAX", "SXXP"].includes(d.universe)); // European universes: Yahoo figures only
 
   const uniTabs = tabs([...UNIS, ...(d.lists || []).map((l) => `W:${l}`)], d.universe, (u) => ctx.go(cmd({ universe: u })));
   for (const b of uniTabs.children) b.title = d.universes?.[b.textContent] || `Watchlist ${b.textContent.slice(2)}`;
@@ -610,6 +613,6 @@ async function fvscan(ctx) {
 }
 
 export default [
-  { id: "FV", name: "Fair value: P/E 15, normal P/E, expected return, quality, dividends, backtest", group: "Kamikaze", needs: true, source: "SEC company facts (US), Yahoo annual figures, prices, dividends and estimates", render: fv },
-  { id: "FVSCAN", name: "Fair value scanner: S&P 500, Nasdaq-100, DAX, STOXX 600, watchlists", group: "Kamikaze", needs: false, source: "SEC company facts (US), Yahoo annual figures, prices, dividends and estimates", render: fvscan },
+  { id: "FV", name: "Fair value: P/E 15, normal P/E, expected return, quality, dividends, backtest", group: "Kamikaze", needs: true, sec: true, source: "SEC company facts (US), Yahoo annual figures, prices, dividends and estimates", render: fv },
+  { id: "FVSCAN", name: "Fair value scanner: S&P 500, Nasdaq-100, DAX, STOXX 600, watchlists", group: "Kamikaze", needs: false, sec: true, source: "SEC company facts (US), Yahoo annual figures, prices, dividends and estimates", render: fvscan },
 ];

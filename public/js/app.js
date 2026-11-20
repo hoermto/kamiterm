@@ -53,6 +53,25 @@ export function toast(msg, err = false, ms = 4500) {
   toast.t = setTimeout(() => (t.hidden = true), ms);
 }
 
+// SEC EDGAR asks every program to name a contact email (SETTINGS > Data sources). Screens that load SEC data
+// (function flag sec: true; a screen can say ctx.usesSec(false), e.g. FV for a European stock) show one line
+// when none is saved: without it SEC may slow down or refuse the requests.
+let secContactSet = null;
+async function hasSecContact() {
+  if (secContactSet == null) {
+    try { secContactSet = !!(await api.get("/api/sec/contact"))?.contact; } catch { return true; }
+  }
+  return secContactSet;
+}
+addEventListener("amber:sec-contact", () => (secContactSet = null));
+function secHint(panel) {
+  const p = document.createElement("p");
+  p.className = "hint";
+  p.innerHTML = `<span class="amber">No SEC contact email set.</span> This screen loads data from SEC EDGAR, which asks every program for a contact email. Without one, SEC may slow down or refuse the requests and figures go missing. <a href="#">Set it in SETTINGS › Data sources</a>`;
+  p.querySelector("a").onclick = (e) => { e.preventDefault(); panel.run("SETTINGS"); };
+  return p;
+}
+
 class Panel {
   constructor(i) {
     this.i = i;
@@ -167,6 +186,7 @@ class Panel {
     const isLive = quiet ? () => this.quietToken === token && (this.token === base || this.token === token) : () => token === this.token;
     const target = quiet ? document.createElement("div") : this.body;
     let follows = null;
+    let usesSec = !!f.sec;
     const ctx = {
       el: target,
       quiet,
@@ -177,6 +197,7 @@ class Panel {
       live: isLive,
       // The screen shows data the server refreshes in the background ({ key, version } from the API): it is
       // rebuilt quietly when newer bars come (event "ohlc", or the minute heartbeat in followLive()).
+      usesSec: (yes) => (usesSec = !!yes),
       follow: (live) => {
         if (!live?.key) return;
         follows = { key: live.key, version: live.version ?? 0 };
@@ -217,6 +238,7 @@ class Panel {
         for (const c of this.cleanups.splice(oldCleanups)) try { c(); } catch {}
         return;
       }
+      if (usesSec && !(await hasSecContact())) target.prepend(secHint(this));
       if (!isLive() || this.token !== base) return;
       const open = new Set([...this.body.querySelectorAll("details[open] > summary")].map((s) => s.textContent));
       const top = this.body.scrollTop;
@@ -237,6 +259,7 @@ class Panel {
       if (token === this.token)
         this.body.innerHTML = `<div class="err">${esc(e.message)}</div><div class="hint">Type HELP for functions, or DATA to see where each screen's data comes from.</div>`;
     }
+    if (usesSec && !(await hasSecContact()) && token === this.token) this.body.prepend(secHint(this));
     save();
   }
 }
