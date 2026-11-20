@@ -105,12 +105,28 @@ equities without API keys, `YAHOO:…`, FX/metals via Yahoo). Charts (`/api/cand
 BTST, COMP, PORT, SURP, and Grokki scanners all share it. Intraday, Binance/Kraken,
 and keyed feeds (Alpaca/Polygon) are untouched. An in-memory TTL sits on top.
 Cold loads fetch from Yahoo and warm the DB; warm loads serve from SQLite and only
-pull missing/recent bars (refresh if `last_fetch` >15 min during US market hours, or
-last bar older than the last trading day). Today's partial daily bar is overwritten
+pull missing/recent bars (refresh if `last_fetch` is older than the refresh interval
+while the symbol's market is open: US 9:30–16:00 New York, European suffixes 9:00–17:35
+Berlin; or last bar older than the last trading day). The interval is a setting
+(SETTINGS › Data sources, 5–60 minutes, default 15; `data/settings.json` tools.OHLC.refreshMin,
+`GET/PUT /api/ohlc/settings`). Today's partial daily bar is overwritten
 on refresh. If SQLite fails, behaviour falls back to the previous live chain.
 Scan budget default is 180s / concurrency 6 so a first full SPX run can complete.
 The cache directory is listed in the Seafile library `seafile-ignore.txt`
 (`amber-terminal/data/cache/`) and is not synced.
+
+### Live scanners (since v1.6.0)
+
+RSL26, DSCAN, FVSCAN and HEAT keep their stocks fresh while on view (`lib/ohlc-live.js`):
+a scan registers its tickers under a key (`rsl26:SPX`, `fvscan:SPX`, `heat:DAX`, `dscan:SPX:14`) and
+returns `live: {key, version}`; the screen calls `ctx.follow(d.live)` and the page reports the keys on
+view every minute (`POST /api/ohlc/follow`). For a key followed in the last 3 minutes whose market is open
+(or closed less than 30 minutes ago) the server refreshes the stocks' cached bars once per interval
+(1 month from Yahoo, 3 at a time; bars the screen fetched within half an interval are skipped). Only
+when bars really changed does the key's version rise and the event `ohlc` go to the pages. The panel then
+rebuilds the screen off screen (`Panel.quietRefresh`, `ctx.quiet`) and swaps it in when complete: scroll
+position, open sections, filters and sort stay; while the user types in the panel it waits; a failed rebuild
+keeps the old view. FVSCAN scans fresh in that case (not the 15-minute result cache).
 
 ### Event cache (dividends, earnings dates)
 

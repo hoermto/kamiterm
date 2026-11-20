@@ -628,6 +628,8 @@ async function rsl(ctx) {
   // Panel-Befehl ohne Parameter merken: Beim Neuladen gelten die gespeicherten Einstellungen (sonst überschreibt z. B. ein altes TOPX=25 im Befehl
   // das zuletzt gesetzte Top X) und Aktionen wie KAUF/VERKAUF werden nicht wiederholt.
   ctx.setCmd?.(`RSL26 ${universe}${action==='WATCH'?' WATCH':''}`);
+  // Live: newer bars in the background rebuild the screen quietly (the command above has no action left to repeat).
+  ctx.follow?.(d.live);
   const profiles=await fetchProfiles();
   ctx.el.replaceChildren(sect(`Levy RSL26 · Scanner · ${d.universeLabel} · Rangliste ${rankingVal(d.ranking)} · RRGEXIT=${d.rrgExit} · RANKTOP=${d.rankTop}`));
   ctx.el.append(uniTabs(universe,u=>ctx.go(`RSL26 ${u}`))); // Reiter: Strategie-Werte je Universum (zuletzt benutzt bzw. Research-Voreinstellung)

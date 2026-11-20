@@ -83,6 +83,7 @@ async function heat(ctx) {
   ctx.el.replaceChildren(html(`<p class="hint">Loading ${esc(uni)} prices (the first run fills the price cache and can take a minute)…</p>`));
   const d = await api.fn("heat", { universe: uni });
   if (!ctx.live()) return;
+  ctx.follow?.(d.live); // newer bars in the background rebuild the map quietly
   const zoom = wanted ? d.groups.find((g) => g.key.toLowerCase() === wanted || g.name.toLowerCase() === wanted) : null;
   const cmd = (o = {}) => {
     const g = "group" in o ? o.group : zoom?.key;

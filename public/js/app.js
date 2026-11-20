@@ -108,8 +108,24 @@ class Panel {
     if (prev) this.run(prev, { count: false });
   }
 
+  // A screen that follows live data (ctx.follow) is rebuilt quietly when the server has newer bars: off screen,
+  // swapped in when done, scroll position and open sections kept. Waits while the user is typing in the panel.
+  quietRefresh() {
+    if (this.refreshing || !this.cmd) return;
+    const a = document.activeElement;
+    if (a && this.body.contains(a) && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) {
+      clearTimeout(this.quietRetry);
+      this.quietRetry = setTimeout(() => this.quietRefresh(), 30e3);
+      return;
+    }
+    this.refreshing = true;
+    this.run(this.cmd, { quiet: true }).finally(() => (this.refreshing = false));
+  }
+
   // count: false for runs the user didn't start now (restoring panels at startup, going back).
-  async run(input, { push = true, count = true } = {}) {
+  // quiet: rebuild the current screen off screen and swap it in (live data, see quietRefresh).
+  async run(input, { push = true, count = true, quiet = false } = {}) {
+    if (quiet) [push, count] = [false, false];
     const p = parse(input);
     if (!p) return;
     let { fn, sec, args } = p;
@@ -125,29 +141,47 @@ class Panel {
       );
     const subject = f.needs ? this.sec : null;
     if (count) countApp(fn); // app usage: ranks the top bar in auto mode (SETTINGS)
-    Object.assign(this, { fn, fname: f.name, subject, srcText: "" });
-    this.cmd = `${subject ? `${subject.raw} ` : ""}${fn}${args.length ? ` ${args.join(" ")}` : ""}`;
-    if (push) this.history.push(this.cmd);
-    if (this.history.length > 50) this.history.shift();
-    this.input.value = "";
-    this.input.placeholder = this.cmd;
-    for (const c of this.cleanups.splice(0))
-      try {
-        c();
-      } catch {}
-    $(".fn", this.el).textContent = `${fn}  ${f.name}`;
-    $(".sec", this.el).textContent = subject ? subject.name || subject.raw : "";
-    $(".src", this.el).textContent = "";
-    $(".asof", this.el).textContent = "";
-    this.body.innerHTML = `<div class="loading">Loading ${esc(f.name)}</div>`;
-    const token = (this.token = {});
+    // A quiet run keeps the screen on view (its token, cleanups and liveData) until the new one is ready.
+    const base = quiet ? this.token : null;
+    const oldCleanups = quiet ? this.cleanups.length : 0;
+    if (!quiet) {
+      Object.assign(this, { fn, fname: f.name, subject, srcText: "", liveData: null });
+      this.cmd = `${subject ? `${subject.raw} ` : ""}${fn}${args.length ? ` ${args.join(" ")}` : ""}`;
+      if (push) this.history.push(this.cmd);
+      if (this.history.length > 50) this.history.shift();
+      this.input.value = "";
+      this.input.placeholder = this.cmd;
+      for (const c of this.cleanups.splice(0))
+        try {
+          c();
+        } catch {}
+      $(".fn", this.el).textContent = `${fn}  ${f.name}`;
+      $(".sec", this.el).textContent = subject ? subject.name || subject.raw : "";
+      $(".src", this.el).textContent = "";
+      $(".asof", this.el).textContent = "";
+      this.body.innerHTML = `<div class="loading">Loading ${esc(f.name)}</div>`;
+    }
+    const token = quiet ? {} : (this.token = {});
+    if (quiet) this.quietToken = token;
+    // quiet: alive while no other run started; becomes the panel's token when swapped in
+    const isLive = quiet ? () => this.quietToken === token && (this.token === base || this.token === token) : () => token === this.token;
+    const target = quiet ? document.createElement("div") : this.body;
+    let follows = null;
     const ctx = {
-      el: this.body,
+      el: target,
+      quiet,
       sec: subject,
       args,
       named: !!sec,
       panel: this,
-      live: () => token === this.token,
+      live: isLive,
+      // The screen shows data the server refreshes in the background ({ key, version } from the API): it is
+      // rebuilt quietly when newer bars come (event "ohlc", or the minute heartbeat in followLive()).
+      follow: (live) => {
+        if (!live?.key) return;
+        follows = { key: live.key, version: live.version ?? 0 };
+        if (!quiet && isLive()) this.liveData = follows;
+      },
       setSource: (src) => {
         this.srcText = String(src ?? "");
         const s = $(".src", this.el);
@@ -160,7 +194,7 @@ class Panel {
       go: (c) => this.run(c),
       // A screen that edits something (W ADD NVDA) leaves the plain command behind, so a reload doesn't repeat it.
       setCmd: (c) => {
-        if (token !== this.token) return;
+        if (!isLive()) return;
         this.cmd = c;
         this.history[this.history.length - 1] = c;
         this.input.placeholder = c;
@@ -169,10 +203,34 @@ class Panel {
       toast,
       onCleanup: (fn2) => this.cleanups.push(fn2),
       every: (ms, fn2) => {
-        const id = setInterval(() => token === this.token && fn2(), ms);
+        const id = setInterval(() => isLive() && fn2(), ms);
         this.cleanups.push(() => clearInterval(id));
       },
     };
+    if (quiet) {
+      // Old view stays until the new one is complete; a failed or overtaken rebuild leaves it as it was.
+      try {
+        await f.render(ctx);
+      } catch (e) {
+        console.warn(`Quiet refresh of ${this.cmd} failed: ${e.message}`);
+        if (this.quietToken === token) this.quietToken = null;
+        for (const c of this.cleanups.splice(oldCleanups)) try { c(); } catch {}
+        return;
+      }
+      if (!isLive() || this.token !== base) return;
+      const open = new Set([...this.body.querySelectorAll("details[open] > summary")].map((s) => s.textContent));
+      const top = this.body.scrollTop;
+      const left = this.body.scrollLeft;
+      this.token = token;
+      this.quietToken = null;
+      for (const c of this.cleanups.splice(0, oldCleanups)) try { c(); } catch {}
+      this.body.replaceChildren(...target.childNodes);
+      for (const d of this.body.querySelectorAll("details")) if (open.has(d.querySelector(":scope > summary")?.textContent)) d.open = true;
+      this.body.scrollTop = top;
+      this.body.scrollLeft = left;
+      this.liveData = follows;
+      return;
+    }
     try {
       await f.render(ctx);
     } catch (e) {
@@ -420,6 +478,21 @@ async function tape() {
 tape();
 setInterval(tape, 60e3);
 
+// Screens with live data (ctx.follow) tell the server once a minute what they show, so it keeps refreshing
+// those stocks; a newer version than the one on view (an "ohlc" event missed) rebuilds the screen quietly.
+async function followLive() {
+  const on = panels.filter((p) => p.liveData?.key && p.el.style.display !== "none");
+  if (!on.length) return;
+  try {
+    const r = await api.post("/api/ohlc/follow", { keys: [...new Set(on.map((p) => p.liveData.key))] });
+    for (const p of on) {
+      const v = r?.versions?.[p.liveData?.key];
+      if (v != null && v > p.liveData.version) p.quietRefresh();
+    }
+  } catch {}
+}
+setInterval(followLive, 60e3);
+
 // Alerts fire on the server (ALRT); the event stream brings them here as a toast and a desktop notification.
 function listenForAlerts() {
   if (!window.EventSource) return;
@@ -435,6 +508,12 @@ function listenForAlerts() {
   });
   es.addEventListener("update", (e) => {
     try { showUpdate(JSON.parse(e.data)); } catch {}
+  });
+  // Newer daily bars for a screen on view: rebuild it quietly (lib/ohlc-live.js).
+  es.addEventListener("ohlc", (e) => {
+    let x;
+    try { x = JSON.parse(e.data); } catch { return; }
+    for (const p of panels) if (p.liveData?.key === x.key && x.version > p.liveData.version) p.quietRefresh();
   });
   es.addEventListener("alert", (e) => {
     let a;

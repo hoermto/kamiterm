@@ -458,7 +458,8 @@ async function fvscan(ctx) {
   ctx.el.replaceChildren(html(`<p class="hint">Scanning ${esc(v.universe)}: annual figures, prices and dividends per stock. The first scan of a universe can take a few minutes; what is not done keeps loading in the background.</p>`));
   // The server keeps a finished scan 15 minutes; the page keeps the last one too, so ESC back from FV is instant.
   const memoKey = `${v.universe}|${v.basis}|${v.pe}`;
-  const fresh = k.fresh === "1" || forceFresh;
+  // quiet rebuild (newer bars in the background): a fresh scan, not the kept one
+  const fresh = k.fresh === "1" || forceFresh || !!ctx.quiet;
   forceFresh = false;
   const d = !fresh && scanMemo?.key === memoKey && Date.now() - scanMemo.at < 15 * 60e3
     ? scanMemo.d
@@ -468,6 +469,7 @@ async function fvscan(ctx) {
   v.universe = d.universe;
   saveSettings("FVSCAN", v);
   ctx.setCmd(cmd({}));
+  ctx.follow?.(d.live);
 
   const uniTabs = tabs([...UNIS, ...(d.lists || []).map((l) => `W:${l}`)], d.universe, (u) => ctx.go(cmd({ universe: u })));
   for (const b of uniTabs.children) b.title = d.universes?.[b.textContent] || `Watchlist ${b.textContent.slice(2)}`;
