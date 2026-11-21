@@ -44,6 +44,7 @@ async function renderSec(ctx, box, msg = "") {
   const save = async (contact, done) => {
     try {
       await api.put("/api/sec/contact", { contact });
+      dispatchEvent(new Event("amber:sec-contact")); // screens check again whether one is set
       renderSec(ctx, box, done);
     } catch (e) {
       ctx.toast(`Not saved: ${e.message}`, true);
@@ -58,9 +59,43 @@ async function renderSec(ctx, box, msg = "") {
     save(new FormData(form).get("contact"), "Saved");
   };
   box.replaceChildren(
-    html(`<p class="para dim">SEC EDGAR asks every program that downloads its data to name a contact email. It is saved in data/settings.json on this computer and sent only to sec.gov, in the request header. Without it, filings and insider trades still work under the generic Amber Terminal name, but the earnings history (8-K dates) needs it.</p>`),
+    html(`<p class="para dim">SEC EDGAR asks every program that downloads its data to name a contact email; there is no default. It is saved in data/settings.json on this computer and sent only to sec.gov, in the request header. It is used by CF (company filings), INSD (insider trades, Form 4), DS (document search), FV and FVSCAN (annual figures of US stocks, SEC company facts) and the M&amp;A check in RSL26. Without it, requests go out under the generic Amber Terminal name: they mostly work, but SEC may slow them down or refuse them (403/429), most likely in a large FVSCAN scan, and those screens then say so.</p>`),
     form,
     html(`<p class="para">${c.contact ? `Requests name <b>${esc(c.contact)}</b>` : "No address set: generic name"}${msg ? ` · <span class="dim">${esc(msg)}</span>` : ""}</p>`),
+  );
+}
+
+// Daily prices (OHLC cache): how old they may get while a market is open, and the background refresh for
+// the scanner screens on view (RSL26, DSCAN, FVSCAN, HEAT), lib/ohlc-live.js.
+async function renderOhlc(ctx, box, msg = "") {
+  let c;
+  try {
+    c = await api.get("/api/ohlc/settings");
+  } catch (e) {
+    box.replaceChildren(html(`<p class="para dim">Not available: ${esc(e.message)}</p>`));
+    return;
+  }
+  if (!ctx.live()) return;
+  const form = html(`<form class="wform" autocomplete="off">
+    <label>Refresh daily prices every <input name="min" type="number" min="5" max="60" step="1" style="width:56px" value="${esc(c.refreshMin)}"> minutes while the market is open</label>
+  </form>`);
+  const save = async (min, done) => {
+    try {
+      await api.put("/api/ohlc/settings", { refreshMin: Number(min) });
+      renderOhlc(ctx, box, done);
+    } catch (e) {
+      ctx.toast(`Not saved: ${e.message}`, true);
+    }
+  };
+  form.append(btn("Save", () => form.requestSubmit()), btn("Standard", () => save(15, "Back to 15 minutes"), "15 minutes"));
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    save(new FormData(form).get("min"), "Saved");
+  };
+  box.replaceChildren(
+    html(`<p class="para dim">Daily prices are kept in data/cache/ohlcv.sqlite. While a stock's market is open (US 9:30–16:00 New York, Europe 9:00–17:35 Berlin) a screen fetches them again once they are older than this. RSL26, DSCAN, FVSCAN and HEAT also refresh their stocks in the background while they are on view, and update themselves quietly when the prices really changed. 5 to 60 minutes; short intervals with large universes (S&amp;P 500, STOXX 600) mean many Yahoo requests.</p>`),
+    form,
+    html(`<p class="para">Every <b>${esc(c.refreshMin)} minutes</b>${msg ? ` · <span class="dim">${esc(msg)}</span>` : ""}</p>`),
   );
 }
 
@@ -318,6 +353,10 @@ function render(ctx) {
   const secBox = html('<div><p class="para dim">Loading…</p></div>');
   ctx.el.append(secBox);
   renderSec(ctx, secBox);
+
+  const ohlcBox = html('<div><p class="para dim">Loading…</p></div>');
+  ctx.el.append(ohlcBox);
+  renderOhlc(ctx, ohlcBox);
 
   const evBox = html('<div></div>');
   ctx.el.append(evBox);

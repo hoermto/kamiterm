@@ -628,6 +628,8 @@ async function rsl(ctx) {
   // Panel-Befehl ohne Parameter merken: Beim Neuladen gelten die gespeicherten Einstellungen (sonst überschreibt z. B. ein altes TOPX=25 im Befehl
   // das zuletzt gesetzte Top X) und Aktionen wie KAUF/VERKAUF werden nicht wiederholt.
   ctx.setCmd?.(`RSL26 ${universe}${action==='WATCH'?' WATCH':''}`);
+  // Live: newer bars in the background rebuild the screen quietly (the command above has no action left to repeat).
+  ctx.follow?.(d.live);
   const profiles=await fetchProfiles();
   ctx.el.replaceChildren(sect(`Levy RSL26 · Scanner · ${d.universeLabel} · Rangliste ${rankingVal(d.ranking)} · RRGEXIT=${d.rrgExit} · RANKTOP=${d.rankTop}`));
   ctx.el.append(uniTabs(universe,u=>ctx.go(`RSL26 ${u}`))); // Reiter: Strategie-Werte je Universum (zuletzt benutzt bzw. Research-Voreinstellung)
@@ -937,7 +939,7 @@ async function rsl(ctx) {
       return otherTag||'';
     }};
     const rankTable=table(rankRows,[
-      col('rank','#',fmt0),statusCol,col('ticker','Ticker'),maCol,col('price',d.eu?'Close €':'Close',px),
+      col('rank','#',fmt0),col('ticker','Ticker'),statusCol,maCol,col('price',d.eu?'Close €':'Close',px),
       ...(d.eu?[{key:'priceLocal',label:'Lokal',html:true,fmt:(v,r)=>r.cur&&r.cur!=='EUR'&&Number.isFinite(v)?`<span title="Letzter Kurs in Handelswährung; Rangliste/Stops rechnen in EUR">${esc(px(v))} ${esc(r.cur)}</span>`:'<span class="hint" style="margin:0">EUR</span>'}]:[]),
       ...(rankingVal(d.ranking)==='MOM52_4'?[{key:'score',label:'Mom\n12-1 %',html:true,fmt:v=>Number.isFinite(v)?`<b title="Rendite Wochenschluss vor 52 Wo. → vor 4 Wo. (Rangkriterium)">${(100*v).toFixed(2).replace('.',',')} %</b>`:'—'}]
         :rankingVal(d.ranking)==='RSL39'?[{key:'score',label:'RSL39',html:true,fmt:v=>Number.isFinite(v)?`<b title="Wochenschluss / SMA 39 Wochenschlüsse (Rangkriterium)">${fmt(v,4)}</b>`:'—'}]:[]),

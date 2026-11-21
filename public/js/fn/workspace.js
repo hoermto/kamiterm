@@ -217,6 +217,30 @@ async function changeWatch(cmd) {
   return r;
 }
 
+/**
+ * Adds securities to the active list in one save (FVSCAN's watchlist buttons). items: [{ words: ["SAP", "GR"], name }].
+ * -> { list, added: [codes], already: [codes], errors: [msg] }
+ */
+export async function watchAdd(items) {
+  let st = await loadWatch();
+  const out = { list: st.active, added: [], already: [], errors: [] };
+  for (const { words, name } of items) {
+    const r = applyWatch(st, { list: null, op: "ADD", ws: words });
+    if (r.error) { out.errors.push(r.error); if (/holds/.test(r.error)) break; continue; }
+    if (!r.added) { out.already.push(r.code); continue; }
+    st = r.st;
+    if (!st.names[r.code] && name) st.names = { ...st.names, [r.code]: name };
+    out.added.push(r.code);
+  }
+  if (out.added.length) await saveWatch(st);
+  return out;
+}
+/** The codes on the active list (to mark what is already there). */
+export async function activeWatch() {
+  const st = await loadWatch();
+  return { name: st.active, codes: new Set(st.lists[st.active] || []) };
+}
+
 // A company's name for a new row, from the same search the command line's lookup uses.
 async function nameFor(code) {
   const sec = secOf(code);

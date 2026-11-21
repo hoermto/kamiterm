@@ -302,6 +302,12 @@ export const CRYPTO_NAMES = {
 // Yahoo suffix back to the exchange code: ".L" is LN. The first code listed for a suffix wins (.DE is GR).
 const SUFFIX = {};
 for (const [code, sfx] of Object.entries(EXCH)) if (sfx && !SUFFIX[sfx]) SUFFIX[sfx] = code;
+/** A share's Yahoo symbol as command words: "SAP.DE" -> ["SAP", "GR"], "VOD.L" -> ["VOD", "LN"], "BF-B" -> ["BF-B"]. */
+export function yahooWords(y) {
+  const s = String(y || "").trim().toUpperCase();
+  const m = /^(.+?)(\.[A-Z]{1,3})$/.exec(s);
+  return m && SUFFIX[m[2]] ? [m[1], SUFFIX[m[2]]] : [s];
+}
 const byYahoo = (map) => Object.fromEntries(Object.entries(map).map(([k, [y, n]]) => [y, [k, n]]));
 const INDEX_BY_YAHOO = { ...byYahoo(INDICES), ...byYahoo(YIELDS) };
 const GENERIC_BY_YAHOO = byYahoo(GENERICS);

@@ -316,7 +316,7 @@ export default [
         );
       ctx.el.append(
         html(
-          `<div class="hint">Next: <a href="#" data-c="FA">FA financials</a> · <a href="#" data-c="CN">CN news</a> · <a href="#" data-c="GP">GP chart</a> · <a href="#" data-c="OMON">OMON options</a> · <a href="#" data-c="GEX">GEX gamma</a> · <a href="#" data-c="CF">CF filings</a> · <a href="#" data-c="DVD">DVD dividends</a> · <a href="#" data-c="DMOV">DMOV ex-div moves</a> · <a href="#" data-c="EE">EE estimates</a> · <a href="#" data-c="ANR">ANR analysts</a></div>`,
+          `<div class="hint">Next: <a href="#" data-c="FA">FA financials</a> · <a href="#" data-c="CN">CN news</a> · <a href="#" data-c="GP">GP chart</a> · <a href="#" data-c="OMON">OMON options</a> · <a href="#" data-c="GEX">GEX gamma</a> · <a href="#" data-c="CF">CF filings</a> · <a href="#" data-c="DVD">DVD dividends</a> · <a href="#" data-c="DMOV">DMOV ex-div moves</a> · <a href="#" data-c="FV">FV fair value</a> · <a href="#" data-c="EE">EE estimates</a> · <a href="#" data-c="ANR">ANR analysts</a></div>`,
         ),
       );
       ctx.el.querySelector(".hint:last-child").onclick = (e) => {

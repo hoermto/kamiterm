@@ -40,6 +40,8 @@ it. After backend changes restart this copy; after UI changes refresh the browse
 | `DSCAN SPX` / `DSCAN ALL DAYS=21 MINOI=0` | Buy-write-Scanner über die kommenden Ex-Tage (US), siehe „DSCAN“ unten |
 | `W` / `W TECH` / `W NEW TECH` / `W TECH ADD NVDA` / `W RENAME TECH CHIPS` / `W DROP TECH` | Mehrere Watchlists: Reiter je Liste; `W ADD`/`W DEL` gelten für die offene Liste. Gespeichert in `data/state.json` (`amberWatch.lists`, `active`) |
 | `HEAT SPX` / `HEAT SPX XLK 1W` / `HEAT SXXP Germany YTD` / `HEAT DAX` | Markt-Heatmap, siehe „HEAT“ unten |
+| `KO FV` / `KO FV FCF` / `SAP.DE FV PE=18` | Fair-Value-Analyse einer Aktie (auch als Link aus DES), siehe „FV / FVSCAN“ unten |
+| `FVSCAN SPX` / `FVSCAN NDX FILTER=QUALITY SORT=YIELD` / `FVSCAN W:TECH BASIS=OE` | Fair-Value-Scanner über S&P 500, Nasdaq-100, DAX, STOXX 600 oder eine Watchlist |
 | `KO DMOV` / `SAP.DE DMOV 5Y` | Kursbewegung um vergangene Ex-Dividenden-Tage (US und Europa), Zeitraum 1Y/2Y/3Y/5Y/ALL, siehe „DMOV“ unten |
 | `RSL26 … MASKIP=0` | „M&A ignorieren“ aus (Standard `MASKIP=1`: M&A-Titel zählen nicht zum Kauf-Fenster). `HIDEMA` ist entfallen und wird ignoriert |
 | `RSLBT SPX START=10000 SIZE=EQUITY FRACTIONAL=1` | Backtest-Startkapital, Budget=Equity/n, Bruchstücke (Defaults) |
@@ -103,12 +105,28 @@ equities without API keys, `YAHOO:…`, FX/metals via Yahoo). Charts (`/api/cand
 BTST, COMP, PORT, SURP, and Grokki scanners all share it. Intraday, Binance/Kraken,
 and keyed feeds (Alpaca/Polygon) are untouched. An in-memory TTL sits on top.
 Cold loads fetch from Yahoo and warm the DB; warm loads serve from SQLite and only
-pull missing/recent bars (refresh if `last_fetch` >15 min during US market hours, or
-last bar older than the last trading day). Today's partial daily bar is overwritten
+pull missing/recent bars (refresh if `last_fetch` is older than the refresh interval
+while the symbol's market is open: US 9:30–16:00 New York, European suffixes 9:00–17:35
+Berlin; or last bar older than the last trading day). The interval is a setting
+(SETTINGS › Data sources, 5–60 minutes, default 15; `data/settings.json` tools.OHLC.refreshMin,
+`GET/PUT /api/ohlc/settings`). Today's partial daily bar is overwritten
 on refresh. If SQLite fails, behaviour falls back to the previous live chain.
 Scan budget default is 180s / concurrency 6 so a first full SPX run can complete.
 The cache directory is listed in the Seafile library `seafile-ignore.txt`
 (`amber-terminal/data/cache/`) and is not synced.
+
+### Live scanners (since v1.6.0)
+
+RSL26, DSCAN, FVSCAN and HEAT keep their stocks fresh while on view (`lib/ohlc-live.js`):
+a scan registers its tickers under a key (`rsl26:SPX`, `fvscan:SPX`, `heat:DAX`, `dscan:SPX:14`) and
+returns `live: {key, version}`; the screen calls `ctx.follow(d.live)` and the page reports the keys on
+view every minute (`POST /api/ohlc/follow`). For a key followed in the last 3 minutes whose market is open
+(or closed less than 30 minutes ago) the server refreshes the stocks' cached bars once per interval
+(1 month from Yahoo, 3 at a time; bars the screen fetched within half an interval are skipped). Only
+when bars really changed does the key's version rise and the event `ohlc` go to the pages. The panel then
+rebuilds the screen off screen (`Panel.quietRefresh`, `ctx.quiet`) and swaps it in when complete: scroll
+position, open sections, filters and sort stay; while the user types in the panel it waits; a failed rebuild
+keeps the old view. FVSCAN scans fresh in that case (not the 15-minute result cache).
 
 ### Event cache (dividends, earnings dates)
 
@@ -412,6 +430,40 @@ haben anfangs wenig Open Interest. Zeitbudget 120 s, 4 Ketten parallel.
 - **Farbe:** Veränderung über den Zeitraum aus den Tageskursen des OHLC-Caches (`history()`, bis 15 Minuten verzögert): n Handelstage zurück (1D=1, 1W=5, 1M=21, 3M=63, 1Y=252), YTD gegen den letzten Schluss des Vorjahres. Volles Rot/Grün bei ±3 % (1D), ±6 % (1W), ±10 % (1M), ±15 % (3M), ±30 % (YTD, 1Y). Europäische Kurse mit `repairBars` bereinigt; Veränderung in Landeswährung (keine EUR-Umrechnung).
 - Alle Zeiträume kommen in einer Antwort, der Wechsel des Zeitraums lädt nicht neu. Universum und Zeitraum werden gemerkt (`/api/settings`, Tool HEAT). Gruppenkopf und Kopfzeile zeigen die nach Gewicht gemittelte Veränderung.
 - Server: `lib/fn/heat.js`, Screen: `public/js/fn/heat.js` (squarified Treemap), Tests: `test/heat.test.js`.
+
+## FV / FVSCAN: Fair Value (seit v1.6.0)
+
+Nach dem Vorbild von ValueLens („Kamikaze-Trader“) und FAST Graphs, mit eigenen Daten (kein Login).
+
+`<Aktie> FV [EPS|FCF|OE] [PE=15]` und `FVSCAN [SPX|NDX|DAX|SXXP|W:<Liste>] [BASIS=] [PE=] [FILTER=] [SORT=]`.
+
+- **Daten** (`lib/fundamentals.js`, Cache `data/cache/fundamentals/`): US-Aktien aus den SEC Company Facts (10-K, bis 20 Jahre; je Feld eine Liste von US-GAAP-Tags, pro Geschäftsjahr gewinnt der erste mit Wert; Wert aus der neuesten Einreichung, „bekannt seit“ = erste Einreichung; EPS und Aktienzahl gegen Yahoos Splits bereinigt, wenn vor dem Split eingereicht). Andere Aktien und 20-F-Filer ohne US-GAAP: Yahoo-Jahreszeitreihe (4 Jahre, „bekannt“ 75 Tage nach Jahresende). Kurse, Dividenden, Splits: ein Yahoo-Chart-Abruf monatlich über die ganze Historie (`period1=0`; `range=max` lässt Jahre aus). Kurs, TTM- und Forward-EPS: Yahoo v7 quote. Berichtswährung ≠ Kurswährung (Shell: USD/GBp): Umrechnung zum heutigen Kurs. Cache: Jahreszahlen 14 Tage, Chart 2 Tage, Analystenprofil 1 Tag. Antwortet SEC nicht (z. B. 429 bei zu vielen Abrufen, eher ohne Kontaktadresse), gelten Yahoos 4 Jahre nur vorläufig: Hinweis in FV, neuer SEC-Versuch nach einer Stunde.
+- **Basis:** EPS (GAAP verwässert), FCF je Aktie (operativer Cashflow − Capex) oder Owner Earnings (FCF − aktienbasierte Vergütung). „Jetzt“: TTM-EPS (nur SEC-Aktien; Yahoos TTM für Auslandslistings ist teils je ADR oder in gemischter Währung), sonst letztes Geschäftsjahr. TTM über 1,3 × Forward-EPS gilt als Einmaleffekt → Forward-EPS.
+- **Fair Value** = Basis × fairer KGV (Standard 15). **Normal-KGV** = Median der Monats-KGVs der letzten 15 Jahre, je Monat mit dem zuletzt veröffentlichten Jahreswert (point in time), nur positive, KGV < 200, mindestens 12 Monate. **Wert bei Normal-KGV** = Basis × Normal-KGV. Bewertung: ≤ −10 % „below normal“, bis +10 % „near normal“, darüber „above normal“; unter 5 Jahren Historie mit „(short history)“.
+- **Wachstum:** Median des Wachstums zwischen allen Jahrespaaren der letzten 10 Jahre (Theil-Sen auf den Logarithmen; ein Ausreißerjahr kippt es nicht; höchstens ein Verlustjahr), sonst 5-Jahres-CAGR (nur über sechs positive Jahre), sonst Analysten nächstes Jahr, danach 6 % (ein Jahr ist keine 5-Jahres-Rate). Begrenzt auf −10 … +25 %.
+- **Erwartete Rendite (5 Jahre, p. a.):** Basis wächst mit g, KGV am Ende = Normal-KGV (höchstens 30; bei kurzer Historie höchstens das heutige), Dividenden wachsen mit g. Dazu dieselbe Rechnung mit KGV 15 und mit Analystenwachstum. FVSCAN rangiert nach dem kleineren der beiden Werte (eigene Historie, Analysten). **Erratisch:** ≥ 2 Verlustjahre unter den letzten 10 → keine erwartete Rendite im Scanner, Warnung in FV.
+- **Qualität:** ROE (Durchschnitts-Eigenkapital), ROA, ROIC (operatives Ergebnis nach Steuern / (EK + Schulden − Cash)), Margen, Schulden/Kapital, Nettoschulden/EBITDA, Zinsdeckung, Current Ratio, Piotroski F (9 Kriterien), Altman Z (original; nicht für Banken, Versicherer, Immobilien). Ausschüttung zu Gewinn und FCF, FCF/Dividende über 5 Jahre.
+- **Dividende** (aus Yahoos Zahlungen): Sonderdividenden und Yahoos doppelte Einträge fallen raus (≥ 1,75 × Median der zwei Jahre drumherum). Jahre erhöht = höchste reguläre Zahlung je Kalenderjahr über der des Vorjahres, in Folge bis zum Vorjahr. Champion ≥ 25, Contender 10–24, Challenger 5–9. Yield Theory: heutige Dividende / Durchschnittsrendite der letzten 10 Jahre (mindestens 36 Monate).
+- **Momentum:** RSL26 (Levy) aus dem OHLC-Cache; „cheap+mom“ = unter Normalwert und RSL > 1.
+- **Backtest (FV):** jeder Monat ab dem vierten Jahr: Kurs / (Basis damals × Normal-KGV aus den Monaten davor), Rendite der nächsten 12 Monate mit Dividenden, gruppiert (> 20 % darunter, 0–20 % darunter, 0–20 % darüber, > 20 % darüber). Überlappende Fenster, vor Kosten und Steuern.
+- **FVSCAN-Filter** (wie ValueLens): ALL, UNDER, NORMAL, RET10, DIV10, ROE15, DEBT50, FCFDIV, QUALITY (ROE ≥ 15, Schulden/Kapital ≤ 50, FCF deckt Dividende, unter Normal), CHAMP / CONTENDER / CHALLENGER (fair bewertet = höchstens 10 % über Normalwert), GROWTH (g ≥ 10, fair, Rendite ≥ 10, PEG ≤ 1,5), GROWTHRET (g ≥ 15, fair), CHEAPMOM. Kombinierbar: ein Klick schaltet eine Voreinstellung zu oder ab, alle gewählten müssen gelten, „All“ löscht sie (`FILTER=QUALITY,CHAMP`). Sortierung: RET, RETHIST, NORMAL, FAIR, YIELD, RAISED, ROE, RSL, F. Universum, Basis, KGV, Filter und Sortierung werden gemerkt (Tool FVSCAN).
+- **Strategien** (Auswahl „Strategy“, oder `FVSCAN SPX STRATEGY=DIVBUY`): setzen „More filters“ und Sortierung auf einmal, die Voreinstellungs-Reiter auf All; jede Änderung danach macht daraus „own filters“. Schwellen an einem S&P-500-Scan (Nov. 2026) geprüft, Treffer in Klammern:
+  - `DIVBUY` Dividenden-Qualität, jetzt kaufen (8): zahlt Dividende, 10+ Jahre erhöht, Rendite ≥ 2 %, FCF deckt 1,2× (Ausschüttung FCF ≤ 80 %), ROE ≥ 12 %, Schulden/Kapital ≤ 65 %, Piotroski ≥ 5, keine erratischen Gewinne; mindestens 10 % unter Normalwert **und** RSL26 ≥ 1 (Trend gedreht). Sortiert nach erwarteter Rendite.
+  - `DIVWATCH` dieselbe Qualität, günstig, aber RSL26 < 1 (noch fallend; z. B. MKC) – Beobachtungsliste.
+  - `DIVGROW` Dividendenwachstum (26): Rendite ≥ 1 %, 5+ Jahre erhöht, Dividende +7 % p. a. über 5 J., Ausschüttung ≤ 60 %, FCF 1,3×, ROE ≥ 15 %, höchstens 10 % über Normalwert.
+  - `HIGHYIELD` hohe Rendite, gedeckt (7): Rendite ≥ 4 %, 5+ Jahre erhöht, FCF 1,2× (≤ 80 %), Schulden ≤ 65 %; sortiert nach Rendite.
+  - `QUALFAIR` Qualität zum fairen Preis (25): ROE ≥ 15, ROIC ≥ 12, Marge ≥ 10, Schulden ≤ 50, Piotroski ≥ 6, höchstens Normalwert, erwartete Rendite ≥ 8 %.
+  - `GARP` Wachstum zum vernünftigen Preis (36): Wachstum ≥ 10 %, PEG ≤ 1,5, ROE ≥ 15, Piotroski ≥ 6, höchstens 10 % über Normal, Rendite ≥ 12 %.
+  - `DEEPVALUE` (10): KGV ≤ 15, ≥ 25 % unter Normal, Rendite ≥ 8 %, Piotroski ≥ 6, Schulden ≤ 60, keine Banken.
+  - `TURN` Turnaround (25): ≥ 20 % unter Normal, RSL26 1,00–1,10 (gerade gedreht), Rendite ≥ 8 %, Piotroski ≥ 5.
+  - `TREND` Qualität im Aufwärtstrend (44): ROE ≥ 15, Piotroski ≥ 6, RSL26 ≥ 1,05, höchstens 20 % über Normal, Rendite ≥ 8 %.
+- **„More filters“** zusätzlich zur Voreinstellung, alle gesetzten müssen gelten (fehlt der Wert, fällt die Aktie raus), ohne neuen Scan, gemerkt: Dividende (zahlt Dividende, mindestens n Jahre gezahlt, mindestens n Jahre in Folge erhöht, Rendite von/bis, Dividendenwachstum 5 J., Ausschüttung zu Gewinn und FCF, FCF/Dividende), Bewertung (KGV, vs Normal, vs Fair, erwartete Rendite, Wachstum, PEG), Qualität (ROE, ROIC, Nettomarge, Schulden/Kapital, Piotroski), RSL26, Ausschlüsse (Banken/Versicherer/Immobilien, erratische Gewinne, kurze Historie). Auch in der Befehlszeile: `FVSCAN SPX PAYER=1 MINRAISED=10 MINYIELD=2 NOFIN=1`, `CLEAR=1` löscht die gemerkten. Zeitbudget 100 s; was nicht fertig wird, lädt im Hintergrund weiter (S&P 500 kalt rund 45 s).
+- **Watchlist:** „+“ in der Spalte W setzt die Aktie auf die aktive Watchlist (✓ = schon drauf), „Add all to <Liste>“ alle angezeigten (nur die fehlenden; ab 26 mit Rückfrage).
+- **Sortieren:** Klick auf einen Spaltenkopf sortiert danach, nochmal umgekehrt; leere Werte immer unten. Gemerkt; das Sort-Menü (Standard erwartete Rendite) oder eine Strategie heben es auf.
+- **Guide** (aufklappbar, Zustand je Browser gemerkt): Bedienung, alle Strategien mit Knopf „Use“, die Bedingung jedes Voreinstellungs-Reiters (auch als Tooltip), Spalten und Begriffe, Vorbehalte.
+- **Cache:** ein vollständiger Scan bleibt 15 Minuten je Universum/Basis/KGV im Server und in der Seite (ESC aus FV zurück ohne neuen Scan); unvollständige Scans (noch im Hintergrund ladend) werden nicht gemerkt. „Rescan“ oder „Scan“ mit gleichen Einstellungen scannt neu, API: `fresh=1`.
+- **SEC-Drosselung:** SEC-Abrufe höchstens 4 je Sekunde (SEC sperrt über 10/s für rund 10 Minuten), nach 429 eine Minute Pause; der Rest lädt im Hintergrund, der erste Scan zeigt nur einen Teil.
+- Server: `lib/fundamentals.js`, `lib/valuation.js`, `lib/fn/fv.js`, `lib/fn/fvscan.js`; Screen: `public/js/fn/fv.js`; Tests: `test/fv.test.js`.
 
 ## RRG: JdK-style approximation, not proprietary JdK
 

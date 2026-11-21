@@ -38,6 +38,7 @@ async function dscan(ctx) {
   ctx.el.replaceChildren(html(`<p class="hint">Looking up ex-dates and option chains (the first run can take a minute)…</p>`));
   const d = await api.fn("dscan", v);
   if (!ctx.live()) return;
+  ctx.follow?.(d.live); // newer bars in the background rebuild the screen quietly
   api.put("/api/settings", { tool: "DSCAN", settings: { ...v, updatedAt: new Date().toISOString() } }).catch(() => {});
 
   ctx.el.replaceChildren(

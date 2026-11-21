@@ -2,14 +2,19 @@
 import { esc } from "./api.js";
 import { periodPnl, niceTicks } from "./equity-pnl.js";
 
-// cols: [{ key, label, left, fmt(v,row) -> text, cls(v,row) -> class, html: true }]
-export function table(rows, cols, { onRow, max = 500 } = {}) {
+// cols: [{ key, label, left, fmt(v,row) -> text, cls(v,row) -> class, html: true, sort: false (not sortable) }]
+// Sortable headers: pass sorted = { col: index, dir: "asc" | "desc" } (or null) and onSort(index); the caller sorts
+// the rows (sortRows below) and redraws.
+export function table(rows, cols, { onRow, max = 500, sorted = null, onSort = null } = {}) {
   const head = cols
-    .map((c) => {
+    .map((c, i) => {
       // "\n" in a label = two-line header; full label (or c.title) as tooltip.
       const lab = String(c.label ?? "");
-      const tip = c.title || (lab.includes("\n") ? lab.replace(/\n/g, " ") : "");
-      return `<th class="${c.left ? "l" : ""}"${tip ? ` title="${esc(tip)}"` : ""}>${lab.split("\n").map(esc).join("<br>")}</th>`;
+      const tip0 = c.title || (lab.includes("\n") ? lab.replace(/\n/g, " ") : "");
+      const can = onSort && c.sort !== false;
+      const tip = can ? `${tip0 ? `${tip0} · ` : ""}click to sort` : tip0;
+      const mark = sorted?.col === i ? (sorted.dir === "asc" ? " ▲" : " ▼") : "";
+      return `<th class="${c.left ? "l" : ""}"${can ? ` data-sort="${i}" style="cursor:pointer"` : ""}${tip ? ` title="${esc(tip)}"` : ""}>${lab.split("\n").map(esc).join("<br>")}${mark}</th>`;
     })
     .join("");
   const body = rows
@@ -39,7 +44,25 @@ export function table(rows, cols, { onRow, max = 500 } = {}) {
       const tr = e.target.closest("tr[data-i]");
       if (tr) onRow(rows[+tr.dataset.i]);
     });
+  if (onSort)
+    el.querySelector("thead").addEventListener("click", (e) => {
+      const th = e.target.closest("th[data-sort]");
+      if (th) onSort(+th.dataset.sort);
+    });
   return el;
+}
+
+/** Rows sorted by a table column (its key or key function): numbers and text, empty values last either way. */
+export function sortRows(rows, col, dir = "desc") {
+  const get = (r) => (typeof col.key === "function" ? col.key(r) : r[col.key]);
+  const s = dir === "asc" ? 1 : -1;
+  const empty = (v) => v == null || v === "" || (typeof v === "number" && !Number.isFinite(v));
+  return rows.slice().sort((a, b) => {
+    const x = get(a), y = get(b);
+    if (empty(x) || empty(y)) return empty(x) - empty(y);
+    if (typeof x === "number" && typeof y === "number") return (x - y) * s;
+    return String(x).localeCompare(String(y)) * s;
+  });
 }
 
 export function kv(pairs) {

@@ -2,6 +2,25 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
+## [1.6.0] – in Arbeit
+
+### Neue Funktionen
+- **FV – Fair-Value-Analyse** (`KO FV`, `KO FV FCF`, `SAP.DE FV PE=18`, Gruppe Kamikaze): Fair Value = EPS (oder FCF, oder Owner Earnings) × 15, eigenes Normal-KGV (Median der Monats-KGVs über bis zu 15 Jahre, point in time) und Wert dazu, Forward-, Yield-Theory- und Analystenwert, Gewinnrendite gegen 10-jährige Treasury, erwartete Rendite über 5 Jahre (Wachstum, KGV zurück zum Normalwert, Dividenden), Qualität (ROE, ROIC, Margen, Schulden, Piotroski, Altman Z), Dividenden-Serie (Champion/Contender/Challenger), RSL26 und ein Backtest „unter Normalwert gekauft“. Chart: Kurs, Fair-Value- und Normalwert-Linie monatlich. US-Aktien aus SEC-10-K-Zahlen (bis 20 Jahre, splitbereinigt), andere aus Yahoo (4 Jahre). Warnungen bei kurzer Historie, Einmalgewinnen, erratischen Gewinnen, Banken/Immobilien.
+- **FVSCAN – Fair-Value-Scanner** (`FVSCAN SPX`, `NDX`, `DAX`, `SXXP`, `W:<Liste>`): die FV-Zahlen für jede Aktie, Filter wie in ValueLens (unter Fair Value, unter Normal-KGV, Rendite 10 %+, Qualität, Dividenden-Champions/Contender/Challenger, Wachstum) plus „cheap + RSL > 1“, Sortierung wählbar, Klick öffnet FV. Beides auch über den MCP-Server.
+- **FVSCAN › Strategien** (Auswahl „Strategy“, `STRATEGY=`): fertige Screens auf einen Klick. Hauptstrategie „Dividend quality, buy now“ (`DIVBUY`): Qualitäts-Dividendenzahler (10+ Jahre erhöht, Rendite ≥ 2 %, FCF-gedeckt, ROE ≥ 12 %, maßvolle Schulden, Piotroski ≥ 5, stetige Gewinne), mindestens 10 % unter dem Normalwert und mit gedrehtem Trend (RSL26 ≥ 1). Dazu „cheap, still falling“ (Beobachtungsliste), Dividend growers, High yield covered, Quality at a fair price, GARP, Deep value, Turnaround, Quality in an uptrend. Neuer Filter „RSL26 at most“.
+- **SEC-Kontakt-Hinweis:** CF, INSD, DS, FV (US-Aktien) und FVSCAN (US-Universen und Watchlists) zeigen eine Zeile „No SEC contact email set“ mit Link zu SETTINGS › Data sources, solange keine Adresse eingetragen ist (es gibt keine Standardadresse; ohne sie gehen die Anfragen unter dem allgemeinen Amber-Terminal-Namen an SEC, die sie bremsen oder ablehnen kann). Der Text in SETTINGS nennt jetzt, wofür die Adresse genutzt wird.
+- **Live-Scanner:** RSL26, DSCAN, FVSCAN und HEAT halten ihre Kurse aktuell, solange sie offen sind: der Server holt die Tageskurse ihrer Aktien während der Handelszeit einmal je Intervall im Hintergrund, und nur wenn sich Kurse wirklich geändert haben, baut sich der Bildschirm still neu auf (unsichtbar vorbereitet und dann getauscht, kein Leer-/Ladebild; Scrollposition, Filter, Sortierung und aufgeklappte Abschnitte bleiben; wartet, solange im Panel getippt wird).
+- **SETTINGS › Data sources › Tageskurse:** Aktualisierungsintervall des OHLC-Caches einstellbar (5–60 Minuten, Standard 15). Europäische Aktien werden jetzt während der europäischen Handelszeit (9:00–17:35 Berlin) aktualisiert, nicht nur während der US-Handelszeit.
+- **FVSCAN › Watchlist:** Spalte „W“ mit „+“ je Zeile (✓ = schon auf der aktiven Liste) und Knopf „Add all / n missing to <Liste>“ für alle angezeigten Aktien (ab 26 mit Rückfrage), Namen werden mitgenommen.
+- **FVSCAN › Sortieren per Spaltenkopf:** Klick sortiert nach der Spalte, nochmal umgekehrt (▲/▼), gemerkt; Standard bleibt das Sort-Menü (erwartete Rendite), Menü oder Strategie gehen dahin zurück.
+- **RSL26:** in der Rangliste steht Ticker vor Status.
+- **FVSCAN › Guide:** aufklappbarer Block „Guide: strategies, presets, terms“ mit Bedienung, allen Strategien (Knopf „Use“ wendet sie an), was jeder Voreinstellungs-Reiter prüft, den Spalten und Begriffen (Normal-KGV, erwartete Rendite, Piotroski, RSL26 …) und Vorbehalten; Reiter zeigen ihre Bedingung als Tooltip.
+- **FVSCAN › Ergebnis-Cache:** ein fertiger Scan bleibt 15 Minuten je Universum, Basis und KGV (Server und Seite), Zurück mit ESC aus FV ist damit sofort da; „Rescan“ (bzw. „Scan“ mit gleichen Einstellungen) holt frische Kurse, die Infozeile zeigt den Stand („as of“).
+- **FVSCAN › Voreinstellungen kombinierbar:** ein Klick schaltet eine zu oder ab, alle gewählten müssen gelten, „All“ löscht sie (`FILTER=QUALITY,CHAMP`).
+- **FVSCAN › More filters:** frei kombinierbare Schwellen zusätzlich zur Voreinstellung, gemerkt: zahlt Dividende, mindestens n Jahre gezahlt / in Folge erhöht, Rendite, Dividendenwachstum, Ausschüttung, FCF-Deckung, KGV, vs Normal/Fair, erwartete Rendite, Wachstum, PEG, ROE, ROIC, Marge, Schulden, Piotroski, RSL26 und Ausschlüsse (Banken/Immobilien, erratische Gewinne, kurze Historie). Auch per Befehl (`FVSCAN SPX PAYER=1 MINRAISED=10`).
+- **SEC-Abrufe gedrosselt:** SEC-Abrufe sind jetzt auf 4 je Sekunde begrenzt (SEC sperrt über 10 je Sekunde für rund 10 Minuten), nach einem 429 eine Minute Pause.
+- **DES verlinkt FV** („FV fair value“ in der Zeile „Next:“).
+
 ## [1.5.0] – in Arbeit
 
 ### Neue Funktionen

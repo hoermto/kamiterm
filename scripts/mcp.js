@@ -299,6 +299,21 @@ const FN = {
     what: "Market heatmap data: every stock of the index with its group (S&P sector, country for STOXX 600), market cap or index weight and the price change over 1D, 1W, 1M, 3M, YTD and 1Y",
     source: "Yahoo daily prices via the OHLC cache, Yahoo market caps, iShares STOXX 600 weights",
   },
+  FV: {
+    file: "fv",
+    needs: true,
+    arg: "basis",
+    argHint: "EPS (default), FCF or OE (owner earnings = FCF minus stock-based pay); pe=15 sets the fair P/E",
+    what: "Fair value analysis of one stock: fair value at a fixed P/E (default 15), the stock's normal P/E (median monthly P/E over up to 15 years, point in time) and the value at it, forward and yield-theory values, analysts' target, earnings yield vs the 10-year Treasury, 5-year expected return (growth + P/E back to normal + dividends), quality (ROE, ROIC, margins, debt, Piotroski, Altman Z), dividend streak and payout, RSL26, and a backtest of buying below the normal value",
+    source: "SEC company facts (US 10-K, up to 20 years), Yahoo annual figures (others, 4 years), Yahoo prices, dividends and estimates",
+  },
+  FVSCAN: {
+    file: "fvscan",
+    arg: "universe",
+    argHint: "SPX (default), NDX, DAX, SXXP or W:<watchlist>; basis=EPS|FCF|OE pe=15",
+    what: "Fair value scanner: the FV numbers (P/E, normal P/E, price vs normal and fair value, expected return, growth, PEG, yield, years of dividend raises, ROE, debt/capital, FCF/dividend cover, Piotroski, RSL26) for every stock of a universe or watchlist, ranked by expected return",
+    source: "SEC company facts (US), Yahoo annual figures, prices, dividends and estimates",
+  },
   ERN: {
     arg: "days",
     argHint: "days ahead, default 5",

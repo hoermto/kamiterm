@@ -16,6 +16,7 @@ import * as alerts from "./lib/alerts.js";
 import * as store from "./lib/store.js";
 import * as toolSettings from "./lib/tool-settings.js";
 import * as secContact from "./lib/sec-contact.js";
+import * as ohlcLive from "./lib/ohlc-live.js";
 import * as eventsCache from "./lib/events-cache.js";
 import * as rslEvalJobs from "./lib/rsl-eval-jobs.js";
 import * as ptq from "./lib/ptq.js";
@@ -182,6 +183,8 @@ function broadcast(type, payload) {
   for (const res of clients) res.write(msg);
 }
 alerts.onFire((e) => broadcast("alert", e));
+// Open scanner screens follow their stocks; refreshed bars are announced as "ohlc" (lib/ohlc-live.js).
+ohlcLive.start((e) => broadcast("ohlc", e));
 let updateStatus = null;
 // Closing the app window quits: see lib/window-watch.js (AMBER_CLOSE_GRACE_MS, default 20 s).
 const windowGraceMs = Number(process.env.AMBER_CLOSE_GRACE_MS) || 20e3;
@@ -485,6 +488,16 @@ async function handle(req, res) {
         if (body.clear) return send(res, 200, eventsCache.clearCache());
       }
       if (req.method === "GET") return send(res, 200, eventsCache.cacheStats());
+    }
+    if (p === "/api/ohlc/settings") {
+      // SETTINGS > Data sources: how old cached daily bars may get while the market is open (minutes).
+      if (req.method === "PUT") ohlcLive.saveSetting((await readBody(req, 1e4)).refreshMin);
+      if (req.method === "GET" || req.method === "PUT") return send(res, 200, { refreshMin: ohlcLive.refreshMinutes() });
+    }
+    if (p === "/api/ohlc/follow" && req.method === "POST") {
+      // An open scanner screen reports the data it shows: { keys: ["rsl26:SPX"] } -> { versions: { key: n } }.
+      const body = await readBody(req, 1e4);
+      return send(res, 200, { versions: ohlcLive.follow(body.keys) });
     }
     if (p === "/api/sec/contact") {
       // Contact email for SEC EDGAR requests (SETTINGS > Data sources); stays in data/settings.json.

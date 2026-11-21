@@ -72,6 +72,7 @@ export default [
     name: "Company filings",
     group: "Equities",
     needs: true,
+    sec: true,
     source: "SEC EDGAR, the official US filing system",
     async render(ctx) {
       const want = ctx.args.join(" ") || "ALL";
@@ -123,6 +124,7 @@ export default [
     name: "Insider transactions",
     group: "Equities",
     needs: true,
+    sec: true,
     source: "SEC Form 4 filings, the reports company insiders must file",
     async render(ctx) {
       const want = INSIDER_TABS.includes(ctx.args[0]) ? ctx.args[0] : "ALL";
