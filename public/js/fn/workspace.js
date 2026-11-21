@@ -236,12 +236,6 @@ export async function watchAdd(items, list = null) {
   if (out.added.length) await saveWatch(st);
   return out;
 }
-/** The codes on the active list (to mark what is already there). */
-export async function activeWatch() {
-  const st = await loadWatch();
-  return { name: st.active, codes: new Set(st.lists[st.active] || []) };
-}
-
 // The list the scanners (FVSCAN, DSCAN) add to: picked on the screen, kept in this browser
 // (amber.watchTarget), the active W list until one is picked or when the picked one is gone.
 const TARGET_KEY = "amber.watchTarget";
