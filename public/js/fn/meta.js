@@ -48,7 +48,7 @@ export default [
             list,
             [
               { key: "id", label: "Code", left: true, lbl: true },
-              { key: "name", label: "What it shows", left: true },
+              { key: "name", label: "What it shows", left: true, html: true, fmt: (v, r) => r.help ? `${esc(v)}<div class="dim" style="font-weight:400;margin-top:2px">${esc(r.help)}</div>` : esc(v) },
               {
                 key: (f) => (f.needs ? "needs a security" : "market-wide"),
                 label: "",

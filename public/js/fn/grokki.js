@@ -1,4 +1,5 @@
 import {api,esc,px,big} from '../api.js';
+import {holdingsGpCommand} from '../gp-overlay.js';
 import {table,kv,sect,tabs,html,equityChart,downloadText} from '../ui.js';
 import {topXVal,buySlotCandidates} from './rsl-slots.js';
 import {pnlRow,pnlTotals} from './rsl-pnl.js';
@@ -361,7 +362,31 @@ function pollWalkForwardJob(ctx, box, jobId, onDone){
   timer=setTimeout(tick,4000);
 }
 let rslFlash=null; // message carried across the reload after a Holdings edit
-// Exit reason short ("SL >20%", "Rank > 25"); the full reason is in the tooltip.
+// Same short labels as lib/fn/grokki-math.js shortExitHint; full text stays in the tooltip.
+function shortReason(reason){
+  if(!reason) return '';
+  const r=String(reason);
+  let m;
+  if((m=/^Trailing-Stop −(\S+) %/.exec(r))) return `SL >${m[1]}%`;
+  if((m=/Rank-Schutz Top (\d+)/.exec(r))) return `RRG schwach & Rang > ${m[1]}`;
+  if((m=/Rank \S+>(\d+)/.exec(r))) return `RRG schwach & Rang > ${m[1]}`;
+  if(/Rank-Schutz aus/.test(r)) return 'RRG schwach';
+  if((m=/Leader-Schutz: Bestätigung nach (\d+)/.exec(r))) return `RRG ${m[1]} Wo.`;
+  if(/^RRG .*\+ RSL < Benchmark/.test(r)) return 'RRG + RSL < Bench';
+  if(/^RSL Aktie < RSL Benchmark/.test(r)) return 'RSL < Bench';
+  if((m=/^RRG Leading→(\w+)/.exec(r))) return `RRG L→${m[1][0]}`;
+  return r;
+}
+function reasonCell(v,r){
+  const full=v==null||v===''?'':String(v);
+  if(!full) return '';
+  let shown=shortReason(full);
+  if(shown.length>22) shown=shown.slice(0,22)+'…';
+  const tip=shown!==full?` title="${esc(full)}"`:'';
+  const style=r.trailing?' style="color:#ff7a45;font-weight:600"':'';
+  return (tip||style)?`<span${style}${tip}>${esc(shown)}</span>`:esc(shown);
+}
+// Exit reason short ("SL >20%", "RRG schwach & Rang > 25"); the full reason is in the tooltip.
 const exitCol={key:'exitShort',label:'Exit-\nHinweis',html:true,left:true,fmt:(v,r)=>r.exitHint?`<span title="${esc(r.exitHint)}">${esc(v||r.exitHint)}</span>`:''};
 function renderBacktestResults(ctx,d) {
   const holdings=d.holdings||d.watch||[];
@@ -473,7 +498,7 @@ function renderBacktestResults(ctx,d) {
             col('date','Datum'),col('signalDate','Signal'),
             ...(b.yearly||b.tradeLog.some(r=>r.activeConfig)?[col('period','Periode'),col('activeConfig','Config')]:[]),
             col('ticker','Ticker'),col('action','Aktion'),
-            {key:'reason',label:'Grund',html:true,left:true,fmt:(v,r)=>r.trailing?`<span style="color:#ff7a45;font-weight:600">${esc(v||'')}</span>`:esc(v||'')},col('price','Preis',v=>fmt(v,4)),col('shares','Stücke',v=>fmt(v,4)),
+            {key:'reason',label:'Grund',html:true,left:true,fmt:reasonCell},col('price','Preis',v=>fmt(v,4)),col('shares','Stücke',v=>fmt(v,4)),
             col('value','Wert',money),col('budget','Budget',money),col('cashAfter','Cash',money),
             col('pnl','P&L',money),col('holdDays','Tage',fmt0),col('rank','Rank',fmt0),
           ];
@@ -768,7 +793,7 @@ async function rsl(ctx) {
       const posTable=table(pos,[
         {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
         col('symbol','Ticker'),uniCol,maCol,col('buyDate','Kauf-\ndatum'),
-        col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),col('note','Notiz'),
+        col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),{...col('note','Notiz'),short:20},
         col('rank','Rank',fmt0),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
         ...rrgCols(),
         exitCol,
@@ -777,7 +802,7 @@ async function rsl(ctx) {
           col('trailStop',`Stop\n−${trailNum(cur.trail)} %`,v=>fmt(v,2)),
           {key:'trailDistPct',label:'Fallhöhe\nbis Stop',html:true,fmt:(v,r)=>Number.isFinite(v)?`<span style="color:${r.trailHit?'#ff5555':(v<5?'#ffa028':'inherit')}" title="${esc(r.trailNote||`(Wochenschluss − Stop) / Wochenschluss · Wochenschluss ${fmt(r.trailClose,2)} · Hoch (Wochenschluss) am ${r.trailPeakDate||'—'}`)}">${v.toFixed(2)} %${r.trailNote?' *':''}</span>`:'—'},
         ]:[]),
-        {key:'_v',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-h-go',`${r.symbol} GP`,'GP',`Chart: ${r.symbol} GP`,'txt')}${iconBtn('data-h-edit',r.id,'✎','Bearbeiten')}${iconBtn('data-h-sell',r.id,'⏏','Verkaufen (auch Teilverkauf)')}${iconBtn('data-h-del',r.id,'✕','Löschen','del')}</span>`},
+        {key:'_v',label:'',html:true,left:true,fmt:(_,r)=>{const cmd=holdingsGpCommand(r.symbol,posAll);return `<span class="ibtns">${iconBtn('data-h-go',cmd,'GP',`Chart: ${cmd}`,'txt')}${iconBtn('data-h-edit',r.id,'✎','Bearbeiten')}${iconBtn('data-h-sell',r.id,'⏏','Verkaufen (auch Teilverkauf)')}${iconBtn('data-h-del',r.id,'✕','Löschen','del')}</span>`;}},
       ]);
       const byId=new Map(pos.map(p=>[p.id,p]));
       const editBox=html('<div></div>');
@@ -812,7 +837,7 @@ async function rsl(ctx) {
       holdingsHost.append(note(posAll.length?`Keine offenen Positionen im Universum ${fUni} (insgesamt ${posAll.length} offen, Filter „Alle“ zeigt sie).`:'Noch keine offenen Positionen. Oben hinzufügen, Kauf-Button in der Rangliste oder RSL26 KAUF TICKER.'));
     }
     if(sold.length) {
-      const soldTable=table(sold,[col('symbol','Ticker'),uniCol,col('buyDate','Kauf'),col('closedDate','Verkauf'),col('buyPrice','Kauf-\nkurs',px),col('sellPrice','Verkaufs-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('closed'),col('note','Notiz'),
+      const soldTable=table(sold,[col('symbol','Ticker'),uniCol,col('buyDate','Kauf'),col('closedDate','Verkauf'),col('buyPrice','Kauf-\nkurs',px),col('sellPrice','Verkaufs-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('closed'),{...col('note','Notiz'),short:20},
         {key:'_c',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-c-re',r.id,'↺','Wieder öffnen')}${iconBtn('data-c-del',r.id,'✕','Löschen','del')}</span>`}]);
       soldTable.addEventListener('click',e=>{
         const b=e.target.closest('button[data-c-re],button[data-c-del]');if(!b)return;
@@ -935,7 +960,7 @@ async function rsl(ctx) {
       if(slots.heldSymbols.has(t)) return `<span data-rsl-held="${esc(r.ticker)}" title="Im Depot (offene Position ${esc(universe)}) · Rang ${esc(r.rank)}" style="display:inline-block;padding:0 5px;border-radius:3px;font-size:11px;font-weight:700;background:#3d7bd9;color:#000">im Depot</span>`;
       const c=candBy.get(t);
       const other=slots.heldElsewhere.get(t);
-      if(slots.skippedMa.has(t)) return `<span data-rsl-maskip="${esc(r.ticker)}" title="M&A ignorieren ist an: Dieser Titel hat ein M&A-Flag und zählt nicht zum Kauf-Fenster; der nächste Rang ohne M&A rückt nach." style="display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;color:#ff7a45;border:1px solid #ff7a45">übersprungen (M&amp;A)</span>${other?` <span style="font-size:10px;color:#9b59d0">Depot ${esc(other.join('/'))}</span>`:''}`;
+      if(slots.skippedMa.has(t)) return `<span data-rsl-maskip="${esc(r.ticker)}" title="M&A ignorieren ist an: Dieser Titel hat ein M&A-Flag und zählt nicht zum Kauf-Fenster; der nächste Rang ohne M&A rückt nach." style="display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;color:#ff7a45;border:1px solid #ff7a45">M&amp;A-Skip</span>${other?` <span style="font-size:10px;color:#9b59d0">Depot ${esc(other.join('/'))}</span>`:''}`;
       const otherTag=other?` <span title="Im Depot unter ${esc(other.join(', '))} (zählt nicht für ${esc(universe)}-Slots)" style="font-size:10px;color:#9b59d0;border:1px solid #9b59d0;border-radius:3px;padding:0 3px">Depot ${esc(other.join('/'))}</span>`:'';
       if(c) return `<span data-rsl-buy="${esc(r.ticker)}" title="${esc(`${slotTip} · Kauf-Kandidat für Slot ${c.slot} (nächster nicht gehaltener Titel aus ${winLabel}). Nur Markierung — Kauf manuell.${r.maFlag?' ⚠ M&A-Flag (M&A ignorieren ist aus) — prüfen.':''}`)}" style="display:inline-block;padding:0 5px;border-radius:3px;font-size:11px;font-weight:700;background:#2ecc71;color:#000">KAUF</span>${otherTag}`;
       return otherTag||'';
@@ -946,8 +971,8 @@ async function rsl(ctx) {
       ...(rankingVal(d.ranking)==='MOM52_4'?[{key:'score',label:'Mom\n12-1 %',html:true,fmt:v=>Number.isFinite(v)?`<b title="Rendite Wochenschluss vor 52 Wo. → vor 4 Wo. (Rangkriterium)">${(100*v).toFixed(2).replace('.',',')} %</b>`:'—'}]
         :rankingVal(d.ranking)==='RSL39'?[{key:'score',label:'RSL39',html:true,fmt:v=>Number.isFinite(v)?`<b title="Wochenschluss / SMA 39 Wochenschlüsse (Rangkriterium)">${fmt(v,4)}</b>`:'—'}]:[]),
       col('rsl',rankingVal(d.ranking)==='RSL26'?'RSL\n(1 = Ø)':'RSL26\n(RS-Exit)',v=>fmt(v,4)),col('asOf','Stand'),
-      {key:'_a',label:'',html:true,left:true,fmt:(_,r)=>`<span class="ibtns">${iconBtn('data-rsl-go',`${r.ticker} GP`,'GP',`Chart: ${r.ticker} GP`,'txt')}${iconBtn('data-rsl-go',`${r.ticker} DES`,'DES',`Beschreibung: ${r.ticker} DES`,'txt')}${iconBtn('data-rsl-kauf',r.ticker,'+','Kaufen (Position anlegen)')}${iconBtn('data-rsl-verk',r.ticker,'⏏','Verkaufen')}</span>`},
-    ],{onRow:r=>ctx.go(`${r.ticker} GP`)});
+      {key:'_a',label:'',html:true,left:true,fmt:(_,r)=>{const cmd=holdingsGpCommand(r.ticker,positions||[]);return `<span class="ibtns">${iconBtn('data-rsl-go',cmd,'GP',`Chart: ${cmd}`,'txt')}${iconBtn('data-rsl-go',`${r.ticker} DES`,'DES',`Beschreibung: ${r.ticker} DES`,'txt')}${iconBtn('data-rsl-kauf',r.ticker,'+','Kaufen (Position anlegen)')}${iconBtn('data-rsl-verk',r.ticker,'⏏','Verkaufen')}</span>`;}},
+    ],{onRow:r=>ctx.go(holdingsGpCommand(r.ticker,positions||[]))});
     rankTable.querySelectorAll('tbody tr[data-i]').forEach(tr=>{
       const r=rankRows[+tr.dataset.i];if(!r)return;const t=String(r.ticker).toUpperCase();
       if(slots.heldSymbols.has(t)){tr.dataset.rslMark='held';tr.style.cssText+=';'+MARK_HELD;}
@@ -1018,7 +1043,7 @@ async function rsl(ctx) {
   try{maList=await api.fn('ma',{action:'LIST'});}catch(_){/* soft */}
   if(maList.entries?.length){
     const maTable=table(maList.entries,[
-      col('symbol','Ticker'),col('note','Notiz'),col('date','Datum'),
+      col('symbol','Ticker'),{...col('note','Notiz'),short:20},col('date','Datum'),
       {key:'_x',label:'',html:true,left:true,fmt:(_,r)=>`<button type="button" data-ma-del="${esc(r.symbol)}">Entfernen</button>`},
     ]);
     maTable.addEventListener('click',async e=>{
@@ -1056,7 +1081,7 @@ async function rrg(ctx) {
   ctx.el.replaceChildren(sect(`RRG · ${d.mode||'unavailable'} · benchmark SPX`));
   ctx.el.append(tabs(['ALL','LEADING','WEAKENING','LAGGING','IMPROVING'],season.toUpperCase(),f=>ctx.go(cmd(sector,f))));
   const select=document.createElement('select');select.innerHTML='<option value="">Sector overview</option>'+(d.sectors||[]).map(s=>`<option value="${esc(s.ticker)}">${esc(s.ticker+' · '+s.name)}</option>`).join('');select.value=sector;select.onchange=()=>ctx.go(`RRG ${select.value} ${season}`);ctx.el.append(select);
-  ctx.el.append(note('Click a sector row to drill into representative stocks. Filter applies to sectors or stocks. Specific tickers: RRG AAPL MSFT IMPROVING.'),scatter(d.rows||[]),table(d.rows||[],[col('ticker','Ticker / sector'),maCol,col('name','Name'),col('ratio','RS-Ratio',fmt),col('momentum','RS-Momentum',fmt),col('quadrant','Quadrant'),col('season','Season'),col('time','As of')],{onRow:r=>ctx.go(d.mode==='sector ETF proxies'?`RRG ${r.ticker} ${season}`:`${r.ticker} GP`)}),note(d.formula||''));
+  ctx.el.append(note('Click a sector row to drill into representative stocks. Filter applies to sectors or stocks. Specific tickers: RRG AAPL MSFT IMPROVING.'),scatter(d.rows||[]),table(d.rows||[],[col('ticker','Ticker / sector'),maCol,{...col('name','Name'),short:22},col('ratio','RS-Ratio',fmt),col('momentum','RS-Momentum',fmt),qCol('quadrant','Quadrant',Q_TIP),col('season','Season'),col('time','As of')],{onRow:r=>ctx.go(d.mode==='sector ETF proxies'?`RRG ${r.ticker} ${season}`:`${r.ticker} GP`)}),note(d.formula||''));
   diagnostics(ctx,d);
 }
 async function mput(ctx) {

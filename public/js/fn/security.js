@@ -3,6 +3,7 @@
 import { api, esc, px, pct, chg, cls, big, num, date, ago } from "../api.js";
 import { table, kv, sect, tabs, priceChart, html, liveTab, isLive, liveBar, tickClass, LIVE_MS, delayTag } from "../ui.js";
 import { compute } from "../../lib/indicators.js";
+import { parseGpOverlay } from "../gp-overlay.js";
 
 const RANGES = {
   "1D": ["5m", 120],
@@ -154,6 +155,52 @@ function drawStudies(chart, bars, on, from = 0) {
     chart.panes().forEach((p, i) => p.setStretchFactor(i === 0 ? 3 : 1));
 }
 
+
+function isoOfBar(t) {
+  return new Date(t * 1000).toISOString().slice(0, 10);
+}
+
+// Horizontal buy / stop lines and a "K" marker on the buy date (Lightweight Charts 5.x: createSeriesMarkers).
+// Overlay comes only from command parameters (BUY=/STOP=/TRAIL=/SRC=), never from a book lookup.
+function applyGpOverlay(series, overlay, bars) {
+  if (!overlay || !series) return;
+  const barOn = (iso) => (bars || []).find((b) => isoOfBar(b.time) >= iso);
+  const marks = [];
+  for (const p of overlay.buys || []) {
+    if (!Number.isFinite(p.price)) continue;
+    series.createPriceLine({
+      price: p.price,
+      color: "#f2d21b",
+      lineWidth: 1,
+      lineStyle: 2,
+      axisLabelVisible: true,
+      title: p.label || "Kauf",
+    });
+    const b = p.date && barOn(p.date);
+    if (b) {
+      marks.push({
+        time: b.time,
+        position: "belowBar",
+        color: "#f2d21b",
+        shape: "arrowUp",
+        text: "K",
+      });
+    }
+  }
+  for (const s of overlay.stops || []) {
+    if (!Number.isFinite(s.price)) continue;
+    series.createPriceLine({
+      price: s.price,
+      color: "#ff4a4a",
+      lineWidth: 1,
+      lineStyle: 2,
+      axisLabelVisible: true,
+      title: s.label || "Stop",
+    });
+  }
+  if (marks.length) window.LightweightCharts.createSeriesMarkers?.(series, marks);
+}
+
 async function chartScreen(ctx, range, type = "candles") {
   const sec = ctx.sec;
   ctx.el.innerHTML = "";
@@ -192,7 +239,10 @@ async function chartScreen(ctx, range, type = "candles") {
     studyTabs.append(b);
   }
   const quote = html(`<span class="dim"></span>`);
-  top.append(rangeTabs, kind, studyTabs, liveTab(() => tick()), quote);
+  const holdHint = html(
+    `<span class="dim" style="display:none" title="Kauf- und Stop-Linien aus den Befehlsparametern BUY= und STOP= (SRC= nur als Label-Präfix). Ohne Parameter keine Overlay-Linien."></span>`,
+  );
+  top.append(rangeTabs, kind, studyTabs, liveTab(() => tick()), quote, holdHint);
   const box = html(`<div class="chartbox"></div>`);
   ctx.el.append(top, box);
   // The tabs can wrap onto more lines in a narrow panel, so the chart starts below them.
@@ -201,10 +251,17 @@ async function chartScreen(ctx, range, type = "candles") {
   const ro = new ResizeObserver(fit);
   ro.observe(top);
   let current, res, shown;
+  const overlay = parseGpOverlay(ctx.args);
   ctx.onCleanup(() => {
     ro.disconnect();
     current?.remove();
   });
+  function paintHint() {
+    if (!holdHint) return;
+    const text = overlay?.hint || "";
+    holdHint.textContent = text;
+    holdHint.style.display = text ? "" : "none";
+  }
   function paint() {
     if (!res) return;
     current?.remove();
@@ -219,6 +276,8 @@ async function chartScreen(ctx, range, type = "candles") {
         : vis.map((b) => ({ time: b.time, value: b.close })),
     );
     drawStudies(current.chart, bars, on, from);
+    if (overlay?.buys?.length || overlay?.stops?.length) applyGpOverlay(current.series, overlay, vis);
+    paintHint();
     // Maximising the panel keeps the same dates in view instead of opening empty space on the left.
     current.chart.applyOptions({
       timeScale: { lockVisibleTimeRangeOnResize: true },
@@ -481,14 +540,15 @@ export default [
     name: "Price graph",
     group: "Charts",
     needs: true,
+    help: "Linien per BUY=150.20@2026-11-09 STOP=120.16 TRAIL=20 SRC=RSL (auch CHART/GRAPH/PRICE). Mehrere Lots kommagetrennt; Datum hinter @ ist optional. Ohne diese Parameter keine Overlay-Linien — GP sucht nicht selbst in den Holdings.",
     source:
-      "Exchange and Yahoo price history (crypto live, stocks may be delayed)",
+      "Exchange and Yahoo price history (crypto live, stocks may be delayed). Optional overlays: BUY=/STOP=/TRAIL=/SRC= on the command (see HELP).",
     render: (ctx) =>
       chartScreen(
         ctx,
-        ["1D", "5D", "1M", "6M", "1Y", "5Y", "MAX"].includes(ctx.args[0])
-          ? ctx.args[0]
-          : "1Y",
+        ctx.args.find((a) =>
+          ["1D", "5D", "1M", "6M", "1Y", "5Y", "MAX"].includes(a),
+        ) || "1Y",
       ),
   },
   {
