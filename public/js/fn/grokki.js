@@ -361,6 +361,8 @@ function pollWalkForwardJob(ctx, box, jobId, onDone){
   timer=setTimeout(tick,4000);
 }
 let rslFlash=null; // message carried across the reload after a Holdings edit
+// Exit reason short ("SL >20%", "Rank > 25"); the full reason is in the tooltip.
+const exitCol={key:'exitShort',label:'Exit-\nHinweis',html:true,left:true,fmt:(v,r)=>r.exitHint?`<span title="${esc(r.exitHint)}">${esc(v||r.exitHint)}</span>`:''};
 function renderBacktestResults(ctx,d) {
   const holdings=d.holdings||d.watch||[];
   if(holdings.length) {
@@ -368,7 +370,7 @@ function renderBacktestResults(ctx,d) {
       note('Nur Research: Monats-Rotation bzw. aktuelles Top-N. Dieselbe Kriterienlogik wie Holdings-Exits (aktueller Stand, ohne Kaufdatum-Gate).'),
       table(holdings,[
         col('rank','#',fmt0),col('ticker','Ticker'),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
-        ...rrgCols(),col('exitHint','Exit-\nHinweis'),col('bought','Gekauft'),
+        ...rrgCols(),exitCol,col('bought','Gekauft'),
         ...(holdings.some(h=>h.trailStop!=null)?[col('trailPeak','Trail-\nHoch',v=>fmt(v,2)),col('trailStop','Trail-\nStop',v=>fmt(v,2))]:[]),
       ],{onRow:r=>ctx.go(`${r.ticker} GP`)}));
   }
@@ -769,7 +771,7 @@ async function rsl(ctx) {
         col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),col('note','Notiz'),
         col('rank','Rank',fmt0),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
         ...rrgCols(),
-        col('exitHint','Exit-\nHinweis'),
+        exitCol,
         ...(trailNum(cur.trail)>0?[
           {...col('trailPeak','Hoch\n(Wo.-Schl.)',v=>fmt(v,2)),title:'Höchster Wochenschluss seit Kauf (mind. Kaufkurs), nicht Intraday-Hoch'},
           col('trailStop',`Stop\n−${trailNum(cur.trail)} %`,v=>fmt(v,2)),

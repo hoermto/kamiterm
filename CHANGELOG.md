@@ -14,6 +14,7 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 - **FVSCAN › Watchlist:** Spalte „W“ mit „+“ je Zeile (✓ = schon auf der aktiven Liste) und Knopf „Add all / n missing to <Liste>“ für alle angezeigten Aktien (ab 26 mit Rückfrage), Namen werden mitgenommen.
 - **FVSCAN › Sortieren per Spaltenkopf:** Klick sortiert nach der Spalte, nochmal umgekehrt (▲/▼), gemerkt; Standard bleibt das Sort-Menü (erwartete Rendite), Menü oder Strategie gehen dahin zurück.
 - **RSL26:** in der Rangliste steht Ticker vor Status.
+- **RSL26 › Holdings:** Spalte „Exit-Hinweis“ kurz („SL >20%“, „Rank > 25“, „RSL < Bench“, „RRG schwach“); der volle Grund steht im Tooltip.
 - **FVSCAN › Guide:** aufklappbarer Block „Guide: strategies, presets, terms“ mit Bedienung, allen Strategien (Knopf „Use“ wendet sie an), was jeder Voreinstellungs-Reiter prüft, den Spalten und Begriffen (Normal-KGV, erwartete Rendite, Piotroski, RSL26 …) und Vorbehalten; Reiter zeigen ihre Bedingung als Tooltip.
 - **FVSCAN › Ergebnis-Cache:** ein fertiger Scan bleibt 15 Minuten je Universum, Basis und KGV (Server und Seite), Zurück mit ESC aus FV ist damit sofort da; „Rescan“ (bzw. „Scan“ mit gleichen Einstellungen) holt frische Kurse, die Infozeile zeigt den Stand („as of“).
 - **FVSCAN › Voreinstellungen kombinierbar:** ein Klick schaltet eine zu oder ab, alle gewählten müssen gelten, „All“ löscht sie (`FILTER=QUALITY,CHAMP`).

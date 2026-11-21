@@ -3,7 +3,7 @@ import './helpers/isolate-data.js'; // must stay first: temp QT_DATA_DIR
 // never reads or writes data/rsl-watchlist.json.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {rotationBacktest,trailingStopStatus,trailingStopReason,evaluatePositionBook} from '../lib/fn/grokki-math.js';
+import {rotationBacktest,trailingStopStatus,trailingStopReason,shortExitHint,evaluatePositionBook} from '../lib/fn/grokki-math.js';
 
 const T=Date.UTC(2023,0,2)/1000, D=86400;
 const mk=(n,fn)=>Array.from({length:n},(_,i)=>{const c=fn(i);return {time:T+i*D,open:c,high:c,low:c,close:c,volume:1e7};});
@@ -109,4 +109,14 @@ test('evaluatePositionBook adds trailing fields and exit hint only with trail>0'
   assert.ok(Number.isFinite(on[0].trailStop)&&Number.isFinite(on[0].trailDistPct));
   assert.equal(on[0].exitSignal,true);
   assert.match(on[0].exitHint,/Trailing-Stop −20 %/);
+});
+
+test('shortExitHint: short labels for the holdings exit column',()=>{
+  assert.equal(shortExitHint(trailingStopReason(20,48.86,38.22)),'SL >20%');
+  assert.equal(shortExitHint(trailingStopReason(17.5,100,80)),'SL >17,5%');
+  assert.equal(shortExitHint('RRG Weakness außerhalb Rank-Schutz Top 25'),'Rank > 25');
+  assert.equal(shortExitHint('RRG Leading→Weakening (Rank 31>25)'),'Rank > 25');
+  assert.equal(shortExitHint('RSL Aktie < RSL Benchmark'),'RSL < Bench');
+  assert.equal(shortExitHint('RRG Weakness (Rank-Schutz aus)'),'RRG schwach');
+  assert.equal(shortExitHint(null),null);
 });
