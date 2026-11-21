@@ -203,6 +203,18 @@ if (Test-Path (Join-Path $App '.git')) {
 }
 
 Set-Location $App
+# Shortcut "Amber Terminal" with the app icon next to start.bat (a .bat file has no icon of its own):
+# drag it to the desktop or pin it to the taskbar. Made once; delete it to have it made again.
+try {
+  $lnk = Join-Path $Base 'Amber Terminal.lnk'
+  $ico = Join-Path $App 'public\favicon.ico'
+  if (-not (Test-Path $lnk) -and (Test-Path $ico)) {
+    $sc = (New-Object -ComObject WScript.Shell).CreateShortcut($lnk)
+    $sc.TargetPath = $env:AMBER_SELF; $sc.WorkingDirectory = $Base; $sc.IconLocation = "$ico,0"
+    $sc.Description = 'Start Amber Terminal'; $sc.Save()
+    Say 'Shortcut  Amber Terminal.lnk (with icon) made next to start.bat'
+  }
+} catch { }
 $cfg = Read-Cfg (Join-Path $App 'data\launcher.cfg')
 if ($cfg.APP_WINDOW) { $env:AMBER_APP_WINDOW = $cfg.APP_WINDOW }
 if ($cfg.EXIT_ON_CLOSE) { $env:AMBER_EXIT_ON_CLOSE = $cfg.EXIT_ON_CLOSE }
