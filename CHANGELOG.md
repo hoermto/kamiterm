@@ -2,6 +2,15 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
+## [1.7.0] – in Arbeit
+
+### Neue Funktionen
+- **FVSCAN und DSCAN › Watchlist-Auswahl:** über der Tabelle wählbar, auf welche Watchlist „+“ und „Add all“ setzen (gemeinsam für beide Scanner, im Browser gespeichert; ohne Auswahl die offene W-Liste, die dadurch nicht wechselt). DSCAN hat jetzt ebenfalls die Spalte „W“ (✓ / +) und „Add all“.
+- **Icon:** eigenes App-Icon (bernsteinfarbener Prompt `>_` auf schwarzem Terminal, `public/icon.svg`, daraus `favicon.ico` und PNGs über `node scripts/make-icons.mjs`) für Browser-Tab und App-Fenster; start.bat legt daneben einmal die Verknüpfung „Amber Terminal“ mit diesem Icon an (eine .bat-Datei kann selbst kein Icon tragen), zum Ziehen auf den Desktop oder in die Taskleiste.
+
+### Änderungen
+- **RSL26 › Holdings:** Spalte „Exit-Hinweis“ kurz („SL >20%“, „Rank > 25“, „RSL < Bench“, „RRG schwach“); der volle Grund steht im Tooltip.
+
 ## [1.6.0] – in Arbeit
 
 ### Neue Funktionen
@@ -11,11 +20,9 @@ Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Serv
 - **SEC-Kontakt-Hinweis:** CF, INSD, DS, FV (US-Aktien) und FVSCAN (US-Universen und Watchlists) zeigen eine Zeile „No SEC contact email set“ mit Link zu SETTINGS › Data sources, solange keine Adresse eingetragen ist (es gibt keine Standardadresse; ohne sie gehen die Anfragen unter dem allgemeinen Amber-Terminal-Namen an SEC, die sie bremsen oder ablehnen kann). Der Text in SETTINGS nennt jetzt, wofür die Adresse genutzt wird.
 - **Live-Scanner:** RSL26, DSCAN, FVSCAN und HEAT halten ihre Kurse aktuell, solange sie offen sind: der Server holt die Tageskurse ihrer Aktien während der Handelszeit einmal je Intervall im Hintergrund, und nur wenn sich Kurse wirklich geändert haben, baut sich der Bildschirm still neu auf (unsichtbar vorbereitet und dann getauscht, kein Leer-/Ladebild; Scrollposition, Filter, Sortierung und aufgeklappte Abschnitte bleiben; wartet, solange im Panel getippt wird).
 - **SETTINGS › Data sources › Tageskurse:** Aktualisierungsintervall des OHLC-Caches einstellbar (5–60 Minuten, Standard 15). Europäische Aktien werden jetzt während der europäischen Handelszeit (9:00–17:35 Berlin) aktualisiert, nicht nur während der US-Handelszeit.
-- **FVSCAN und DSCAN › Watchlist:** Spalte „W“ mit „+“ je Zeile (✓ = schon auf der Liste), Auswahl der Ziel-Watchlist über der Tabelle (gemeinsam für beide Scanner, im Browser gespeichert, ohne Auswahl die offene W-Liste) und Knopf „Add all / n missing“ für alle angezeigten Aktien (ab 26 mit Rückfrage), Namen werden mitgenommen.
+- **FVSCAN › Watchlist:** Spalte „W“ mit „+“ je Zeile (✓ = schon auf der aktiven Liste) und Knopf „Add all / n missing to <Liste>“ für alle angezeigten Aktien (ab 26 mit Rückfrage), Namen werden mitgenommen.
 - **FVSCAN › Sortieren per Spaltenkopf:** Klick sortiert nach der Spalte, nochmal umgekehrt (▲/▼), gemerkt; Standard bleibt das Sort-Menü (erwartete Rendite), Menü oder Strategie gehen dahin zurück.
 - **RSL26:** in der Rangliste steht Ticker vor Status.
-- **Icon:** eigenes App-Icon (bernsteinfarbener Prompt `>_` auf schwarzem Terminal, `public/icon.svg`, daraus `favicon.ico` und PNGs über `node scripts/make-icons.mjs`) für Browser-Tab und App-Fenster; start.bat legt daneben einmal die Verknüpfung „Amber Terminal“ mit diesem Icon an (eine .bat-Datei kann selbst kein Icon tragen), zum Ziehen auf den Desktop oder in die Taskleiste.
-- **RSL26 › Holdings:** Spalte „Exit-Hinweis“ kurz („SL >20%“, „Rank > 25“, „RSL < Bench“, „RRG schwach“); der volle Grund steht im Tooltip.
 - **FVSCAN › Guide:** aufklappbarer Block „Guide: strategies, presets, terms“ mit Bedienung, allen Strategien (Knopf „Use“ wendet sie an), was jeder Voreinstellungs-Reiter prüft, den Spalten und Begriffen (Normal-KGV, erwartete Rendite, Piotroski, RSL26 …) und Vorbehalten; Reiter zeigen ihre Bedingung als Tooltip.
 - **FVSCAN › Ergebnis-Cache:** ein fertiger Scan bleibt 15 Minuten je Universum, Basis und KGV (Server und Seite), Zurück mit ESC aus FV ist damit sofort da; „Rescan“ (bzw. „Scan“ mit gleichen Einstellungen) holt frische Kurse, die Infozeile zeigt den Stand („as of“).
 - **FVSCAN › Voreinstellungen kombinierbar:** ein Klick schaltet eine zu oder ab, alle gewählten müssen gelten, „All“ löscht sie (`FILTER=QUALITY,CHAMP`).
