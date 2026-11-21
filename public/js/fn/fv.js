@@ -5,8 +5,8 @@
 // back at normal (at most 30) and the dividends. Maths on the server: lib/valuation.js, lib/fn/fv.js, lib/fn/fvscan.js.
 import { api, esc, num, px, big } from "../api.js";
 import { table, sortRows, sect, tabs, html, lineChart } from "../ui.js";
-import { watchAdd, activeWatch } from "./workspace.js";
-import { toSecurity, bbgCode, yahooWords } from "../securities.js";
+import { watchButtons } from "./workspace.js";
+import { yahooWords } from "../securities.js";
 
 const finite = (v) => typeof v === "number" && Number.isFinite(v);
 const BASES = ["EPS", "FCF", "OE"];
@@ -532,26 +532,13 @@ async function fvscan(ctx) {
   const guide = guideBlock((key) => { strat.s.value = key; strat.s.onchange(); strat.scrollIntoView({ block: "nearest" }); });
   ctx.el.replaceChildren(sect(`FV scanner · ${d.label}`), uniTabs, strat, filterTabs, form, more, guide, info, out);
 
-  // Watchlist: the active list's codes, to mark rows already on it; + adds one row, "Add all" every shown row.
-  const codeOf = (t) => bbgCode(toSecurity(yahooWords(t)));
-  let watch = await activeWatch().catch(() => null);
+  // Watchlist: W column (✓ / +) and the bar with the list picker and "Add all" (lists in workspace.js).
+  const wb = watchButtons(ctx, { item: (r) => ({ words: yahooWords(r.t), name: r.name }), key: (r) => r.t, redraw: () => draw() });
+  await wb.load();
   if (!ctx.live()) return;
-  async function addToWatch(rows) {
-    const r = await watchAdd(rows.map((x) => ({ words: yahooWords(x.t), name: x.name })));
-    watch = await activeWatch().catch(() => watch);
-    const parts = [r.added.length && `Added ${r.added.length} to ${r.list}`, r.already.length && `${r.already.length} already there`, r.errors[0]].filter(Boolean);
-    ctx.toast(parts.join(" · ") || "Nothing to add", !r.added.length && !!r.errors.length);
-    draw();
-  }
+  wb.bind(out, (t) => d.rows.find((x) => x.t === t));
   // Header click sorts by that column (again: the other way); the Sort menu or a strategy goes back to it.
   // Default stays the Sort menu (expected return).
-  out.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-add]");
-    if (!b) return;
-    e.stopPropagation(); // not the row click (FV)
-    const r = d.rows.find((x) => x.t === b.dataset.add);
-    if (r) addToWatch([r]);
-  }, { capture: true });
 
   function draw() {
     let rows = filterRows(d.rows, v.filter, v.sort, v.custom);
@@ -564,12 +551,8 @@ async function fvscan(ctx) {
     const ci = v.colSort ? cols.findIndex((c) => c.id === v.colSort.id) : -1;
     if (ci >= 0) rows = sortRows(rows, cols[ci], v.colSort.dir);
     const sortedBy = ci >= 0 ? `${String(cols[ci].label).replace(/\n/g, " ").toLowerCase()} ${v.colSort.dir === "asc" ? "▲" : "▼"}` : esc(SORTS[v.sort][0].toLowerCase());
-    const missing = watch ? rows.filter((r) => !watch.codes.has(codeOf(r.t))) : [];
-    const head = html(`<p class="hint">${rows.length} stocks · ${what} · sorted by ${sortedBy}${watch ? ` · <button type="button" data-addall${missing.length ? "" : " disabled"} title="Add every stock shown to the watchlist ${esc(watch.name)}">${!missing.length ? `All on ${esc(watch.name)}` : `Add ${missing.length === rows.length ? "all" : `${missing.length} missing`} to ${esc(watch.name)}`}</button>` : ""}</p>`);
-    head.querySelector("[data-addall]")?.addEventListener("click", () => {
-      if (missing.length > 25 && !confirm(`Add ${missing.length} stocks to the watchlist ${watch.name}?`)) return;
-      addToWatch(missing);
-    });
+    const head = html(`<p class="hint">${rows.length} stocks · ${what} · sorted by ${sortedBy}</p>`);
+    head.append(wb.bar(rows));
     out.append(head, table(rows, cols, {
       sorted: ci >= 0 ? { col: ci, dir: v.colSort.dir } : null,
       onSort: (i) => {
@@ -584,8 +567,7 @@ async function fvscan(ctx) {
   }
   function columns() {
     return [
-      { id: "w", key: (r) => (watch?.codes.has(codeOf(r.t)) ? 1 : 0), label: "W", html: true, sort: false, title: watch ? `On the watchlist ${watch.name}? + adds it` : "Watchlist",
-        fmt: (x, r) => (x ? `<span class="dim" title="On ${esc(watch.name)}">✓</span>` : `<button type="button" class="ibtn" data-add="${esc(r.t)}" title="Add ${esc(r.t)} to the watchlist ${esc(watch?.name || "")}" aria-label="Add to watchlist">+</button>`) },
+      wb.col(),
       { key: "t", label: "Ticker", left: true, lbl: true },
       { key: "name", label: "Name", left: true, fmt: (x) => String(x || "").slice(0, 26) },
       { key: "price", label: "Price", fmt: (x, r) => `${px(x)} ${r.currency || ""}` },

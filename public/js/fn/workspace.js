@@ -221,11 +221,12 @@ async function changeWatch(cmd) {
  * Adds securities to the active list in one save (FVSCAN's watchlist buttons). items: [{ words: ["SAP", "GR"], name }].
  * -> { list, added: [codes], already: [codes], errors: [msg] }
  */
-export async function watchAdd(items) {
+export async function watchAdd(items, list = null) {
   let st = await loadWatch();
-  const out = { list: st.active, added: [], already: [], errors: [] };
+  if (list && !st.lists[list]) list = null; // deleted meanwhile: the active list
+  const out = { list: list || st.active, added: [], already: [], errors: [] };
   for (const { words, name } of items) {
-    const r = applyWatch(st, { list: null, op: "ADD", ws: words });
+    const r = applyWatch(st, { list, op: "ADD", ws: words });
     if (r.error) { out.errors.push(r.error); if (/holds/.test(r.error)) break; continue; }
     if (!r.added) { out.already.push(r.code); continue; }
     st = r.st;
@@ -239,6 +240,79 @@ export async function watchAdd(items) {
 export async function activeWatch() {
   const st = await loadWatch();
   return { name: st.active, codes: new Set(st.lists[st.active] || []) };
+}
+
+// The list the scanners (FVSCAN, DSCAN) add to: picked on the screen, kept in this browser
+// (amber.watchTarget), the active W list until one is picked or when the picked one is gone.
+const TARGET_KEY = "amber.watchTarget";
+const readTarget = () => { try { return localStorage.getItem(TARGET_KEY) || ""; } catch { return ""; } };
+const writeTarget = (n) => { try { localStorage.setItem(TARGET_KEY, n); } catch { /* private window */ } };
+export async function watchTarget() {
+  const st = await loadWatch();
+  const pick = readTarget();
+  const name = st.lists[pick] ? pick : st.active;
+  return { name, active: st.active, lists: Object.keys(st.lists), codes: new Set(st.lists[name] || []) };
+}
+
+/**
+ * Watchlist buttons for a scanner table: a W column (✓ on the list, + adds the row), and a bar with the list
+ * picker and "Add all" for the rows shown.
+ *   item(row) -> { words: ["SAP", "GR"], name } for W ADD;  key(row) -> id for data-add;  redraw() after a change.
+ */
+export function watchButtons(ctx, { item, key, redraw }) {
+  const codeOf = (r) => bbgCode(toSecurity(item(r).words));
+  const s = { watch: null };
+  s.load = async () => { s.watch = await watchTarget().catch(() => s.watch); return s.watch; };
+  s.has = (r) => !!s.watch?.codes.has(codeOf(r));
+  s.add = async (rows) => {
+    if (!s.watch || !rows.length) return;
+    let r;
+    try {
+      r = await watchAdd(rows.map(item), s.watch.name);
+    } catch (e) {
+      ctx.toast(`Not added: ${e.message}`, true);
+      return;
+    }
+    await s.load();
+    const parts = [r.added.length && `Added ${r.added.length} to ${r.list}`, r.already.length && `${r.already.length} already there`, r.errors[0]].filter(Boolean);
+    ctx.toast(parts.join(" · ") || "Nothing to add", !r.added.length && !!r.errors.length);
+    if (ctx.live()) redraw();
+  };
+  s.col = () => ({
+    id: "w", key: (r) => (s.has(r) ? 1 : 0), label: "W", html: true, sort: false,
+    title: s.watch ? `On the watchlist ${s.watch.name}? + adds it` : "Watchlist",
+    fmt: (x, r) => (x
+      ? `<span class="dim" title="On ${esc(s.watch.name)}">✓</span>`
+      : `<button type="button" class="ibtn" data-add="${esc(key(r))}" title="Add ${esc(key(r))} to the watchlist ${esc(s.watch?.name || "")}" aria-label="Add to watchlist">+</button>`),
+  });
+  /** "to [list ▾] [Add n missing]" for the rows shown. */
+  s.bar = (rows) => {
+    const w = s.watch;
+    const span = document.createElement("span");
+    span.dataset.wbar = "";
+    if (!w) return span;
+    const missing = rows.filter((r) => !s.has(r));
+    span.innerHTML = ` · watchlist <select data-wlist title="The list + and Add all put stocks on (W ${esc(w.active)} is the open one)">${w.lists.map((n) => `<option${n === w.name ? " selected" : ""}>${esc(n)}</option>`).join("")}</select> <button type="button" data-addall${missing.length ? "" : " disabled"} title="Add every stock shown to the watchlist ${esc(w.name)}">${!missing.length ? `All on ${esc(w.name)}` : `Add ${missing.length === rows.length ? "all" : `${missing.length} missing`}`}</button>`;
+    span.querySelector("[data-wlist]").onchange = async (e) => {
+      writeTarget(e.target.value);
+      await s.load();
+      if (ctx.live()) redraw();
+    };
+    span.querySelector("[data-addall]").onclick = () => {
+      if (missing.length > 25 && !confirm(`Add ${missing.length} stocks to the watchlist ${w.name}?`)) return;
+      s.add(missing);
+    };
+    return span;
+  };
+  /** + buttons in `el` (capture: not the row click). rowOf(key) -> row. */
+  s.bind = (el, rowOf) => el.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-add]");
+    if (!b) return;
+    e.stopImmediatePropagation();
+    const r = rowOf(b.dataset.add);
+    if (r) s.add([r]);
+  }, { capture: true });
+  return s;
 }
 
 // A company's name for a new row, from the same search the command line's lookup uses.
