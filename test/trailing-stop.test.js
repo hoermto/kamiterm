@@ -114,8 +114,8 @@ test('evaluatePositionBook adds trailing fields and exit hint only with trail>0'
 test('shortExitHint: short labels for the holdings exit column',()=>{
   assert.equal(shortExitHint(trailingStopReason(20,48.86,38.22)),'SL >20%');
   assert.equal(shortExitHint(trailingStopReason(17.5,100,80)),'SL >17,5%');
-  assert.equal(shortExitHint('RRG Weakness außerhalb Rank-Schutz Top 25'),'Rank > 25');
-  assert.equal(shortExitHint('RRG Leading→Weakening (Rank 31>25)'),'Rank > 25');
+  assert.equal(shortExitHint('RRG Weakness außerhalb Rank-Schutz Top 25'),'RRG schwach & Rang > 25');
+  assert.equal(shortExitHint('RRG Leading→Weakening (Rank 31>25)'),'RRG schwach & Rang > 25');
   assert.equal(shortExitHint('RSL Aktie < RSL Benchmark'),'RSL < Bench');
   assert.equal(shortExitHint('RRG Weakness (Rank-Schutz aus)'),'RRG schwach');
   assert.equal(shortExitHint(null),null);

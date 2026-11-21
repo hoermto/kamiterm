@@ -2,9 +2,18 @@
 import { esc } from "./api.js";
 import { periodPnl, niceTicks } from "./equity-pnl.js";
 
-// cols: [{ key, label, left, fmt(v,row) -> text, cls(v,row) -> class, html: true, sort: false (not sortable) }]
+// cols: [{ key, label, left, fmt(v,row) -> text, cls(v,row) -> class, html: true, sort: false (not sortable),
+//         short: n (plain-text cells longer than n chars become n+'…' with title=full text; html:true is left alone) }]
 // Sortable headers: pass sorted = { col: index, dir: "asc" | "desc" } (or null) and onSort(index); the caller sorts
 // the rows (sortRows below) and redraws.
+/** Truncate plain text to n characters with an ellipsis '…'; when clipped, title holds the full string. */
+export function clipText(s, n) {
+  const t = s == null ? "" : String(s);
+  const max = Number(n);
+  if (!Number.isFinite(max) || max < 0 || t.length <= max) return { text: t, clipped: false };
+  return { text: `${t.slice(0, max)}…`, clipped: true, title: t };
+}
+
 export function table(rows, cols, { onRow, max = 500, sorted = null, onSort = null } = {}) {
   const head = cols
     .map((c, i) => {
@@ -30,7 +39,16 @@ export function table(rows, cols, { onRow, max = 500, sorted = null, onSort = nu
             c.lbl ? "lbl" : "",
             c.wrap ? "wrap" : "",
           ].join(" ");
-          return `<td class="${k}">${c.html ? (txt ?? "") : esc(txt ?? "—")}</td>`;
+          // html:true cells may already set title themselves — do not rewrite or truncate them here.
+          if (c.html) return `<td class="${k}">${txt ?? ""}</td>`;
+          const raw = txt ?? "—";
+          const clip =
+            c.short != null && txt != null && String(txt) !== ""
+              ? clipText(String(txt), c.short)
+              : null;
+          const show = clip?.clipped ? clip.text : raw;
+          const title = clip?.clipped ? ` title="${esc(clip.title)}"` : "";
+          return `<td class="${k}"${title}>${esc(show)}</td>`;
         })
         .join("");
       return `<tr data-i="${i}" class="${onRow ? "click" : ""}">${tds}</tr>`;
