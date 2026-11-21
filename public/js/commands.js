@@ -8,9 +8,12 @@ export { YELLOW, INDICES, GENERICS, toSecurity };
 
 // Split input into a security part and a function, the way the terminal reads it.
 // Words that are options to a function, not a security: FA Q, HP W, CF 10-K, GP 1Y, MOST GAINERS, OMON 2.
+// GP overlay: BUY=/STOP=/TRAIL=/SRC= stay args, not part of "SAP GY EQUITY" (futures like CL=F are not this list).
 const OPTS = new Set(["Q", "A", "D", "W", "M", "H", "ALL", "HIGH", "MEDIUM", "VOLUME", "GAINERS", "LOSERS", "1D", "5D", "1M", "6M", "1Y", "5Y", "MAX", "10-K", "10-Q", "8-K", "S-1", "13F", "TECH", "COINS", "ECON", "CANDLES", "LINE"]);
+const KV_OVERLAY = /^(BUY|STOP|SRC|TRAIL|SOURCE)=/;
 export const isOpt = (fn, w) =>
   OPTS.has(w) ||
+  KV_OVERLAY.test(w) ||
   /^\d{1,2}$/.test(w) ||
   // An expiry for OMON: a date (2027-01-15) or a month (JAN27).
   ((fn === "OMON" || fn === "GEX") && /^(\d{4}-\d{2}-\d{2}|(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\d{2})$/.test(w)) ||
