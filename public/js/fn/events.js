@@ -3,6 +3,7 @@
 // today's terms. The maths runs on the server (lib/fn/dscan.js, lib/buywrite.js, lib/event-moves.js).
 import { api, esc, pct, num, cls } from "../api.js";
 import { table, sect, tabs, html } from "../ui.js";
+import { watchButtons } from "./workspace.js";
 
 const finite = (v) => typeof v === "number" && Number.isFinite(v);
 const p2 = (v) => pct(v, 2);
@@ -73,45 +74,56 @@ async function dscan(ctx) {
     sk.illiquid && `${sk.illiquid} below ${d.minOi} open interest or above ${d.maxSpread}% spread`,
     sk.error && `${sk.error} where the option data did not load (CBOE limits requests: run again in a minute)`,
   ].filter(Boolean);
-  ctx.el.append(
-    form,
-    html(`<p class="hint">${c.exDates} stocks with an ex-date · ${c.listed} listed${out.length ? ` · left out: ${out.join(", ")}` : ""}${c.partial ? " · not all checked in time, run again" : ""}</p>`),
-  );
-  if (!d.rows.length) {
-    ctx.el.append(html(`<p class="hint">No candidates with these filters. More days ahead, a wider DTE or looser liquidity filters find more.</p>`));
-  } else {
-    const t = table(d.rows, [
-        { key: "symbol", label: "Ticker", left: true, lbl: true, title: "Click a row for DMOV, the Chart button for the price chart" },
-        { key: "symbol", label: "", left: true, html: true, fmt: (x) => `<button class="tab" data-chart="${esc(x)}" title="Price chart (GP) for ${esc(x)}">Chart</button>`, title: "Open the price chart" },
-        { key: "verdictLabel", label: "Verdict", left: true, html: true, fmt: (x, r) => verdictHtml(r.verdict, x, r.verdictReason), title: "From the past ex-dates at today's terms; hover for the reason" },
-        { key: "exDate", label: "Ex-date", left: true },
-        { key: "dividendPct", label: "Dividend", fmt: (x) => (finite(x) ? `${x.toFixed(2)}%` : "—") },
-        { key: "entryDate", label: "Entry", left: true },
-        { key: "expiry", label: "Expiry", left: true, fmt: (x, r) => `${x}${r.monthly ? " M" : ""}`, title: "M = monthly expiry (no weekly one in the DTE range)" },
-        { key: "dte", label: "DTE" },
-        { key: "strike", label: "Strike", fmt: (x, r) => `${num(x, 2)} (${p2(r.strikePct)})` },
-        { key: "premiumPct", label: "Premium", fmt: (x, r) => (finite(x) ? `${x.toFixed(2)}%${r.premiumEstimated ? "*" : ""}` : "—"), title: "Call bid over the price; * = estimated for the entry day" },
-        { key: "flatPct", label: "Premium +\ndividend", fmt: (x) => (finite(x) ? `${x.toFixed(2)}%` : "—"), title: "What the trade makes if the stock ends where it started" },
-        { key: "oi", label: "Open\ninterest" },
-        { key: "spreadPct", label: "Spread", fmt: perc0 },
-        { key: "n", label: "Past\nex-dates" },
-        { key: "avgPct", label: "Avg per\ntrade", fmt: p2, cls, title: "Today's terms on the past ex-dates: average return per trade" },
-        { key: "medianPct", label: "Median", fmt: p2, cls },
-        { key: "worstPct", label: "Worst", fmt: p2, cls },
-        { key: "winPct", label: "Win", fmt: perc0 },
-        { key: "assignedPct", label: "Called\naway", fmt: perc0 },
-        { key: "perYearPct", label: "Per year", fmt: p2, cls, title: "Average per trade x 365 / DTE (simple, before costs)" },
-        { key: (r) => (r.earlyRisk ? "early assignment" : ""), label: "Warning", left: true },
-      ], { onRow: (r) => ctx.go(`${r.symbol} DMOV ${d.period} ENTRY=${d.entryDays} DTE=${d.dteMin}-${d.dteMax}`) });
-    // The Chart button opens GP; the rest of the row opens DMOV.
-    t.addEventListener("click", (e) => {
-      const sym = e.target.closest("[data-chart]")?.dataset.chart;
-      if (!sym) return;
-      e.stopImmediatePropagation();
-      ctx.go(`${sym} GP`);
-    }, true);
-    ctx.el.append(t);
+  // Watchlist: W column (✓ / +), list picker and "Add all" (workspace.js); the symbols are US stocks.
+  const host = document.createElement("div");
+  const wb = watchButtons(ctx, { item: (r) => ({ words: [r.symbol] }), key: (r) => r.symbol, redraw: () => drawTable() });
+  if (d.rows.length) await wb.load();
+  if (!ctx.live()) return;
+  const info = html(`<p class="hint">${c.exDates} stocks with an ex-date · ${c.listed} listed${out.length ? ` · left out: ${out.join(", ")}` : ""}${c.partial ? " · not all checked in time, run again" : ""}</p>`);
+  ctx.el.append(form, info, host);
+  wb.bind(host, (sym) => d.rows.find((r) => r.symbol === sym));
+  function drawTable() {
+    info.querySelector("[data-wbar]")?.remove();
+    host.replaceChildren();
+    if (!d.rows.length) {
+      host.append(html(`<p class="hint">No candidates with these filters. More days ahead, a wider DTE or looser liquidity filters find more.</p>`));
+    } else {
+      info.append(wb.bar(d.rows));
+      const t = table(d.rows, [
+          wb.col(),
+          { key: "symbol", label: "Ticker", left: true, lbl: true, title: "Click a row for DMOV, the Chart button for the price chart" },
+          { key: "symbol", label: "", left: true, html: true, fmt: (x) => `<button class="tab" data-chart="${esc(x)}" title="Price chart (GP) for ${esc(x)}">Chart</button>`, title: "Open the price chart" },
+          { key: "verdictLabel", label: "Verdict", left: true, html: true, fmt: (x, r) => verdictHtml(r.verdict, x, r.verdictReason), title: "From the past ex-dates at today's terms; hover for the reason" },
+          { key: "exDate", label: "Ex-date", left: true },
+          { key: "dividendPct", label: "Dividend", fmt: (x) => (finite(x) ? `${x.toFixed(2)}%` : "—") },
+          { key: "entryDate", label: "Entry", left: true },
+          { key: "expiry", label: "Expiry", left: true, fmt: (x, r) => `${x}${r.monthly ? " M" : ""}`, title: "M = monthly expiry (no weekly one in the DTE range)" },
+          { key: "dte", label: "DTE" },
+          { key: "strike", label: "Strike", fmt: (x, r) => `${num(x, 2)} (${p2(r.strikePct)})` },
+          { key: "premiumPct", label: "Premium", fmt: (x, r) => (finite(x) ? `${x.toFixed(2)}%${r.premiumEstimated ? "*" : ""}` : "—"), title: "Call bid over the price; * = estimated for the entry day" },
+          { key: "flatPct", label: "Premium +\ndividend", fmt: (x) => (finite(x) ? `${x.toFixed(2)}%` : "—"), title: "What the trade makes if the stock ends where it started" },
+          { key: "oi", label: "Open\ninterest" },
+          { key: "spreadPct", label: "Spread", fmt: perc0 },
+          { key: "n", label: "Past\nex-dates" },
+          { key: "avgPct", label: "Avg per\ntrade", fmt: p2, cls, title: "Today's terms on the past ex-dates: average return per trade" },
+          { key: "medianPct", label: "Median", fmt: p2, cls },
+          { key: "worstPct", label: "Worst", fmt: p2, cls },
+          { key: "winPct", label: "Win", fmt: perc0 },
+          { key: "assignedPct", label: "Called\naway", fmt: perc0 },
+          { key: "perYearPct", label: "Per year", fmt: p2, cls, title: "Average per trade x 365 / DTE (simple, before costs)" },
+          { key: (r) => (r.earlyRisk ? "early assignment" : ""), label: "Warning", left: true },
+        ], { onRow: (r) => ctx.go(`${r.symbol} DMOV ${d.period} ENTRY=${d.entryDays} DTE=${d.dteMin}-${d.dteMax}`) });
+      // The Chart button opens GP; the rest of the row opens DMOV.
+      t.addEventListener("click", (e) => {
+        const sym = e.target.closest("[data-chart]")?.dataset.chart;
+        if (!sym) return;
+        e.stopImmediatePropagation();
+        ctx.go(`${sym} GP`);
+      }, true);
+      host.append(t);
+    }
   }
+  drawTable();
   ctx.el.append(
     html(`<p class="hint">Buy ${d.entryDays} trading day${d.entryDays > 1 ? "s" : ""} before the ex-date, sell the first call above the price on the first expiry ${d.dteMin} to ${d.dteMax} days after the entry, keep the dividend, hold to expiry. Verdict: <span class="up">promising</span> = at least 8 past ex-dates, average above zero, at least 65% won and the average clearly above chance (t ≥ 1.5); <span class="down">not promising</span> = average at or below zero or under half won; <span class="amber">mixed</span> = in between. "Avg per trade" applies today's strike distance, premium and dividend to the stock's past ex-dates since ${esc(d.since || "the start of the data")}: the move to expiry capped at the strike, plus premium and dividend. Quotes are about 15 minutes behind; outside market hours the spreads are those of the close and often wide.</p>`),
   );

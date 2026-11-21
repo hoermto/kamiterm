@@ -2,6 +2,21 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
+## [Unreleased]
+
+### Neue Funktionen
+- **GP › Overlay-Parameter:** Der Preischart zeichnet Kauf- und Stop-Linien nur noch aus Befehlsparametern, nicht aus einem automatischen Holdings-Lookup. Syntax: `GP AAPL BUY=150.20@2026-11-09 STOP=120.16 TRAIL=20 SRC=RSL` (Reihenfolge egal, auch `AAPL GP …`, Aliase CHART/GRAPH/PRICE). `BUY=` ein oder mehrere Lots kommagetrennt `preis@YYYY-MM-DD` (Datum optional: dann nur Linie, kein Marker „K“). `STOP=` ein oder mehrere Kurse, rot gestrichelt; `TRAIL=` nur fürs Label („Stop −20 % 120,16“). `SRC=` als Präfix („RSL Kauf 150,20“). Dezimalpunkt in den Werten. Ungültige Teile werden im Hinweis gemeldet, der Chart erscheint trotzdem. Reines `GP AAPL` bleibt ohne Overlay. Der GP-Knopf in RSL-Holdings und in der Rangliste (wenn der Ticker offen gehalten wird) setzt die Parameter aus den bereits berechneten Tabellenwerten (`SRC=RSL`). Die API `/api/fn/rsloverlay` entfällt.
+
+## [1.7.0] – in Arbeit
+
+### Neue Funktionen
+- **FVSCAN und DSCAN › Watchlist-Auswahl:** über der Tabelle wählbar, auf welche Watchlist „+“ und „Add all“ setzen (gemeinsam für beide Scanner, im Browser gespeichert; ohne Auswahl die offene W-Liste, die dadurch nicht wechselt). DSCAN hat jetzt ebenfalls die Spalte „W“ (✓ / +) und „Add all“.
+- **Icon:** eigenes App-Icon (bernsteinfarbener Prompt `>_` auf schwarzem Terminal, `public/icon.svg`, daraus `favicon.ico` und PNGs über `node scripts/make-icons.mjs`) für Browser-Tab und App-Fenster; start.bat legt daneben einmal die Verknüpfung „Amber Terminal“ mit diesem Icon an (eine .bat-Datei kann selbst kein Icon tragen), zum Ziehen auf den Desktop oder in die Taskleiste.
+
+### Änderungen
+- **RSL26 › Holdings:** Spalte „Exit-Hinweis“ kurz („SL >20%“, „RRG schwach & Rang > 25“ = RRG-Schwächephase und Rank-Schutz weggefallen, „RSL < Bench“, „RRG schwach“); der volle Grund steht im Tooltip.
+- **RSL26-Tabellen:** lange Zelltexte werden gekürzt, der volle Text steht im Tooltip. Trade-Protokoll „Grund“ dieselben Kurzformen wie Exit-Hinweis (sonst max. 22 Zeichen); Notiz max. 20, RRG-Namen max. 22; Status „M&A-Skip“ statt „übersprungen (M&A)“; RRG-Quadrant abgekürzt (Lead/Weak/Lag/Impr). `table()` unterstützt `short: n` für Klartext-Spalten (`html:true` bleibt unverändert).
+
 ## [1.6.0] – in Arbeit
 
 ### Neue Funktionen
