@@ -134,7 +134,7 @@ export default [
   {
     id: "DSCAN",
     name: "Buy-write scanner over ex-dividend dates",
-    group: "Equities",
+    group: "Kamikaze",
     needs: false,
     source: "Nasdaq dividend calendar, CBOE delayed option quotes, Yahoo dividends and prices",
     render: dscan,

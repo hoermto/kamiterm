@@ -35,7 +35,27 @@ const secOf = (code) => toSecurity(words(code));
 export const LIST_NAME = /^[A-Z0-9][A-Z0-9_-]{0,19}$/;
 export const MAX_LISTS = 20;
 const LIST_VERBS = { NEW: "NEW", CREATE: "NEW", RENAME: "RENAME", DROP: "DROP", DELLIST: "DROP" };
-const RESERVED = ["ADD", "DEL", "DELETE", "REMOVE", "RM", ...Object.keys(LIST_VERBS)];
+const RESERVED = ["ADD", "DEL", "DELETE", "REMOVE", "RM", "HOLD", ...Object.keys(LIST_VERBS)];
+
+// ---------- W:HOLD, die Auto-Watchlist der Holdings ----------
+// Virtuell und nur lesbar: der Server rechnet sie bei jedem Abruf aus den Holding-Quellen der Apps
+// (RSL-Buch, GSW-Buch, PORT …, GET /api/watch/hold). Sie steht nie in amberWatch/state.json, darum zieht jede
+// Buchung automatisch nach und es gibt nichts zu speichern oder zu synchronisieren.
+export const HOLD = "HOLD";
+export const HOLD_TAB = "W:HOLD";
+/** W-Argumente -> null (normale Liste) | { show: true } | { error } für W HOLD / W W:HOLD. Eine eigene Liste HOLD (alt) hat bei "W HOLD" Vorrang. */
+export function holdCommand(args, names = []) {
+  const a = args.map((x) => String(x).toUpperCase());
+  if (!a.length) return null;
+  const hit = a[0] === HOLD_TAB || (a[0] === HOLD && !names.includes(HOLD));
+  if (!hit) return null;
+  if (a.length > 1) return { error: "W:HOLD füllt sich automatisch aus deinen Holdings (RSL, GSW, PORT) und lässt sich nicht bearbeiten. Kauf/Verkauf im jeweiligen Buch ändert sie." };
+  return { show: true };
+}
+/** Quelle-Spalte: "RSL SPX 3.975 · GSW Gold 12". */
+export const holdSources = (r) => (r?.sources || []).map((x) => `${x.source}${Number.isFinite(x.qty) && x.qty ? ` ${+x.qty.toFixed(4)}` : ""}`).join(" · ");
+const loadHold = () => api.get("/api/watch/hold");
+const holdNames = new Map(); // Namen der Holdings-Codes, nur im Speicher dieser Seite (nichts wird gespeichert)
 
 /** W command words -> { show } | { op: NEW|RENAME|DROP, name, to } | { list, op, ws } (ADD/DEL, list null = active). */
 export function watchCommand(args, names) {
@@ -418,10 +438,89 @@ async function createAlert(ctx, ws, dir, level) {
   return true;
 }
 
+function holdTab(ctx, on, n = null) {
+  const b = document.createElement("button");
+  b.className = `tab hold${on ? " on" : ""}`;
+  b.textContent = n == null ? HOLD_TAB : `${HOLD_TAB} (${n})`;
+  b.title = "Auto-Watchlist: alle aktuell gehaltenen Symbole aus RSL, GSW, PORT (W HOLD), nur lesbar";
+  b.onclick = () => ctx.go(`W ${HOLD_TAB}`);
+  return b;
+}
+
+// Die Auto-Watchlist: gleiche Kursspalten wie W, dazu "Quelle"; kein Hinzufügen/Löschen, alle 30 s neu berechnet.
+async function renderHold(ctx, st) {
+  if (!ctx.live()) return;
+  ctx.setTitle(`${HOLD_TAB} Auto-Watchlist`);
+  ctx.el.innerHTML = "";
+  const listTabs = document.createElement("div");
+  listTabs.className = "tabs";
+  for (const n of Object.keys(st.lists)) {
+    const b = document.createElement("button");
+    b.className = "tab";
+    b.textContent = `${n} (${st.lists[n].length})`;
+    b.title = `Show the list ${n} (W ${n})`;
+    b.onclick = () => ctx.go(`W ${n}`);
+    listTabs.append(b);
+  }
+  const tab = holdTab(ctx, true);
+  listTabs.append(tab);
+  const info = html(`<div class="hint hold-info">Automatisch aus deinen Holdings berechnet, nicht editierbar: jede Buchung im RSL- oder GSW-Buch (bzw. PORT) zieht hier beim nächsten Abruf nach (spätestens 30 s). Click a row to open it.</div>`);
+  const body = document.createElement("div");
+  ctx.el.append(listTabs, info, body);
+  const cols = [
+    { key: "code", label: "Security", left: true, lbl: true },
+    { key: "name", label: "Name", left: true, fmt: (v) => String(v || "").slice(0, 24) },
+    { key: "quelle", label: "Quelle", left: true },
+    { key: "price", label: "Last", html: true, fmt: (v, r) => px(v) + delayTag(r) },
+    { key: "change", label: "Net chg", fmt: (v) => chg(v), cls },
+    { key: "changePct", label: "% chg", fmt: (v) => pct(v), cls },
+    { key: "ytdPct", label: "YTD %", fmt: (v) => pct(v), cls },
+    { key: "low52", label: "52w low", fmt: px },
+    { key: "high52", label: "52w high", fmt: px },
+    { key: "spark", label: "30 days", html: true, fmt: spark },
+  ];
+  const load = async () => {
+    let h;
+    try { h = await loadHold(); } catch (e) {
+      if (!ctx.live()) return;
+      body.innerHTML = "";
+      body.append(html(`<div class="hint">Holdings nicht lesbar: ${esc(e.message)}</div>`));
+      return;
+    }
+    const list = h.codes || [];
+    const byCode = new Map((h.rows || []).map((r) => [r.code, r]));
+    const secs = list.map(secOf).filter(Boolean);
+    const ys = [...new Set(secs.map(yahooSymbol).filter(Boolean))];
+    const crypto = secs.filter((s) => s.sector === "CRYPTO").map((s) => s.id);
+    const missing = list.filter((c) => !st.names[c] && !holdNames.has(c));
+    const [b, q] = await Promise.all([
+      ys.length ? api.fn("board", { symbols: ys.join(",") }).catch(() => ({ rows: {} })) : { rows: {} },
+      crypto.length ? api.quotes(crypto).catch(() => ({})) : {},
+      ...missing.map((c) => nameFor(c).then((n) => holdNames.set(c, n || ""), () => holdNames.set(c, ""))),
+    ]);
+    if (!ctx.live()) return;
+    tab.textContent = `${HOLD_TAB} (${list.length})`;
+    const top = ctx.el.scrollTop;
+    body.innerHTML = "";
+    const provs = (h.providers || []).map((p) => `${p.label}: ${p.error ? `Fehler (${p.error})` : p.count}`).join(" · ");
+    body.append(sect(`${HOLD_TAB}, ${list.length} securities`), html(`<div class="hint">Quellen: ${esc(provs)}</div>`));
+    if (!list.length) body.append(html(`<div class="hint">Gerade keine offenen Positionen. Sobald du im RSL- oder GSW-Buch kaufst, steht das Symbol hier.</div>`));
+    else {
+      const rows = watchRows(list, b.rows, q, { ...Object.fromEntries(holdNames), ...st.names }).map((r) => ({ ...r, quelle: holdSources(byCode.get(r.code)) }));
+      body.append(table(rows, cols, { onRow: (r) => ctx.go(`${r.code} ${r.sector === "EQUITY" ? "DES" : "GP"}`) }));
+    }
+    ctx.el.scrollTop = top;
+    ctx.setSource(`Holdings live aus ${(h.providers || []).map((p) => p.label).join(", ")}; Yahoo Finance prices (some exchanges delayed 15 minutes)${crypto.length ? ", crypto live from Binance" : ""}`);
+  };
+  await load();
+  ctx.every(30e3, () => load().catch(() => {}));
+}
+
 export default [
   {
     id: "W",
     name: "Watchlist monitor",
+    help: "Auto-Watchlist W:HOLD (auch W HOLD oder Reiter W:HOLD): alle aktuell gehaltenen Symbole aus RSL-Buch, GSW-Buch und PORT, live berechnet, Spalte Quelle, nicht editierbar; jede Buchung zieht automatisch nach. FVSCAN W:HOLD scannt sie.",
     group: "Workspace",
     source:
       "Yahoo Finance prices (some exchanges delayed 15 minutes), crypto live from Binance. Your list is saved on this computer",
@@ -431,6 +530,12 @@ export default [
         return null;
       });
       if (!st) return;
+      const hc = holdCommand(ctx.args, Object.keys(st.lists));
+      if (hc) {
+        if (hc.error) ctx.toast(hc.error, true);
+        ctx.setCmd(`W ${HOLD_TAB}`);
+        return renderHold(ctx, st);
+      }
       if (ctx.args.length) {
         const cmd = watchCommand(ctx.args, Object.keys(st.lists));
         const r = await changeWatch(cmd).catch((e) => ({ error: `Couldn't save the list: ${e.message}` }));
@@ -455,6 +560,7 @@ export default [
         b.onclick = () => ctx.go(`W ${n}`);
         listTabs.append(b);
       }
+      listTabs.append(holdTab(ctx, false));
       const form = html(
         `<form class="wform" autocomplete="off"><input class="sec" spellcheck="false" placeholder="Add to ${esc(name)}: NVDA, VOD LN, BTC, GC1 COMDTY"><button type="submit">Add</button><span class="hint">Click a row to open it.</span></form>`,
       );

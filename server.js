@@ -363,6 +363,11 @@ async function handle(req, res) {
       }
     }
 
+    // W:HOLD: virtuelle Auto-Watchlist aller gehaltenen Symbole (RSL-Buch, GSW-Buch, PORT …), live berechnet, nur lesen
+    if (p === "/api/watch/hold" && req.method === "GET") {
+      const { holdList } = await import("./lib/holdings.js");
+      return send(res, 200, holdList());
+    }
     if (p === "/api/state") {
       if (req.method === "GET") return send(res, 200, store.read("state", {}));
       if (req.method === "PUT") {
@@ -589,6 +594,36 @@ async function handle(req, res) {
           sold: rslWatch.closedPositions(book, 30),
         });
       }
+    }
+    // GSW Gold/Silber-Swap (Grokki): eigenes Buch data/gsw-book.json, eigene Einstellungen data/gsw-settings.json, Profile data/gsw-profiles.json
+    if (p === "/api/gsw" || p.startsWith("/api/gsw/")) {
+      const gsw = await import("./lib/gsw/service.js");
+      const gset = await import("./lib/gsw/settings.js");
+      if (p === "/api/gsw" && req.method === "GET") return send(res, 200, await gsw.status(q));
+      if (p === "/api/gsw/settings") {
+        if (req.method === "GET") return send(res, 200, { settings: gset.loadSettings(), defaults: gset.defaults(), pairs: gset.pairsList() });
+        if (req.method === "PUT" || req.method === "POST") return send(res, 200, { ok: true, settings: gset.saveSettings(await readBody(req)) });
+      }
+      if (p === "/api/gsw/book") {
+        if (req.method === "GET") { const b = gsw.book.loadBook(); return send(res, 200, { book: b, open: gsw.book.openLots(b), closed: gsw.book.closedLots(b) }); }
+        if (req.method === "POST") { const body = await readBody(req); const r = gsw.book.applyAction(body.action, body); return send(res, 200, { ...r, open: gsw.book.openLots(r.book), closed: gsw.book.closedLots(r.book) }); }
+      }
+      if (p === "/api/gsw/bt") {
+        if (req.method === "POST") return send(res, 200, await gsw.startBacktest(await readBody(req)));
+        if (req.method === "GET") return send(res, 200, gsw.getJob(q.id));
+      }
+      if (p === "/api/gsw/run" && req.method === "POST") return send(res, 200, await gsw.runSingle(await readBody(req)));
+      // Parameter-Profile: eigene Datei data/gsw-profiles.json (fehlt → implizites Profil „Spec v3“, geschrieben erst bei Aktion)
+      if (p === "/api/gsw/profiles") {
+        const P = gsw.profiles;
+        if (req.method === "GET") return send(res, 200, { ...P.loadProfiles(), pairs: gset.pairsList() });
+        if (req.method === "POST") { const body = await readBody(req); return send(res, 200, P.createProfile(body.profile || {}, { activate: !!body.activate })); }
+        if (req.method === "PUT") { const body = await readBody(req); return send(res, 200, P.updateProfile(String(body.id || ""), body.profile || {})); }
+        if (req.method === "DELETE") return send(res, 200, P.deleteProfile(String(q.id || "")));
+      }
+      if (p === "/api/gsw/profiles/activate" && req.method === "POST") { const body = await readBody(req); return send(res, 200, gsw.profiles.activateProfile(String(body.id || ""))); }
+      if (p === "/api/gsw/profiles/delete" && req.method === "POST") { const body = await readBody(req); return send(res, 200, gsw.profiles.deleteProfile(String(body.id || ""))); }
+      return send(res, 404, { error: "Unknown GSW endpoint" });
     }
     // Terminal functions: /api/fn/<name> runs lib/fn/<name>.js, one file per data source.
 

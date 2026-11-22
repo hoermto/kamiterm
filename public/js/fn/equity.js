@@ -1122,7 +1122,7 @@ export default [
   {
     id: "DMOV",
     name: "Ex-dividend moves",
-    group: "Equities",
+    group: "Kamikaze",
     needs: true,
     source:
       "Yahoo dividend events and daily prices (US and European stocks), announced ex-dates from Nasdaq",

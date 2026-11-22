@@ -31,6 +31,8 @@ export function parse(input) {
     .filter(Boolean)
     .map((w) => ALIASES[w] || w);
   if (!words.length) return null;
+  // "W:HOLD" getippt = die Auto-Watchlist der Holdings, also W mit dem Argument W:HOLD.
+  if (words[0] === "W:HOLD") words.splice(0, 1, "W", "W:HOLD");
   // A function first ("TOP CRYPTO", "FA Q", "OMON AAPL", "GP BTC 1Y"): what follows is options, or a subject
   // and then options.
   // ...unless a yellow key and then a function follow, which makes the first word a ticker ("W US EQUITY DES").

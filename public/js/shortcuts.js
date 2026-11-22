@@ -20,6 +20,9 @@ export const SHORTCUTS = [
   ['Gelbe Tasten', 'F11', 'CRNCY anhängen'],
   ['RSL26', 'Klick auf Zeile der Rangliste', 'Öffnet TICKER GP (Chart); zurück mit Esc oder ◂'],
   ['RSL26', 'Enter im Formular', 'Aktualisieren (wie Knopf „Aktualisieren“)'],
+  ['GSW', 'GSW (Befehl)', 'Gold/Silber-Swap: Signal, Schwellen, Holdings mit Swap-Knopf, Charts; Einstellungen oben (⚙)'],
+  ['GSW', 'Enter im Formular', 'Kauf, Verkauf, Swap bzw. Einstellungen absenden (Swap und Verkauf mit Rückfrage)'],
+  ['GSW', 'GSWBT (Befehl)', 'GSW-Backtest: Grid, Robust-Rangliste, Walk-Forward, OOS; Klick auf Grid-Zeile rechnet die Zelle im Detail'],
 ];
 /** True, wenn der Fokus in einem Feld liegt, in dem getippt wird (dann keine Einzeltasten-Kürzel). */
 export function isTyping(el) {
