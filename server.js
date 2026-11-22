@@ -612,6 +612,7 @@ async function handle(req, res) {
         if (req.method === "POST") return send(res, 200, await gsw.startBacktest(await readBody(req)));
         if (req.method === "GET") return send(res, 200, gsw.getJob(q.id));
       }
+      if (p === "/api/gsw/history" && req.method === "GET") return send(res, 200, await gsw.history(q));
       if (p === "/api/gsw/run" && req.method === "POST") return send(res, 200, await gsw.runSingle(await readBody(req)));
       // Parameter-Profile: eigene Datei data/gsw-profiles.json (fehlt → implizites Profil „Spec v3“, geschrieben erst bei Aktion)
       if (p === "/api/gsw/profiles") {

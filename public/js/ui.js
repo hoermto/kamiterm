@@ -1,6 +1,7 @@
 // Building blocks for function screens: tables, key-value grids, tabs and charts, all in the terminal's look.
 import { esc } from "./api.js";
 import { periodPnl, niceTicks } from "./equity-pnl.js";
+import { titlesOnAxis } from "./chart-labels.js";
 
 // cols: [{ key, label, left, fmt(v,row) -> text, cls(v,row) -> class, html: true, sort: false (not sortable),
 //         short: n (plain-text cells longer than n chars become n+'…' with title=full text; html:true is left alone) }]
@@ -130,10 +131,16 @@ const alpha = (hex, a) => {
   return m ? `rgba(${parseInt(m[1], 16)},${parseInt(m[2], 16)},${parseInt(m[3], 16)},${a})` : `rgba(255,160,40,${a})`;
 };
 
+// Alle Charts des Terminals entstehen hier: Serien-/Preislinien-Titel stehen rechts auf der Y-Achse („Wert Titel“),
+// nie im Plotbereich, damit sie die letzten Kurse nicht verdecken (siehe chart-labels.js).
+export function createChart(host, options) {
+  return titlesOnAxis(window.LightweightCharts.createChart(host, options));
+}
+
 // A price chart in the terminal's colours. Returns { chart, series, remove }.
 export function priceChart(host, { type = "line", height } = {}) {
   const LW = window.LightweightCharts;
-  const chart = LW.createChart(host, {
+  const chart = createChart(host, {
     autoSize: true,
     height,
     layout: {
@@ -168,7 +175,7 @@ export function priceChart(host, { type = "line", height } = {}) {
 
 export function lineChart(host, seriesList, { percent = false } = {}) {
   const LW = window.LightweightCharts;
-  const chart = LW.createChart(host, {
+  const chart = createChart(host, {
     autoSize: true,
     layout: {
       background: { type: "solid", color: "#050505" },
@@ -178,7 +185,7 @@ export function lineChart(host, seriesList, { percent = false } = {}) {
       attributionLogo: false, // credited on the DATA screen and in the README instead
     },
     grid: { vertLines: { color: "#161616" }, horzLines: { color: "#161616" } },
-    rightPriceScale: { borderColor: "#262626", mode: percent ? 2 : 0 },
+    rightPriceScale: { borderColor: "#262626", mode: percent ? 2 : 0, autoScale: true },
     timeScale: { borderColor: "#262626" },
   });
   for (const s of seriesList) {
@@ -248,7 +255,20 @@ export function equityChart(host, seriesList, { storeKey = "equity", height = 26
     );
     if (st.view === "curve") {
       line = lineChart(plot, seriesList);
-      line.chart.priceScale("right").applyOptions({ mode: st.scale === "log" ? 1 : 0 });
+      // Legende (Titel stehen zusätzlich mit Wert rechts an der Y-Achse)
+      for (const s of seriesList) {
+        if (!s.data?.length) continue;
+        const item = document.createElement("span");
+        item.innerHTML = `<i style="background:${s.color}"></i>${esc(s.title)}`;
+        legend.append(item);
+      }
+      line.chart.priceScale("right").applyOptions({ mode: st.scale === "log" ? 1 : 0, autoScale: true });
+      // „Y auto“: Y-Achse wieder an den sichtbaren Zeitraum anpassen (nach Ziehen an der Achse)
+      const ay = document.createElement("button");
+      ay.type = "button"; ay.className = "tab"; ay.textContent = "Y auto";
+      ay.title = "Y-Achse automatisch an den sichtbaren Zeitraum anpassen (Doppelklick auf die Achse geht auch)";
+      ay.onclick = () => line?.chart.priceScale("right").applyOptions({ autoScale: true });
+      bar.append(ay);
       line.chart.applyOptions({ localization: { priceFormatter: (v) => v.toLocaleString("de-DE", { maximumFractionDigits: Math.abs(v) >= 100 ? 0 : 2 }) } });
       // Tageswerte über 10 Jahre (~2500 Punkte) passen bei minBarSpacing 0.5 px nicht in ~700 px → nur die letzten Jahre sichtbar.
       // autoSize kennt die Breite zudem erst nach dem Layout, daher fitContent einen Frame später erneut.

@@ -2,7 +2,7 @@
 // Regel: Spezifikation strategies/Gold_Silber_Swap_Spec.md (v3). Server: lib/gsw/*, API /api/gsw*.
 import { api, esc } from '../api.js';
 import { formatGpCommand } from '../gp-overlay.js';
-import { table, sortRows, sect, html, kv, equityChart } from '../ui.js';
+import { table, sortRows, sect, html, kv, equityChart, createChart } from '../ui.js';
 
 const de = (v, d = 2) => (Number.isFinite(v) ? v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—');
 const deMax = (v, d = 4) => (Number.isFinite(v) ? v.toLocaleString('de-DE', { maximumFractionDigits: d }) : '—');
@@ -38,6 +38,28 @@ const restHoldDays = (buy, asOf, days = 365) => Math.max(0, Math.round((Date.par
 const btn = (label, title, onclick, attrs = '') => { const b = html(`<button type="button" ${attrs}>${esc(label)}</button>`); if (title) b.title = title; b.onclick = onclick; return b; };
 const iconBtn = (attr, id, sym, label, cls = '') => `<button type="button" class="ibtn${cls ? ' ' + cls : ''}" ${attr}="${esc(id)}" title="${esc(label)}" aria-label="${esc(label)}">${sym}</button>`;
 const HINT_COLORS = { due: '#ff4a4a', warn: '#ffa028', ok: '#2fd36b', info: '#8c8c8c' };
+// Signal/Aktion je Lot (Server: lib/gsw/advice.js): due = Swap fällig, hold = fällig aber Haltefrist, spike = Spike halten, ok = halten
+export const ACTION_COLORS = { due: '#ff4a4a', hold: '#ffa028', spike: '#b469ff', ok: '#2fd36b', info: '#8c8c8c' };
+export function actionCell(a) {
+  if (!a) return '—';
+  const c = ACTION_COLORS[a.level] || '#8c8c8c';
+  const strong = a.level === 'due' || a.level === 'hold';
+  return `<span class="gsw-action gsw-action-${esc(a.level)}" style="color:${c};${strong ? 'font-weight:700;' : ''}white-space:nowrap" title="${esc([a.text, a.dist].filter(Boolean).join(' · '))}">${strong ? '● ' : ''}${esc(a.text)}</span>${a.dist ? `<br><span class="hint" style="margin:0;font-size:90%">${esc(a.dist)}</span>` : ''}`;
+}
+/** Aufklappbarer Bereich (Zustand je key im Browser, wie RSL26); onOpen läuft beim ersten Aufklappen (Charts erst dann bauen). */
+function collapsible(key, summary, nodes, { open = false, onOpen = null } = {}) {
+  const d = document.createElement('details'); d.className = 'gsw-collapse'; d.dataset.key = key; d.style.margin = '6px 0';
+  let isOpen = open; try { const v = localStorage.getItem(`amber.gsw.open.${key}`); if (v != null) isOpen = v === '1'; } catch {}
+  const sm = document.createElement('summary'); sm.style.cssText = 'cursor:pointer;font-weight:600'; sm.textContent = summary; d.append(sm);
+  for (const n of [].concat(nodes || [])) if (n) d.append(n);
+  let done = false;
+  const fire = () => { if (d.open && !done && onOpen) { done = true; onOpen(); } };
+  d.addEventListener('toggle', () => { try { localStorage.setItem(`amber.gsw.open.${key}`, d.open ? '1' : '0'); } catch {} fire(); });
+  d.open = isOpen; if (isOpen) queueMicrotask(fire);
+  return d;
+}
+/** Legende unter einem Chart: [[Farbe, Text, gestrichelt?]]. */
+const legend = (items) => html(`<div class="hint gsw-legend" style="margin:2px 0 8px;display:flex;gap:14px;flex-wrap:wrap">${items.map(([c, t, dash]) => `<span style="white-space:nowrap"><span style="display:inline-block;width:18px;height:0;border-top:2px ${dash ? 'dashed' : 'solid'} ${c};vertical-align:middle;margin-right:4px"></span>${esc(t)}</span>`).join('')}</div>`);
 
 /** Paar-Auswahl (Presets + Benutzerdefiniert); gemeinsam für GSW und GSWBT. */
 function pairPicker(pairs, cur) {
@@ -72,21 +94,53 @@ const PARAM_FIELDS = [
   ['costPct', 'Kosten %', 'Kosten je Seite in %, auch beim Erstkauf'],
 ];
 
-/** Kleiner Linien-Chart mit optionaler zweiter Skala; series: {title,color,data,scale?,lines?,markers?}. */
+/**
+ * Y-Autoscale mit Hilfslinien: Bereich der sichtbaren Daten (original) plus die Schwellen, die darin liegen, und je die
+ * nächste darüber/darunter, sofern sie höchstens eine Datenspanne entfernt ist (sonst würde sie die Kurve stauchen).
+ * guides: [{ value }] (konstant) oder [{ data: [{time, value}] }] (zeitabhängig, Bereich im sichtbaren Zeitfenster).
+ */
+export function guideAutoscale(original, guides, visible = null, { maxStretch = 1 } = {}) {
+  const o = original();
+  if (!o?.priceRange || !guides?.length) return o;
+  let { minValue: lo, maxValue: hi } = o.priceRange;
+  const span = Math.max(hi - lo, Math.abs(hi) * 0.002, 1e-9);
+  const rng = guides.map((g) => {
+    if (Number.isFinite(g.value)) return [g.value, g.value];
+    const v = (g.data || []).filter((p) => (!visible || (p.time >= visible.from && p.time <= visible.to)) && Number.isFinite(p.value)).map((p) => p.value);
+    return v.length ? [Math.min(...v), Math.max(...v)] : null;
+  }).filter(Boolean);
+  const inside = rng.filter(([a, b]) => b >= lo && a <= hi);
+  const above = rng.filter(([a]) => a > hi).sort((x, y) => x[0] - y[0])[0];
+  const below = rng.filter(([, b]) => b < lo).sort((x, y) => y[1] - x[1])[0];
+  let nlo = lo, nhi = hi;
+  for (const [a, b] of inside) { nlo = Math.min(nlo, a); nhi = Math.max(nhi, b); }
+  if (above && above[0] - hi <= maxStretch * span) nhi = Math.max(nhi, above[1]);
+  if (below && lo - below[1] <= maxStretch * span) nlo = Math.min(nlo, below[0]);
+  return { ...o, priceRange: { minValue: nlo, maxValue: nhi } };
+}
+
+/** Y-Autoscale wieder einschalten (nach Zoom/Ziehen an der Achse). */
+const autoY = (chart) => { for (const id of ['right', 'left']) { try { chart.priceScale(id).applyOptions({ autoScale: true }); } catch {} } };
+
+/** Kleiner Linien-Chart mit optionaler zweiter Skala; series: {title,color,data,scale?,lines?,markers?,guides?,autoscale?}. Y skaliert auf den sichtbaren Zeitbereich. */
 function multiChart(host, seriesList, { height = 260 } = {}) {
   const LW = window.LightweightCharts;
   host.style.height = `${height}px`; host.style.position = 'relative';
-  const chart = LW.createChart(host, {
+  const chart = createChart(host, {
     autoSize: true,
     layout: { background: { type: 'solid', color: '#050505' }, textColor: '#ffa028', fontSize: 11, attributionLogo: false },
     grid: { vertLines: { color: '#161616' }, horzLines: { color: '#161616' } },
-    rightPriceScale: { borderColor: '#262626', visible: true }, leftPriceScale: { borderColor: '#262626', visible: seriesList.some((s) => s.scale === 'left') },
+    rightPriceScale: { borderColor: '#262626', visible: true, autoScale: true, scaleMargins: { top: 0.08, bottom: 0.08 } }, leftPriceScale: { borderColor: '#262626', visible: seriesList.some((s) => s.scale === 'left'), autoScale: true, scaleMargins: { top: 0.08, bottom: 0.08 } },
     timeScale: { borderColor: '#262626', minBarSpacing: 0.01 },
     localization: { priceFormatter: (v) => v.toLocaleString('de-DE', { maximumFractionDigits: Math.abs(v) >= 100 ? 1 : 3 }) },
   });
   const out = [];
   for (const s of seriesList) {
-    const ser = chart.addSeries(LW.LineSeries, { color: s.color, lineWidth: s.width || 2, lineStyle: s.style || 0, title: s.title, priceScaleId: s.scale || 'right', priceLineVisible: false, lastValueVisible: s.lastValue !== false });
+    // Schwellen als Preislinien bzw. Hilfsreihen zählen über guides mit (nur die nahen), Hilfsreihen selbst nicht (autoscale:false)
+    const guides = [...(s.lines || []).map((l) => ({ value: l.price })), ...(s.guides || [])];
+    const vis = () => { try { const r = chart.timeScale().getVisibleRange(); return r ? { from: Number(r.from), to: Number(r.to) } : null; } catch { return null; } };
+    const autoscaleInfoProvider = s.autoscale === false ? () => null : guides.length ? (orig) => guideAutoscale(orig, guides, vis()) : undefined;
+    const ser = chart.addSeries(LW.LineSeries, { color: s.color, lineWidth: s.width || 2, lineStyle: s.style || 0, title: s.title, priceScaleId: s.scale || 'right', priceLineVisible: false, lastValueVisible: s.lastValue !== false, ...(autoscaleInfoProvider ? { autoscaleInfoProvider } : {}) });
     ser.setData(s.data.filter((p) => Number.isFinite(p.value)));
     for (const l of s.lines || []) ser.createPriceLine({ price: l.price, color: l.color, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: l.title });
     if (s.markers?.length) LW.createSeriesMarkers?.(ser, s.markers.sort((a, b) => a.time - b.time));
@@ -105,6 +159,7 @@ function rangeTabs(charts, dates) {
     b.onclick = () => {
       bar.querySelectorAll('button').forEach((x) => x.classList.remove('on')); b.classList.add('on');
       for (const c of charts) {
+        autoY(c.chart);
         if (!yrs) { c.chart.timeScale().fitContent(); continue; }
         const from = `${Number(last.slice(0, 4)) - yrs}${last.slice(4)}`;
         c.chart.timeScale().setVisibleRange({ from: toTime(from < dates[0] ? dates[0] : from), to: toTime(last) });
@@ -112,6 +167,9 @@ function rangeTabs(charts, dates) {
     };
     bar.append(b);
   }
+  const ay = html('<button type="button" class="tab" title="Y-Achse wieder automatisch an den sichtbaren Zeitraum anpassen (nach Ziehen an der Achse; Doppelklick auf die Achse geht auch)">Y auto</button>');
+  ay.onclick = () => charts.forEach((c) => autoY(c.chart));
+  bar.append(ay);
   return bar;
 }
 
@@ -131,6 +189,8 @@ async function gsw(ctx) {
   ctx.el.append(profileBox(ctx, d));
   // Hinweis Regel vs. Buch
   if (d.hint) ctx.el.append(html(`<p class="gsw-hint" style="margin:6px 0;padding:6px 8px;border-left:4px solid ${HINT_COLORS[d.hint.level] || '#777'};background:#111"><strong>${d.hint.level === 'due' ? 'Swap-Signal' : d.hint.level === 'ok' ? 'OK' : 'Hinweis'}:</strong> ${esc(d.hint.text)}</p>`));
+  // Datenqualität: korrigierte bzw. erkannte eingefrorene Kurse (lib/data-quality.js)
+  if (d.dataQuality?.length) ctx.el.append(dataQualityBox(d.dataQuality));
   // Status
   const nx = st.next;
   ctx.el.append(kv([
@@ -162,30 +222,60 @@ async function gsw(ctx) {
   const chartSect = sect('Charts');
   ctx.el.append(chartSect);
   const tabsHost = document.createElement('div'); ctx.el.append(tabsHost);
-  ctx.el.append(note('sig mit Schwellen (▼ S = Backtest-Wechsel in Silber, ▲ G = zurück in Gold; ● K = eigene Käufe aus dem Buch). Darunter die Paar-Ratio mit tagesgenau umgerechneten Schwellen (Schwelle / k × Paar-Ratio / GLD-SLV-Ratio) und die Kurse des Handelspaars.'), sigHost);
-  ctx.el.append(sect(`${pair.label}-Ratio mit Schwellen`), ratioHost, sect(`Kurse ${pair.label} (${cur})`), pxHost);
   const pts = (arr) => arr.map((v, i) => ({ time: toTime(dates[i]), value: v }));
   const LC = { U1: '#ff4a4a', L1: '#2fd36b', S: '#b469ff', L2: '#63a9ff' };
+  const LN = { U1: 'U1 Einstieg Silber', L1: 'L1 zurück in Gold', S: 'S Spike scharf', L2: 'L2 Spike-Exit' };
+  // Chart 1: das Signal
+  ctx.el.append(html(`<h4 class="gsw-chart-title" style="margin:8px 0 2px">① Signal sig mit Schwellen <span class="hint" style="margin:0;font-weight:normal">(y: sig in Spot-Einheiten = Unzen Silber je Unze Gold, aus GLD/SLV × k)</span></h4>`),
+    note('Hiernach handelt die Regel: über U1 Gold → Silber, unter L1 zurück in Gold; steigt sig im Silber über S, gilt bis zum Rückgang unter L2 der Spike-Modus. ▼ S / ▲ G = Wechsel im Backtest, ● K = eigene Käufe.'), sigHost,
+    legend([['#ffa028', 'sig'], ...['U1', 'L1', 'S', 'L2'].map((k) => [LC[k], `${LN[k]} (${deMax(P[k])})`, true])]));
   charts.push(multiChart(sigHost, [
     { title: 'sig', color: '#ffa028', data: pts(ch.sig), lines: [['U1', P.U1], ['L1', P.L1], ['S', P.S], ['L2', P.L2]].map(([k, v]) => ({ price: v, color: LC[k], title: `${k} ${v}` })), markers: [...btMarks(), ...ownMarks] },
   ], { height: 280 }));
   const ratio = ch.pg.map((g, i) => g / ch.ps[i]);
   const conv = ratio.map((r, i) => r / ch.etf[i]);
-  charts.push(multiChart(ratioHost, [
-    { title: `${pair.label}`, color: '#e6e6e6', data: pts(ratio), markers: btMarks() },
-    ...[['U1', P.U1], ['L1', P.L1], ['S', P.S], ['L2', P.L2]].map(([k, v]) => ({ title: k, color: LC[k], width: 1, style: 2, lastValue: true, data: pts(ch.kMed.map((km, i) => (v / km) * conv[i])) })),
-  ], { height: 240 }));
-  charts.push(multiChart(pxHost, [
-    { title: `Gold ${pair.gold}`, color: '#f2d21b', data: pts(ch.pg), scale: 'left', markers: ownMarks.filter((m) => m.text.endsWith('Au')) },
-    { title: `Silber ${pair.silver}`, color: '#c0c0c0', data: pts(ch.ps), markers: ownMarks.filter((m) => m.text.endsWith('Ag')) },
-  ], { height: 240 }));
+  // Chart 2: dieselben Schwellen, übersetzt in das Kursverhältnis des Handelspaars (einklappbar, Charts erst beim Aufklappen)
+  const isSpec = pair.id === 'GLDSLV';
+  const ratioNodes = [
+    note(`Kurs ${pair.gold} geteilt durch Kurs ${pair.silver}, also „wie viele ${pair.silver} kostet ein ${pair.gold}“. Die gestrichelten Linien sind die Schwellen aus Chart ①, Tag für Tag in dieses Verhältnis umgerechnet: kreuzt die weiße Linie eine Schwelle, kreuzt sig sie auch. Nützlich, um Swap-Kurse fürs eigene Paar abzuschätzen${isSpec ? '; beim Spec-Paar GLD/SLV zeigt er dasselbe Bild wie ① in anderer Einheit' : ''}.`),
+    ratioHost,
+    legend([['#e6e6e6', `${pair.label} (Kursverhältnis)`], ...['U1', 'L1', 'S', 'L2'].map((k) => [LC[k], `${LN[k]} umgerechnet`, true])]),
+  ];
+  ctx.el.append(collapsible('chart-ratio', `② Kursverhältnis ${pair.label} mit umgerechneten Schwellen (y: ${pair.gold} / ${pair.silver})`, ratioNodes, { onOpen: () => {
+    const thr = [['U1', P.U1], ['L1', P.L1], ['S', P.S], ['L2', P.L2]].map(([k, v]) => ({ title: k, color: LC[k], width: 1, style: 2, lastValue: true, autoscale: false, data: pts(ch.kMed.map((km, i) => (v / km) * conv[i])) }));
+    const c = multiChart(ratioHost, [
+      { title: `${pair.label}`, color: '#e6e6e6', data: pts(ratio), markers: btMarks(), guides: thr.map((t) => ({ data: t.data })) },
+      ...thr,
+    ], { height: 240 });
+    charts.push(c);
+  } }));
+  // Chart 3: die beiden Kurse des Handelspaars
+  const pxNodes = [
+    note(`Die Tagesschlusskurse der beiden gehandelten Instrumente: ${pair.gold} (Gold, linke Achse) und ${pair.silver} (Silber, rechte Achse), in ${cur}. Zwei Achsen, weil die Preise sehr verschieden hoch sind; ● K = eigene Käufe. Zeigt, wie sich die Bestände wertmäßig entwickelt haben.`),
+    pxHost,
+    legend([['#f2d21b', `Gold ${pair.gold} (linke Achse, ${cur})`], ['#c0c0c0', `Silber ${pair.silver} (rechte Achse, ${cur})`]]),
+  ];
+  ctx.el.append(collapsible('chart-prices', `③ Kurse ${pair.gold} und ${pair.silver} (y: Kurs in ${cur})`, pxNodes, { onOpen: () => {
+    charts.push(multiChart(pxHost, [
+      { title: `Gold ${pair.gold}`, color: '#f2d21b', data: pts(ch.pg), scale: 'left', markers: ownMarks.filter((m) => m.text.endsWith('Au')) },
+      { title: `Silber ${pair.silver}`, color: '#c0c0c0', data: pts(ch.ps), markers: ownMarks.filter((m) => m.text.endsWith('Ag')) },
+    ], { height: 240 }));
+  } }));
   const gpBar = html('<span style="display:inline-flex;gap:6px;margin-left:12px"></span>');
   for (const [m, t] of [['gold', pair.gold], ['silver', pair.silver]]) gpBar.append(btn(`GP ${t}`, 'Preischart mit Kauflinien der offenen Lots (GP-Overlay BUY=…)', () => ctx.go(gpCmd(t, d.book.open))));
   tabsHost.append(rangeTabs(charts, dates), gpBar);
   ctx.el.append(sect(`Backtest-Wechsel mit diesen Parametern (${deDate(d.backtest.from)} – ${deDate(d.asOf)})`), tradesTable(tradesBt, cur, pair));
   const m = d.backtest.metrics;
   ctx.el.append(note(`Laufender Backtest ab ${deDate(m.startDate)} (10.000 ${cur}): Endwert ${money(m.endValue, cur)}, CAGR ${pc(m.cagr)}, MaxDD ${pc(m.maxdd)}, ${m.switches} Wechsel, ${pc(m.timeInSilver, 1)} der Zeit in Silber, ${deMax(m.goldOz, 3)} Gold-oz. Details und Optimierung: GSWBT.`));
-  for (const n of d.notes || []) ctx.el.append(note(n));
+  for (const n of (d.notes || []).filter((x) => !/^[⚠ℹ] Daten(korrektur|warnung)/.test(x))) ctx.el.append(note(n));
+}
+
+/** Hinweisbox Datenqualität (oben in GSW und GSWBT). */
+export function dataQualityBox(list) {
+  const warn = list.some((n) => n.level === 'warn');
+  const box = html(`<div class="gsw-dq" style="margin:6px 0;padding:6px 8px;border-left:4px solid ${warn ? '#ffa028' : '#63a9ff'};background:#111"><strong>Datenqualität:</strong></div>`);
+  for (const n of list) box.append(html(`<div class="hint gsw-dq-${esc(n.level)}" style="margin:2px 0;${n.level === 'warn' ? 'color:#ffa028' : ''}">${n.level === 'warn' ? '⚠' : 'ℹ'} ${esc(n.text)}</div>`));
+  return box;
 }
 
 function gpCmd(symbol, openLots) {
@@ -341,6 +431,7 @@ function holdingsBox(ctx, d) {
     const tb = table(B.open, [
       { key: 'metal', label: 'Metall', left: true, fmt: metalName },
       { key: 'symbol', label: 'Symbol', left: true },
+      { key: 'action', label: 'Signal/Aktion', html: true, left: true, sort: false, title: 'Was die Regel (aktives Profil, aktuelles sig) für dieses Lot sagt. Rot = Swap fällig (Buch-Metall weicht vom Regel-Metall ab), orange = fällig, aber Haltefrist läuft, violett = Spike-Modus halten, grün = halten. Zweite Zeile: Abstand von sig zur nächsten Schwelle.', fmt: (v) => actionCell(v) },
       { key: 'qty', label: 'Stück', fmt: (v) => deMax(v, 6) },
       { key: 'buyPrice', label: 'Kauf-\nkurs', fmt: (v) => de(v, 4) },
       { key: 'buyDate', label: 'Kauf-\ndatum', fmt: deDate },
@@ -353,8 +444,9 @@ function holdingsBox(ctx, d) {
       } }] : []),
       { key: 'last', label: 'Letzter\nSchluss', fmt: (v) => de(v, 4), title: 'Letzter Tagesschluss (Yahoo)' },
       { key: 'value', label: 'Wert', fmt: (v) => money(v) },
-      { key: 'pnl', label: 'P&L', fmt: (v) => money(v), cls: (v) => (v > 0 ? 'up' : v < 0 ? 'down' : '') },
+      { key: 'pnl', label: 'P&L', fmt: (v) => money(v), cls: (v) => (v > 0 ? 'up' : v < 0 ? 'down' : ''), title: 'Wert − (Stück × Kaufkurs + Kaufgebühr)' },
       { key: 'pnlPct', label: 'P&L\n%', fmt: (v) => pcs(v), cls: (v) => (v > 0 ? 'up' : v < 0 ? 'down' : '') },
+      { key: 'buyFees', label: 'Geb.', fmt: (v) => (v ? de(v, 2) : '—'), title: 'Kaufgebühr (absolut, Lot-Währung)' },
       { key: 'currency', label: 'Währ.', left: true },
       { key: 'note', label: 'Notiz', left: true, short: 24 },
       { key: '_a', label: '', html: true, left: true, fmt: (_, r) => `<span class="ibtns">${iconBtn('data-gsw-go', gpCmd(r.symbol, B.open), 'GP', `Chart mit Kauflinie: ${gpCmd(r.symbol, B.open)}`, 'txt')}${iconBtn('data-gsw-sell', r.id, '⏏', 'Verkaufen (auch Teilverkauf)')}${iconBtn('data-gsw-edit', r.id, '✎', 'Bearbeiten')}${iconBtn('data-gsw-del', r.id, '✕', 'Löschen', 'del')}</span>` },
@@ -372,6 +464,7 @@ function holdingsBox(ctx, d) {
   }
   box.append(swapBar);
   const dlgHost = document.createElement('div'); box.append(dlgHost);
+  const histDlg = html('<div data-gsw-hist-dlg></div>'); // Bearbeiten aus der Historie erscheint dort
   function swapDialog(from) {
     const to = from === 'gold' ? 'silver' : 'gold';
     const lots = B.open.filter((l) => l.metal === from);
@@ -425,23 +518,26 @@ function holdingsBox(ctx, d) {
     const lot = [...B.open, ...B.closed].find((l) => l.id === id); if (!lot) return;
     if (del) { if (confirm(`Lot ${lot.symbol} (${deMax(lot.qty)} Stück, Kauf ${deDate(lot.buyDate)}) löschen?`)) post({ action: 'DELETE', id }, 'Löschen'); return; }
     if (ro) { if (confirm(`Lot ${lot.symbol} wieder öffnen?`)) post({ action: 'REOPEN', id }, 'Wieder öffnen'); return; }
-    if (sell) { lotForm(lot, 'SELL'); return; }
-    if (ed) lotForm(lot, 'EDIT');
+    const host = e.target.closest('[data-gsw-hist]') ? histDlg : dlgHost;
+    if (sell) { lotForm(lot, 'SELL', host); return; }
+    if (ed) lotForm(lot, 'EDIT', host);
   });
-  function lotForm(lot, mode) {
+  function lotForm(lot, mode, host = dlgHost) {
     const f = html(mode === 'SELL'
       ? `<form style="border:1px solid #444;padding:8px;margin:6px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><strong>Verkauf ${esc(lot.symbol)}</strong>
         <label>Datum <input name="sellDate" type="date" value="${todayIso()}"></label><label>Kurs <input name="sellPrice" value="${esc(String(lastOf(lot.symbol) ?? ''))}" inputmode="decimal" style="width:80px"></label>
         <label title="Leer = ganzes Lot; weniger = Teilverkauf">Stück <input name="qty" value="${esc(String(lot.qty))}" inputmode="decimal" style="width:80px"></label>
+        <label title="Verkaufsgebühr absolut in ${esc(lot.currency)} (leer = 0)">Gebühr <input name="sellFees" inputmode="decimal" style="width:60px"></label>
         <p class="gsw-hold-warn hint" style="margin:0;width:100%;color:#ffa028"></p>
         <button type="submit">Verkaufen</button></form>`
       : `<form style="border:1px solid #444;padding:8px;margin:6px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><strong>Bearbeiten ${esc(lot.symbol)}</strong>
         <select name="metal"><option value="gold"${lot.metal === 'gold' ? ' selected' : ''}>Gold</option><option value="silver"${lot.metal === 'silver' ? ' selected' : ''}>Silber</option></select>
         <input name="symbol" value="${esc(lot.symbol)}" style="width:80px"><label>Stück <input name="qty" value="${esc(String(lot.qty))}" style="width:80px"></label>
         <label>Kauf <input name="buyDate" type="date" value="${esc(lot.buyDate)}"></label><label>Kurs <input name="buyPrice" value="${esc(String(lot.buyPrice))}" style="width:80px"></label>
-        ${lot.status === 'closed' ? `<label>Verkauf <input name="sellDate" type="date" value="${esc(lot.sellDate || '')}"></label><label>Kurs <input name="sellPrice" value="${esc(String(lot.sellPrice ?? ''))}" style="width:80px"></label>` : ''}
+        <label title="Kaufgebühr absolut in Lot-Währung (leer = 0)">Geb. <input name="buyFees" value="${esc(lot.buyFees ? String(lot.buyFees) : '')}" inputmode="decimal" style="width:60px"></label>
+        ${lot.status === 'closed' ? `<label>Verkauf <input name="sellDate" type="date" value="${esc(lot.sellDate || '')}"></label><label>Kurs <input name="sellPrice" value="${esc(String(lot.sellPrice ?? ''))}" style="width:80px"></label><label title="Verkaufsgebühr absolut (leer = 0)">Geb. <input name="sellFees" value="${esc(lot.sellFees ? String(lot.sellFees) : '')}" inputmode="decimal" style="width:60px"></label>` : ''}
         <input name="currency" value="${esc(lot.currency)}" style="width:44px"><input name="note" value="${esc(lot.note || '')}" placeholder="Notiz" style="width:140px"><button type="submit">Speichern</button></form>`);
-    f.append(btn('Abbrechen', '', () => dlgHost.replaceChildren()));
+    f.append(btn('Abbrechen', '', () => host.replaceChildren()));
     if (mode === 'SELL' && d.holdMin?.enabled) {
       const warnSell = () => {
         const fd = Object.fromEntries(new FormData(f));
@@ -460,7 +556,7 @@ function holdingsBox(ctx, d) {
       if (mode === 'SELL' && !confirm(`Verkauf ${lot.symbol}: ${fd.qty || lot.qty} Stück zu ${fd.sellPrice}?`)) return;
       post({ action: mode, id: lot.id, ...fd }, mode === 'SELL' ? 'Verkauf' : 'Bearbeiten');
     };
-    dlgHost.replaceChildren(f);
+    host.replaceChildren(f);
   }
   // Kauf-Formular
   const buy = html(`<form class="gsw-buy" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0"><strong>Kauf</strong>
@@ -475,19 +571,59 @@ function holdingsBox(ctx, d) {
   mSel.onchange = () => { const s = mSel.value === 'gold' ? pair.gold : pair.silver; buy.querySelector('[name=symbol]').value = s; buy.querySelector('[name=buyPrice]').value = String(lastOf(s) ?? ''); };
   buy.onsubmit = (e) => { e.preventDefault(); const fd = Object.fromEntries(new FormData(buy)); post({ action: 'BUY', ...fd, costPct: d.params.costPct }, 'Kauf'); };
   box.append(buy);
-  if (B.closed.length) {
-    const det = html(`<details><summary>Geschlossene Lots (${B.closed.length})</summary></details>`);
-    det.append(table(B.closed, [
-      { key: 'metal', label: 'Metall', left: true, fmt: metalName }, { key: 'symbol', label: 'Symbol', left: true }, { key: 'qty', label: 'Stück', fmt: (v) => deMax(v, 6) },
-      { key: 'buyDate', label: 'Kauf', fmt: deDate }, { key: 'buyPrice', label: 'Kauf-\nkurs', fmt: (v) => de(v, 4) }, { key: 'sellDate', label: 'Verkauf', fmt: deDate }, { key: 'sellPrice', label: 'Verk.-\nkurs', fmt: (v) => de(v, 4) },
-      { key: 'pnl', label: 'P&L', fmt: (v) => money(v), cls: (v) => (v > 0 ? 'up' : v < 0 ? 'down' : '') }, { key: 'pnlPct', label: 'P&L\n%', fmt: (v) => pcs(v) },
-      { key: 'swapId', label: 'Swap', fmt: (v) => (v ? '✓' : '') }, { key: 'note', label: 'Notiz', left: true, short: 24 },
-      { key: '_a', label: '', html: true, left: true, fmt: (_, r) => `<span class="ibtns">${iconBtn('data-gsw-edit', r.id, '✎', 'Bearbeiten')}${iconBtn('data-gsw-reopen', r.id, '↺', 'Wieder öffnen')}${iconBtn('data-gsw-del', r.id, '✕', 'Löschen', 'del')}</span>` },
-    ]));
-    box.append(det);
-  }
+  box.append(historySection(ctx, d, histDlg));
   box.append(note('Buch: data/gsw-book.json (getrennt vom RSL-Buch). Swap = alle offenen Lots eines Metalls zum angegebenen Kurs verkaufen, Erlös × (1 − Kosten) × (1 − Kosten) / Kaufkurs = neue Stückzahl, wie im Backtest. Haltefrist (falls eingeschaltet): Warnung, kein Block.'));
   return box;
+}
+
+// ---------- Historie: Equity des echten Buchs + geschlossene Lots (wie RSL26 „Equity der Holdings“) ----------
+function historySection(ctx, d, histDlg) {
+  const B = d.book, cur = d.pair.currency;
+  const eqBody = html('<div data-gsw-equity></div>');
+  let chart = null;
+  ctx.onCleanup?.(() => chart?.remove());
+  const loadEq = async () => {
+    eqBody.replaceChildren(note('Lade Equity des Buchs…'));
+    try {
+      const r = await api.get('/api/gsw/history');
+      if (!ctx.live()) return;
+      eqBody.replaceChildren();
+      if (r.points?.length) {
+        const S = r.stats, c = r.currency;
+        eqBody.append(note(`Seit ${deDate(r.first)}: eingezahlt ${money(S.deposits, c)} · Equity ${money(S.equity, c)} · G/V ${money(S.pnl, c)} (${pcs(S.pnlPct)}) · davon realisiert ${money(S.realized, c)} · Gebühren ${money(S.fees, c)}${S.rule != null ? ` · Regel gleiche Einzahlungen ${money(S.rule, c)}` : ''}${S.bhGold != null ? ` · Buy & Hold ${r.pair.gold} ${money(S.bhGold, c)}` : ''}${S.bhSilver != null ? ` · Buy & Hold ${r.pair.silver} ${money(S.bhSilver, c)}` : ''}`));
+        const host = html('<div data-gsw-equity-chart></div>'); eqBody.append(host);
+        const series = [{ title: `Buch (${c})`, color: '#ffa028', data: r.points.map((p) => ({ time: p.date, value: p.equity })) }];
+        if (r.points.some((p) => p.rule != null)) series.push({ title: `Regel ${r.rule?.profile || ''}`.trim(), color: '#63a9ff', data: r.points.filter((p) => p.rule != null).map((p) => ({ time: p.date, value: p.rule })) });
+        if (r.points.some((p) => p.bhGold != null)) series.push({ title: `Buy & Hold ${r.pair.gold}`, color: '#f2d21b', data: r.points.filter((p) => p.bhGold != null).map((p) => ({ time: p.date, value: p.bhGold })) });
+        if (r.points.some((p) => p.bhSilver != null)) series.push({ title: `Buy & Hold ${r.pair.silver}`, color: '#c0c0c0', data: r.points.filter((p) => p.bhSilver != null).map((p) => ({ time: p.date, value: p.bhSilver })) });
+        series.push({ title: 'Einzahlungen', color: '#777', flows: true, data: r.points.map((p) => ({ time: p.date, value: p.deposits })) });
+        chart?.remove();
+        chart = equityChart(host, series, { storeKey: 'gsw-book', cur: c });
+      }
+      for (const n of [r.method, ...(r.notes || [])].filter(Boolean)) eqBody.append(note(n));
+    } catch (e) { eqBody.replaceChildren(note(`Equity nicht verfügbar: ${e.message}`)); }
+  };
+  const nodes = [
+    note(`Wert des echten GSW-Buchs über die Zeit (${cur}): Buchungen + Tagesschlüsse; zum Vergleich die Regel (aktives Profil) sowie Buy & Hold Gold und Buy & Hold Silber mit denselben Einzahlungen. Darunter alle geschlossenen Lots mit Bearbeiten/Löschen.`),
+    eqBody,
+  ];
+  if (B.closed.length) {
+    const tb = table(B.closed, [
+      { key: 'exitKind', label: 'Art', left: true, title: 'Swap = im Swap-Knopf verkauft, Verkauf = Einzelverkauf' },
+      { key: 'metal', label: 'Metall', left: true, fmt: metalName }, { key: 'symbol', label: 'Symbol', left: true }, { key: 'qty', label: 'Stück', fmt: (v) => deMax(v, 6) },
+      { key: 'buyDate', label: 'Kauf', fmt: deDate }, { key: 'buyPrice', label: 'Kauf-\nkurs', fmt: (v) => de(v, 4) }, { key: 'sellDate', label: 'Verkauf/\nSwap', fmt: deDate }, { key: 'sellPrice', label: 'Verk.-\nkurs', fmt: (v) => de(v, 4) },
+      { key: 'fees', label: 'Gebühren', fmt: (v) => (v ? de(v, 2) : '—'), title: 'Kauf- + Verkaufsgebühr (absolut)' },
+      { key: 'pnl', label: 'G/V', fmt: (v) => money(v), cls: (v) => (v > 0 ? 'up' : v < 0 ? 'down' : ''), title: 'Stück × (Verkaufskurs − Kaufkurs) − Gebühren, in Lot-Währung' }, { key: 'pnlPct', label: 'G/V\n%', fmt: (v) => pcs(v), cls: (v) => (v > 0 ? 'up' : v < 0 ? 'down' : '') },
+      { key: 'holdDaysHeld', label: 'Halte-\ndauer', fmt: (v) => (Number.isFinite(v) ? `${v} Tg` : '—'), title: 'Kalendertage Kauf → Verkauf' },
+      { key: 'taxFreeFrom', label: 'steuerfrei\nab', html: true, fmt: (v, r) => (v ? `<span class="${r.soldTaxFree ? 'up' : ''}" title="${r.soldTaxFree ? 'nach Fristende verkauft' : 'vor Fristende verkauft'} · Frist ${esc(String(d.holdMin?.days || 365))} Tage (aktives Profil). Keine Steuerberatung.">${deDate(v)}</span>` : '—') },
+      { key: 'note', label: 'Notiz', left: true, short: 24 },
+      { key: '_a', label: '', html: true, left: true, fmt: (_, r) => `<span class="ibtns">${iconBtn('data-gsw-edit', r.id, '✎', 'Bearbeiten (Datum, Kurs, Stück, Gebühren, Notiz)')}${iconBtn('data-gsw-reopen', r.id, '↺', 'Wieder öffnen')}${iconBtn('data-gsw-del', r.id, '✕', 'Löschen (mit Rückfrage)', 'del')}</span>` },
+    ]);
+    const wrap = html('<div data-gsw-hist></div>');
+    wrap.append(html(`<h4 style="margin:8px 0 2px">Historische Lots (${B.closed.length})</h4>`), tb, histDlg);
+    nodes.push(wrap);
+  } else nodes.push(note('Noch keine geschlossenen Lots.'));
+  return collapsible('history', `📈 Historie: Equity des Buchs & historische Lots (${B.closed.length} geschlossen)`, nodes, { onOpen: loadEq });
 }
 
 // ================= GSWBT =================
@@ -679,7 +815,10 @@ async function gswbt(ctx) {
       } catch (e) { alert(e.message); }
     } }));
     paint();
-    for (const n of r.notes || []) out.append(note(n));
+    const dqRe = /^([⚠ℹ]) (Daten(korrektur|warnung).*)$/;
+    const dq = (r.notes || []).map((n) => dqRe.exec(n)).filter(Boolean).map((m) => ({ level: m[1] === '⚠' ? 'warn' : 'info', text: m[2] }));
+    if (dq.length) out.prepend(dataQualityBox(dq));
+    for (const n of (r.notes || []).filter((x) => !dqRe.test(x))) out.append(note(n));
     out.append(note(`Sharpe neu berechnet (Tagesrenditen, rf = 0, × √252); in der Spezifikation v3 nicht berechnet. CAGR auf 10.000 Startkapital (nicht 9.990 nach Erstkauf). Buy & Hold ohne Kosten und ohne Steuer. ${r.tax ? '' : 'Steuern, '}TER, Spreads nicht enthalten.`));
     if (r.tax) out.append(note(taxNote(r.tax)));
   }
@@ -714,6 +853,6 @@ function taxNote(t) {
 }
 
 export default [
-  { id: 'GSW', name: 'Gold/Silber-Swap · Signal, Schwellen, Holdings, Swap-Knopf, Charts', help: 'Parameter-Profile (data/gsw-profiles.json): oben Profil wählen; das aktive Profil bestimmt Paar, Schwellen, Chart-Levels und Haltefrist-Warnung. Werte unter „Profilwerte bearbeiten“ ändern → „Anwenden (Vorschau)“, dann Überschreiben / Als neues Profil / Verwerfen. Aktives Profil nicht löschbar. Buch profilunabhängig.', group: 'Kamikaze', needs: false, source: 'Yahoo Close GLD, SLV, GC=F, SI=F + Handelspaar; Buch data/gsw-book.json; Regel v3 (Spec)', render: gsw },
+  { id: 'GSW', name: 'Gold/Silber-Swap · Signal, Schwellen, Holdings, Swap-Knopf, Charts', help: 'Holdings-Spalte Signal/Aktion je Lot: rot = Swap fällig (Buch-Metall ≠ Regel-Metall), orange = fällig, Haltefrist läuft, violett = Spike halten, grün = halten, darunter Abstand zur nächsten Schwelle. „📈 Historie“ (aufklappbar): Equity des echten Buchs vs. Regel, Buy & Hold Gold und Buy & Hold Silber mit denselben Einzahlungen, historische Lots mit Bearbeiten (Datum, Kurs, Stück, Gebühren, Notiz) und Löschen. Charts: ① sig mit Schwellen; ② Kursverhältnis des Paars mit umgerechneten Schwellen und ③ Paar-Kurse sind einklappbar. Parameter-Profile (data/gsw-profiles.json): oben Profil wählen; das aktive Profil bestimmt Paar, Schwellen, Chart-Levels und Haltefrist-Warnung. Werte unter „Profilwerte bearbeiten“ ändern → „Anwenden (Vorschau)“, dann Überschreiben / Als neues Profil / Verwerfen. Aktives Profil nicht löschbar. Buch profilunabhängig.', group: 'Kamikaze', needs: false, source: 'Yahoo Close GLD, SLV, GC=F, SI=F + Handelspaar; Buch data/gsw-book.json; Regel v3 (Spec)', render: gsw },
   { id: 'GSWBT', name: 'GSW-Backtest · Grid, Robustheit, Walk-Forward, OOS, Handelspaar wählbar', help: 'Profil laden füllt Paar, Sperre, Steuer und Einzelparameter. „Als Profil speichern“ im Einzellauf, in der Detailansicht und per ＋P an jeder Grid-Zeile (Name abfragen, Kennzahlen als Snapshot).', group: 'Kamikaze', needs: false, source: 'Yahoo Close; gleiche Engine wie GSW (lib/gsw); Worker-Thread', render: gswbt },
 ];
