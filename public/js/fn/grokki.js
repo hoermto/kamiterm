@@ -407,6 +407,7 @@ function reasonCell(v,r){
   const style=r.trailing?' style="color:#ff7a45;font-weight:600"':'';
   return (tip||style)?`<span${style}${tip}>${esc(shown)}</span>`:esc(shown);
 }
+const deDate=(s)=>/^\d{4}-\d{2}-\d{2}/.test(String(s||''))?`${s.slice(8,10)}.${s.slice(5,7)}.${s.slice(0,4)}`:(s||'—');
 // Exit reason short ("SL >20%", "RRG schwach & Rang > 25"); the full reason is in the tooltip.
 const exitCol={key:'exitShort',label:'Exit-\nHinweis',html:true,left:true,fmt:(v,r)=>r.exitHint?`<span title="${esc(r.exitHint)}">${esc(v||r.exitHint)}</span>`:''};
 function renderBacktestResults(ctx,d) {
@@ -803,7 +804,7 @@ async function rsl(ctx) {
       fBar.append(b);
     }
     holdingsHost.append(sect(`Holdings (offene Positionen) (${pos.length} von ${posAll.length} offen${fUni==='ALL'?'':` · Filter ${fUni}`})`),fBar,
-      collapsible('holdings-info','ℹ Hinweise zu Holdings & Exit-Signalen',[...(trailNum(cur.trail)>0?[note(`Trailing-Stop ${trailNum(cur.trail)} %: Hoch = max(Kaufkurs, Wochenschlüsse seit Kaufdatum, inkl. laufender Woche). Exit-Hinweis, sobald der Wochenschluss ≤ Stop. Ein „gesperrt bis“ für verkaufte Titel wird nicht angezeigt: Der Verkaufsgrund ist im Buch nicht gespeichert. Nach einem Trailing-Verkauf ${lockNum(cur.trailLock)} Wochen nicht zurückkaufen.`)]:[]),
+      collapsible('holdings-info','ℹ Hinweise zu Holdings & Exit-Signalen',[...(trailNum(cur.trail)>0?[note(`Trailing-Stop ${trailNum(cur.trail)} %: Hoch = max(Kaufkurs, Wochenschlüsse seit Kaufdatum, inkl. laufender Woche). Exit-Hinweis, sobald der Wochenschluss ≤ Stop. Nach einem Verkauf, bei dem der Stop ausgelöst war, ist der Titel ${lockNum(cur.trailLock)} Wochen gesperrt (Rangliste „gesperrt bis“, kein Kauf-Kandidat; aus den Kursen ermittelt).`)]:[]),
       note('Exit-Signale nur für offene Positionen, unabhängig vom Kaufdatum (aktuelle Kriterien: RRG-Schwächephase, Rank, Rank-Schutz, RS-Exit RSL26 < Bench, Trailing-Stop). „offen seit …“ = Beginn der noch aktiven Schwächephase nach Leading→Weakening/Lagging; entfällt bei Improving/Leading. RANK: Exit erst bei Rank > RANKTOP in der Schwächephase. Rank-Schutz verhindert nur RRG-Exits, nicht RS-Exit oder Trailing-Stop. Kaufdatum bleibt gespeichert/angezeigt, unterdrückt aber kein Exit. Spalte „Exit?“ steht vorn; Grund im Tooltip und unter „Exit-Hinweis“. Befehle: RSL26 KAUF/EDIT/VERKAUF/LOESCHEN/HOLDINGS')]));
     const addForm=html(`<form style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0">
     <input name="symbol" placeholder="Symbol" required style="width:80px">${uniSel(universe)}
@@ -921,6 +922,7 @@ async function rsl(ctx) {
       d.sold=fresh.sold;
       d.book=fresh.book;
       d.bookAction=fresh.bookAction;
+      d.trailLocks=fresh.trailLocks||[];
       paintHoldings(fresh, msg||(fresh.bookAction?.message?`✓ ${fresh.bookAction.message}`:undefined));
       paintRankRef?.(fresh.positions);
     }catch(e){alert(`Aktualisieren fehlgeschlagen: ${e.message}`);}
@@ -974,7 +976,9 @@ async function rsl(ctx) {
   const paintRank=(positions)=>{
     lastPositions=positions||[];
     const rankRows=allRows.slice(0, topX);
-    const slots=buySlotCandidates(allRows, positions||[], {n:cur.n, universe, skipMa:!!cur.maSkip});
+    // Rückkauf-Sperre nach Trailing-Exit (Server: verkaufte Positionen, deren Stop bis zum Verkauf ausgelöst war)
+    const lockBy=new Map((d.trailLocks||[]).filter(l=>canonUni(l.universe)===universe).map(l=>[String(l.symbol).toUpperCase(),l]));
+    const slots=buySlotCandidates(allRows, positions||[], {n:cur.n, universe, skipMa:!!cur.maSkip, lockedSymbols:[...lockBy.keys()]});
     const winLabel=slots.skipMa&&slots.skippedMa.size?`Rang 1…${slots.windowEnd??slots.n} ohne M&A (${[...slots.skippedMa].join(', ')} übersprungen)`:`Rang 1…${slots.n}`;
     const candBy=new Map(slots.candidates.map(c=>[String(c.ticker).toUpperCase(),c]));
     const slotTip=`Freier Slot: Holdings ${slots.held}/${slots.n} (${universe})`;
@@ -983,6 +987,8 @@ async function rsl(ctx) {
       if(slots.heldSymbols.has(t)) return `<span data-rsl-held="${esc(r.ticker)}" title="Im Depot (offene Position ${esc(universe)}) · Rang ${esc(r.rank)}" style="display:inline-block;padding:0 5px;border-radius:3px;font-size:11px;font-weight:700;background:#3d7bd9;color:#000">im Depot</span>`;
       const c=candBy.get(t);
       const other=slots.heldElsewhere.get(t);
+      const lk=lockBy.get(t);
+      if(lk) return `<span data-rsl-locked="${esc(r.ticker)}" title="${esc(`Rückkauf-Sperre nach Trailing-Exit: verkauft am ${deDate(lk.sellDate)} (Stop ausgelöst, Wochenschluss ${fmt(lk.close,2)} ≤ Stop ${fmt(lk.stop,2)} am ${deDate(lk.hitDate)}). ${cur.trailLock} Wochen kein Wiederkauf, bis ${deDate(lk.until)}; der nächste Rang rückt nach.`)}" style="display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;color:#ffa028;border:1px solid #ffa028">gesperrt bis ${esc(deDate(lk.until))}</span>`;
       if(slots.skippedMa.has(t)) return `<span data-rsl-maskip="${esc(r.ticker)}" title="M&A ignorieren ist an: Dieser Titel hat ein M&A-Flag und zählt nicht zum Kauf-Fenster; der nächste Rang ohne M&A rückt nach." style="display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;color:#ff7a45;border:1px solid #ff7a45">M&amp;A-Skip</span>${other?` <span style="font-size:10px;color:#9b59d0">Depot ${esc(other.join('/'))}</span>`:''}`;
       const otherTag=other?` <span title="Im Depot unter ${esc(other.join(', '))} (zählt nicht für ${esc(universe)}-Slots)" style="font-size:10px;color:#9b59d0;border:1px solid #9b59d0;border-radius:3px;padding:0 3px">Depot ${esc(other.join('/'))}</span>`:'';
       if(c) return `<span data-rsl-buy="${esc(r.ticker)}" title="${esc(`${slotTip} · Kauf-Kandidat für Slot ${c.slot} (nächster nicht gehaltener Titel aus ${winLabel}). Nur Markierung — Kauf manuell.${r.maFlag?' ⚠ M&A-Flag (M&A ignorieren ist aus) — prüfen.':''}`)}" style="display:inline-block;padding:0 5px;border-radius:3px;font-size:11px;font-weight:700;background:#2ecc71;color:#000">KAUF</span>${otherTag}`;
@@ -1031,7 +1037,8 @@ async function rsl(ctx) {
     if(slots.shortfall>0&&cand.length) lines.push(`${slots.shortfall} Slot${slots.shortfall===1?'':'s'} bleibt frei: kein weiterer nicht gehaltener Titel in ${winLabel}.`);
     lines.push(heldList.length?`Im Depot (${universe}): ${heldList.join(', ')}`:`Keine offenen ${universe}-Positionen.`);
     lines.push(cur.maSkip?'M&A ignorieren: an (M&A-Titel zählen nicht zum Kauf-Fenster; gehaltene M&A-Titel bleiben).':'M&A ignorieren: aus (M&A-Titel zählen mit; nur Warnung).');
-    lines.push('Nur Markierung, kein automatischer Kauf. Rückkauf-Sperre nach Trailing-Exit wird live nicht geprüft (Verkaufsgrund nicht im Buch) — nach Trailing-Verkauf selbst beachten.');
+    if(lockBy.size) lines.push(`Rückkauf-Sperre nach Trailing-Exit (${cur.trailLock} Wo.): ${[...lockBy.values()].map(l=>`${l.symbol} bis ${deDate(l.until)}`).join(', ')} – zählen nicht als Kauf-Kandidat.`);
+    lines.push(`Nur Markierung, kein automatischer Kauf.${trailNum(cur.trail)>0&&lockNum(cur.trailLock)>0?' Rückkauf-Sperre: ein Verkauf, bei dem der Trailing-Stop ausgelöst war, sperrt den Titel für die eingestellten Wochen (wie im Backtest).':''}`);
     for(const t of lines){const p=document.createElement('div');p.className='hint';p.style.margin='2px 0';p.textContent=t;sum.append(p);}
     const euNote=d.eu?note(`${universe==='SXXP'?'STOXX Europe 600: alle Kurse in EUR (Yahoo EURxxx=X, Tagesschluss). ':'HDAX: Kurse in EUR. '}Benchmark ${UNI_BENCH[universe]}. Datenreparatur: ${d.eu.repairs?.length?d.eu.repairs.map(r=>`${r.ticker} (${r.fixes}× ${r.types.join('/')})`).join(', '):'keine nötig'}.${universe==='SXXP'?' Hinweis: ZEG.L (+353 % 14.11.2023) und ABVX.PA (+510 % 23.07.2025) sind echte, ungeprüfte Kurssprünge — vor einem Kauf prüfen.':''} Kaufkurs im Buch in EUR eintragen (Kauf-Button übernimmt den EUR-Kurs).${d.coverage?.scanMs!=null?` Scan ${(d.coverage.scanMs/1000).toFixed(1)} s (${d.coverage.fromCache??'?'} von ${d.coverage.loaded} aus Cache).`:''}`):null;
     const rankHead=document.createElement('div');rankHead.dataset.rslRankHead='1';

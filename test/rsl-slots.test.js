@@ -120,3 +120,10 @@ test('skipMa: M&A unterhalb des Fensters wird nicht als übersprungen markiert',
   assert.equal(s.skippedMa.size, 0);
   assert.equal(s.windowEnd, 3);
 });
+
+test('locked ticker (rebuy lock) is skipped and the next rank becomes the candidate', () => {
+  const rows = [{ ticker: 'MRNA', rank: 1 }, { ticker: 'BBB', rank: 2 }, { ticker: 'CCC', rank: 3 }];
+  const r = buySlotCandidates(rows, [], { n: 2, universe: 'SPX', lockedSymbols: ['mrna'] });
+  assert.deepEqual(r.candidates.map((c) => c.ticker), ['BBB']);
+  assert.deepEqual(r.skippedLocked, ['MRNA']);
+});
