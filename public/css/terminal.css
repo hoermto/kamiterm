@@ -578,6 +578,18 @@ table.t td.wrap {
   color: var(--down);
   border-color: var(--down);
 }
+.toast-act {
+  margin-left: 6px;
+  background: var(--amber-bg2);
+  color: var(--amber);
+  border: 1px solid var(--amber-2);
+  padding: 2px 8px;
+  cursor: pointer;
+  font: inherit;
+}
+.toast-act:hover {
+  background: var(--amber-dim);
+}
 
 @media (max-width: 1000px) {
   .grid {

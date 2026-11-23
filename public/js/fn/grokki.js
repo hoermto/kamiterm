@@ -51,15 +51,15 @@ const rslBasisPref=()=>{try{return getPrefs()?.rslBasis==='live'?'live':'friday'
 function basisBar(d,onPick){
   const wrap=html('<div class="rsl-basis" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0"></div>');
   const fri=d.basis==='FRI';
-  wrap.append(html('<span>Signale:</span>'));
-  for(const [k,lab,tip] of [['live','Aktuell','Laufende Woche: letzter Tageskurs zählt als Wochenschluss (nicht regelkonform, nur zur Orientierung).'],['friday','Fr-Schluss (regelkonform)','Regelwerk: Prüfung auf Basis des Freitagsschlusskurses. Gleiche Rechnung wie die RSL-Alarme.']]){
+  wrap.append(html('<span title="Gilt nur für die Verkaufssignale der Holdings. Rangliste, Kurse und P&amp;L sind immer aktuell.">Verkaufssignale:</span>'));
+  for(const [k,lab,tip] of [['live','Aktuell','Verkaufssignale mit laufender Woche: letzter Tageskurs zählt als Wochenschluss (nicht regelkonform, nur zur Orientierung).'],['friday','Fr-Schluss (regelkonform)','Regelwerk: Verkaufssignale auf Basis des Freitagsschlusskurses. Gleiche Rechnung wie die RSL-Alarme.']]){
     const b=document.createElement('button');b.type='button';b.textContent=lab;b.title=tip;b.dataset.basis=k;
     const on=(k==='friday')===fri;if(on){b.style.outline='2px solid #ffa028';b.setAttribute('aria-pressed','true');}
     b.onclick=()=>{if(!on)onPick(k);};wrap.append(b);
   }
   const wk=d.weekClose;
-  const txt=fri&&wk?`Regelkonform: ${wk.text} (Woche gilt ab Fr ${wk.close} + 30 min als abgeschlossen). Kurse, Rang, Exit-Signale und P&L in dieser Ansicht = Stand Stichtag; die RSL-Alarme nutzen dieselbe Rechnung.`
-    :'Aktuell: Signale mit laufender Woche (letzter Tageskurs als Wochenschluss). Das Regelwerk gilt nur für Signale auf Freitagsschlusskurs; die RSL-Alarme melden nur diese.';
+  const txt=fri&&wk?`Regelkonform: ${wk.text} (Woche gilt ab Fr ${wk.close} + 30 min als abgeschlossen). Exit-Signale, Rang für den Rank-Schutz und Trailing-Stop der Holdings = Stand Stichtag, wie die RSL-Alarme. Kurs und P&L sind aktuell, die Rangliste ebenfalls.`
+    :'Aktuell: Verkaufssignale mit laufender Woche (letzter Tageskurs als Wochenschluss), nur zur Orientierung. Das Regelwerk gilt für Signale auf Freitagsschlusskurs; die RSL-Alarme melden nur diese.';
   const h=html(`<span class="hint" data-basis-hint style="margin:0">${esc(txt)}</span>`);
   wrap.append(h);
   return wrap;
@@ -407,8 +407,44 @@ function reasonCell(v,r){
   const style=r.trailing?' style="color:#ff7a45;font-weight:600"':'';
   return (tip||style)?`<span${style}${tip}>${esc(shown)}</span>`:esc(shown);
 }
+// RSL26-Spalten der Holdings: Rang und RSL der Signal-Basis (Fr-Schluss bzw. aktuell), dazu RSL26 aktuell und Δ zur Vorwoche.
+function rslDeltaCell(v, fri, d, extra='') {
+  if(!Number.isFinite(v)) return '—';
+  const when=d.weekClose?.asOf?` (${deDate(d.weekClose.asOf)})`:'';
+  const tip=`RSL26 aktuell − RSL26 am letzten Freitagsschluss${when}${Number.isFinite(fri)?`: ${fmt(fri,4)}`:''}${extra?` · ${extra}`:''}`;
+  const c=v>0?'#2ecc71':v<0?'#ff5555':'inherit';
+  return `<span style="color:${c}" title="${esc(tip)}">${v>0?'+':v<0?'−':'±'}${fmt(Math.abs(v),4)}</span>`;
+}
+function rslHoldCols(d) {
+  // Die Signal-Basis (Aktuell / Fr-Schluss) gilt nur für die Exit-Signale; Rang und RSL26 zeigen immer den aktuellen Stand.
+  const fri=d.basis==='FRI', ranking=rankingVal(d.ranking);
+  const now=r=>fri?r.rankNow:r.rank;
+  return [
+    {key:'rankEntry',label:'Rang\nEntry',html:true,title:`Rang am Wochenschluss, auf dem der Kauf beruht (Kauf Mo–Do: Freitag davor; Kauf Fr–So: dieser Freitag), Rangliste ${ranking}`,
+      fmt:(v,r)=>Number.isFinite(v)?`<span title="${esc(`Rang ${v} am Wochenschluss ${deDate(r.rankEntryDate)} (Basis des Kaufs am ${deDate(r.buyDate)})`)}">${v}</span>`:'—'},
+    {key:'_rankNow',label:'Rang',html:true,title:`Aktueller Rang (${ranking}, aktueller Kurs), wie in der Rangliste`,
+      fmt:(_,r)=>{const v=now(r);if(!Number.isFinite(v))return '—';const tip=fri&&Number.isFinite(r.rank)?`Aktueller Rang ${v} · Rang am letzten Freitagsschluss ${r.rank} (Basis des Exit-Signals)`:`Aktueller Rang ${v}`;return `<span title="${esc(tip)}">${v}</span>`;}},
+    {key:fri?'rslNow':'rsl',label:'RSL26',html:true,title:'RSL26 mit dem aktuellen Kurs (laufende Woche)',
+      fmt:(v,r)=>Number.isFinite(v)?`<span title="${esc(`RSL26 aktuell${fri&&Number.isFinite(r.rsl)?` · am letzten Freitagsschluss ${fmt(r.rsl,4)} (Basis des Exit-Signals)`:''}`)}">${fmt(v,4)}</span>`:'—'},
+    {key:'rslDelta',label:'Δ RSL26\nWoche',html:true,fmt:(v,r)=>rslDeltaCell(v,r.rslFri,d,fri&&Number.isFinite(r.rankNow)?`Rang Fr ${r.rank??'—'} → aktuell ${r.rankNow}`:'')},
+  ];
+}
+// Benchmark-RSL26 ist je Universum für alle Holdings gleich: eine Zeile über der Tabelle statt einer Spalte.
+function benchLine(pos, d) {
+  const fri=d.basis==='FRI', by=new Map();
+  for(const p of pos){const u=p.universe||'—';if(!by.has(u)&&(Number.isFinite(p.benchRsl)||Number.isFinite(p.benchRslNow)))by.set(u,p);}
+  if(!by.size) return null;
+  const when=d.weekClose?.asOf?` ${deDate(d.weekClose.asOf)}`:'';
+  const parts=[...by].map(([u,p])=>{
+    const nowV=fri?p.benchRslNow:p.benchRsl;
+    const txt=[Number.isFinite(nowV)?`aktuell <b>${fmt(nowV,4)}</b>`:'',fri&&Number.isFinite(p.benchRsl)?`Fr-Schluss${when} <b>${fmt(p.benchRsl,4)}</b>`:''].filter(Boolean).join(' · ');
+    return `${esc(u)}${d.benchmark?.ticker&&u===d.universe?` (${esc(d.benchmark.ticker)})`:''}: ${txt}`;
+  });
+  return html(`<p class="hint" data-rsl-bench style="margin:4px 0" title="RSL26 des Benchmarks je Universum; RS-Exit: RSL26 der Aktie unter diesem Wert${fri?' (geprüft am Freitagsschluss)':''}">Benchmark-RSL26 · ${parts.join(' &nbsp;|&nbsp; ')}</p>`);
+}
+const deDate=(s)=>/^\d{4}-\d{2}-\d{2}/.test(String(s||''))?`${s.slice(8,10)}.${s.slice(5,7)}.${s.slice(0,4)}`:(s||'—');
 // Exit reason short ("SL >20%", "RRG schwach & Rang > 25"); the full reason is in the tooltip.
-const exitCol={key:'exitShort',label:'Exit-\nHinweis',html:true,left:true,fmt:(v,r)=>r.exitHint?`<span title="${esc(r.exitHint)}">${esc(v||r.exitHint)}</span>`:''};
+const exitCol={key:'exitShort',label:'Exit-\nHinweis',html:true,left:true,fmt:(v,r)=>r.exitHint&&!r.signalPending?`<span title="${esc(r.exitHint)}">${esc(v||r.exitHint)}</span>`:''}; // neu gekauft (ab Fr): kein Exit, Hinweis nur im Tooltip der Spalte Exit?
 function renderBacktestResults(ctx,d) {
   const holdings=d.holdings||d.watch||[];
   if(holdings.length) {
@@ -632,6 +668,7 @@ async function rsl(ctx) {
     ranking:rankingVal(pick(q.ranking, saved.ranking, 'RSL26')),
     topX:topXVal(pick(q.topx, saved.topX, 25)),
     paramMode:'FEST',
+    rankLive:1, // Rangliste immer aktuell; die Basis gilt nur für die Verkaufssignale der Holdings
     basis:String(q.basis||'').toUpperCase()==='LIVE'?'LIVE':String(q.basis||'').toUpperCase().startsWith('FR')?'FRI':(rslBasisPref()==='live'?'LIVE':'FRI'),
   };
   if(action) params.action=action;
@@ -682,7 +719,6 @@ async function rsl(ctx) {
   const profiles=await fetchProfiles();
   ctx.el.replaceChildren(sect(`Levy RSL26 · Scanner · ${d.universeLabel} · Rangliste ${rankingVal(d.ranking)} · RRGEXIT=${d.rrgExit} · RANKTOP=${d.rankTop}`));
   ctx.el.append(uniTabs(universe,u=>ctx.go(`RSL26 ${u}`))); // Reiter: Strategie-Werte je Universum (zuletzt benutzt bzw. Research-Voreinstellung)
-  ctx.el.append(basisBar(d,async k=>{try{await savePrefs({rslBasis:k});}catch{} ctx.go(`RSL26 ${universe}`);}));
   mountProfileBar(ctx.el,{current:{...cur,universe},profiles,onChange:({type,profile})=>{
     if(type==='load'&&profile){
       saveToolSettings('RSL26',{...profilePayload(profile),universe:profile.universe||universe,paramMode:'FEST'});
@@ -802,8 +838,9 @@ async function rsl(ctx) {
       b.onclick=()=>{try{localStorage.setItem(HOLD_FILTER_KEY,k);}catch{}paintHoldings(bundle);};
       fBar.append(b);
     }
-    holdingsHost.append(sect(`Holdings (offene Positionen) (${pos.length} von ${posAll.length} offen${fUni==='ALL'?'':` · Filter ${fUni}`})`),fBar,
-      collapsible('holdings-info','ℹ Hinweise zu Holdings & Exit-Signalen',[...(trailNum(cur.trail)>0?[note(`Trailing-Stop ${trailNum(cur.trail)} %: Hoch = max(Kaufkurs, Wochenschlüsse seit Kaufdatum, inkl. laufender Woche). Exit-Hinweis, sobald der Wochenschluss ≤ Stop. Ein „gesperrt bis“ für verkaufte Titel wird nicht angezeigt: Der Verkaufsgrund ist im Buch nicht gespeichert. Nach einem Trailing-Verkauf ${lockNum(cur.trailLock)} Wochen nicht zurückkaufen.`)]:[]),
+    holdingsHost.append(sect(`Holdings (offene Positionen) (${pos.length} von ${posAll.length} offen${fUni==='ALL'?'':` · Filter ${fUni}`})`),
+      basisBar(d,async k=>{try{await savePrefs({rslBasis:k});}catch{} ctx.go(`RSL26 ${universe}`);}),fBar,
+      collapsible('holdings-info','ℹ Hinweise zu Holdings & Exit-Signalen',[...(trailNum(cur.trail)>0?[note(`Trailing-Stop ${trailNum(cur.trail)} %: Hoch = max(Kaufkurs, Wochenschlüsse seit Kaufdatum, inkl. laufender Woche). Exit-Hinweis, sobald der Wochenschluss ≤ Stop. Nach einem Verkauf, bei dem der Stop ausgelöst war, ist der Titel ${lockNum(cur.trailLock)} Wochen gesperrt (Rangliste „gesperrt bis“, kein Kauf-Kandidat; aus den Kursen ermittelt).`)]:[]),
       note('Exit-Signale nur für offene Positionen, unabhängig vom Kaufdatum (aktuelle Kriterien: RRG-Schwächephase, Rank, Rank-Schutz, RS-Exit RSL26 < Bench, Trailing-Stop). „offen seit …“ = Beginn der noch aktiven Schwächephase nach Leading→Weakening/Lagging; entfällt bei Improving/Leading. RANK: Exit erst bei Rank > RANKTOP in der Schwächephase. Rank-Schutz verhindert nur RRG-Exits, nicht RS-Exit oder Trailing-Stop. Kaufdatum bleibt gespeichert/angezeigt, unterdrückt aber kein Exit. Spalte „Exit?“ steht vorn; Grund im Tooltip und unter „Exit-Hinweis“. Befehle: RSL26 KAUF/EDIT/VERKAUF/LOESCHEN/HOLDINGS')]));
     const addForm=html(`<form style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0">
     <input name="symbol" placeholder="Symbol" required style="width:80px">${uniSel(universe)}
@@ -814,10 +851,10 @@ async function rsl(ctx) {
     holdingsHost.append(addForm);
     if(pos.length) {
       const posTable=table(pos,[
-        {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>r.signalPending?`<span class="dim" title="${esc(r.exitHint||'')}">ab Fr</span>`:v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
+        {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>r.signalPending?`<span title="${esc(r.exitHint||'')}">—</span>`:v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
         col('symbol','Ticker'),uniCol,maCol,col('buyDate','Kauf-\ndatum'),
         col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),{...col('note','Notiz'),short:20},
-        col('rank','Rank',fmt0),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
+        ...rslHoldCols(d),
         ...rrgCols(),
         exitCol,
         ...(trailNum(cur.trail)>0?[
@@ -854,7 +891,8 @@ async function rsl(ctx) {
         f.querySelector('[data-cancel]').onclick=()=>editBox.replaceChildren();
         editBox.replaceChildren(f);
       },true);
-      holdingsHost.append(posTable,editBox);
+      const bl=benchLine(pos,d);
+      holdingsHost.append(...(bl?[bl]:[]),posTable,editBox);
       if(trailNum(cur.trail)>0) holdingsHost.append(note(`ℹ Trailing-Stop: Referenz ist der höchste Wochenschluss seit Kauf (meist Freitagsschluss, laufende Woche mit letztem Schlusskurs, mindestens Kaufkurs), nicht das Handelshoch (Intraday-Hoch). Stop = Hoch × (1 − ${trailNum(cur.trail)} %). Ausgelöst, wenn ein Wochenschluss ≤ Stop; Ausführung Montag-Open, kein Intraday-Stop. „Fallhöhe bis Stop“ = wie viel % der Kurs bis zum Stop noch fallen darf (max. ${trailNum(cur.trail)} %, negativ = unter Stop). Wie im Backtest.`));
     } else {
       holdingsHost.append(note(posAll.length?`Keine offenen Positionen im Universum ${fUni} (insgesamt ${posAll.length} offen, Filter „Alle“ zeigt sie).`:'Noch keine offenen Positionen. Oben hinzufügen, Kauf-Button in der Rangliste oder RSL26 KAUF TICKER.'));
@@ -915,12 +953,15 @@ async function rsl(ctx) {
   const refreshHoldings=async(msg)=>{
     try{
       const ranks=(d.rows||d.rowsAll||[]).map(r=>`${r.ticker}:${r.rank}`).filter(x=>!x.endsWith(':undefined')&&!x.endsWith(':null')).join(',');
-      const fresh=await api.fn('rsl26',{universe,years:cur.years,n:cur.n,rrgExit:cur.rrgExit,rankTop:cur.rankTop,confirmWeeks:cur.confirmWeeks,rsExit:cur.rsExit?1:0,trail:cur.trail||undefined,trailLock:cur.trailLock,ranking:cur.ranking,maSkip:cur.maSkip?1:0,watch:1,bookOnly:1,ranks:ranks||undefined});
+      // Fr-Schluss: die Exit-Prüfung braucht die Ränge am Freitagsschluss, nicht die aktuellen der Rangliste
+      const friRanks=(d.rows||d.rowsAll||[]).filter(r=>Number.isFinite(r.friRank)).map(r=>`${r.ticker}:${r.friRank}`).join(',');
+      const fresh=await api.fn('rsl26',{universe,years:cur.years,n:cur.n,rrgExit:cur.rrgExit,rankTop:cur.rankTop,confirmWeeks:cur.confirmWeeks,rsExit:cur.rsExit?1:0,trail:cur.trail||undefined,trailLock:cur.trailLock,ranking:cur.ranking,maSkip:cur.maSkip?1:0,watch:1,bookOnly:1,ranks:ranks||undefined,friRanks:d.basis==='FRI'&&friRanks||undefined,basis:d.basis==='FRI'?'FRI':'LIVE',rankLive:1});
       if(!ctx.live())return;
       d.positions=fresh.positions;
       d.sold=fresh.sold;
       d.book=fresh.book;
       d.bookAction=fresh.bookAction;
+      d.trailLocks=fresh.trailLocks||[];
       paintHoldings(fresh, msg||(fresh.bookAction?.message?`✓ ${fresh.bookAction.message}`:undefined));
       paintRankRef?.(fresh.positions);
     }catch(e){alert(`Aktualisieren fehlgeschlagen: ${e.message}`);}
@@ -974,7 +1015,9 @@ async function rsl(ctx) {
   const paintRank=(positions)=>{
     lastPositions=positions||[];
     const rankRows=allRows.slice(0, topX);
-    const slots=buySlotCandidates(allRows, positions||[], {n:cur.n, universe, skipMa:!!cur.maSkip});
+    // Rückkauf-Sperre nach Trailing-Exit (Server: verkaufte Positionen, deren Stop bis zum Verkauf ausgelöst war)
+    const lockBy=new Map((d.trailLocks||[]).filter(l=>canonUni(l.universe)===universe).map(l=>[String(l.symbol).toUpperCase(),l]));
+    const slots=buySlotCandidates(allRows, positions||[], {n:cur.n, universe, skipMa:!!cur.maSkip, lockedSymbols:[...lockBy.keys()]});
     const winLabel=slots.skipMa&&slots.skippedMa.size?`Rang 1…${slots.windowEnd??slots.n} ohne M&A (${[...slots.skippedMa].join(', ')} übersprungen)`:`Rang 1…${slots.n}`;
     const candBy=new Map(slots.candidates.map(c=>[String(c.ticker).toUpperCase(),c]));
     const slotTip=`Freier Slot: Holdings ${slots.held}/${slots.n} (${universe})`;
@@ -983,6 +1026,8 @@ async function rsl(ctx) {
       if(slots.heldSymbols.has(t)) return `<span data-rsl-held="${esc(r.ticker)}" title="Im Depot (offene Position ${esc(universe)}) · Rang ${esc(r.rank)}" style="display:inline-block;padding:0 5px;border-radius:3px;font-size:11px;font-weight:700;background:#3d7bd9;color:#000">im Depot</span>`;
       const c=candBy.get(t);
       const other=slots.heldElsewhere.get(t);
+      const lk=lockBy.get(t);
+      if(lk) return `<span data-rsl-locked="${esc(r.ticker)}" title="${esc(`Rückkauf-Sperre nach Trailing-Exit: verkauft am ${deDate(lk.sellDate)} (Stop ausgelöst, Wochenschluss ${fmt(lk.close,2)} ≤ Stop ${fmt(lk.stop,2)} am ${deDate(lk.hitDate)}). ${cur.trailLock} Wochen kein Wiederkauf, bis ${deDate(lk.until)}; der nächste Rang rückt nach.`)}" style="display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;color:#ffa028;border:1px solid #ffa028">gesperrt bis ${esc(deDate(lk.until))}</span>`;
       if(slots.skippedMa.has(t)) return `<span data-rsl-maskip="${esc(r.ticker)}" title="M&A ignorieren ist an: Dieser Titel hat ein M&A-Flag und zählt nicht zum Kauf-Fenster; der nächste Rang ohne M&A rückt nach." style="display:inline-block;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;color:#ff7a45;border:1px solid #ff7a45">M&amp;A-Skip</span>${other?` <span style="font-size:10px;color:#9b59d0">Depot ${esc(other.join('/'))}</span>`:''}`;
       const otherTag=other?` <span title="Im Depot unter ${esc(other.join(', '))} (zählt nicht für ${esc(universe)}-Slots)" style="font-size:10px;color:#9b59d0;border:1px solid #9b59d0;border-radius:3px;padding:0 3px">Depot ${esc(other.join('/'))}</span>`:'';
       if(c) return `<span data-rsl-buy="${esc(r.ticker)}" title="${esc(`${slotTip} · Kauf-Kandidat für Slot ${c.slot} (nächster nicht gehaltener Titel aus ${winLabel}). Nur Markierung — Kauf manuell.${r.maFlag?' ⚠ M&A-Flag (M&A ignorieren ist aus) — prüfen.':''}`)}" style="display:inline-block;padding:0 5px;border-radius:3px;font-size:11px;font-weight:700;background:#2ecc71;color:#000">KAUF</span>${otherTag}`;
@@ -993,7 +1038,10 @@ async function rsl(ctx) {
       ...(d.eu?[{key:'priceLocal',label:'Lokal',html:true,fmt:(v,r)=>r.cur&&r.cur!=='EUR'&&Number.isFinite(v)?`<span title="Letzter Kurs in Handelswährung; Rangliste/Stops rechnen in EUR">${esc(px(v))} ${esc(r.cur)}</span>`:'<span class="hint" style="margin:0">EUR</span>'}]:[]),
       ...(rankingVal(d.ranking)==='MOM52_4'?[{key:'score',label:'Mom\n12-1 %',html:true,fmt:v=>Number.isFinite(v)?`<b title="Rendite Wochenschluss vor 52 Wo. → vor 4 Wo. (Rangkriterium)">${(100*v).toFixed(2).replace('.',',')} %</b>`:'—'}]
         :rankingVal(d.ranking)==='RSL39'?[{key:'score',label:'RSL39',html:true,fmt:v=>Number.isFinite(v)?`<b title="Wochenschluss / SMA 39 Wochenschlüsse (Rangkriterium)">${fmt(v,4)}</b>`:'—'}]:[]),
-      col('rsl',rankingVal(d.ranking)==='RSL26'?'RSL\n(1 = Ø)':'RSL26\n(RS-Exit)',v=>fmt(v,4)),col('asOf','Stand'),
+      ...(allRows.some(r=>r.friClose!=null)?[{key:'friClose',label:'Fr-\nSchluss',fmt:v=>v!=null?px(v):'—',title:`Schlusskurs am letzten Freitagsschluss${d.weekClose?.asOf?` (${deDate(d.weekClose.asOf)})`:''}, nur zur Orientierung; Rang und Kauf-Kandidaten rechnen mit dem aktuellen Kurs`}]:[]),
+      col('rsl',rankingVal(d.ranking)==='RSL26'?'RSL26\naktuell':'RSL26\n(RS-Exit)',v=>fmt(v,4)),
+      ...(allRows.some(r=>r.friRsl!=null)?[{key:'rslDelta',label:'Δ RSL26\nWoche',html:true,fmt:(v,r)=>rslDeltaCell(v,r.friRsl,d,r.friRank!=null?`Rang am Freitagsschluss ${r.friRank} → aktuell ${r.rank}`:'')}]:[]),
+      col('asOf','Stand'),
       {key:'_a',label:'',html:true,left:true,fmt:(_,r)=>{const cmd=holdingsGpCommand(r.ticker,positions||[]);return `<span class="ibtns">${iconBtn('data-rsl-go',cmd,'GP',`Chart: ${cmd}`,'txt')}${iconBtn('data-rsl-go',`${r.ticker} DES`,'DES',`Beschreibung: ${r.ticker} DES`,'txt')}${iconBtn('data-rsl-kauf',r.ticker,'+','Kaufen (Position anlegen)')}${iconBtn('data-rsl-verk',r.ticker,'⏏','Verkaufen')}</span>`;}},
     ],{onRow:r=>ctx.go(holdingsGpCommand(r.ticker,positions||[]))});
     rankTable.querySelectorAll('tbody tr[data-i]').forEach(tr=>{
@@ -1031,7 +1079,8 @@ async function rsl(ctx) {
     if(slots.shortfall>0&&cand.length) lines.push(`${slots.shortfall} Slot${slots.shortfall===1?'':'s'} bleibt frei: kein weiterer nicht gehaltener Titel in ${winLabel}.`);
     lines.push(heldList.length?`Im Depot (${universe}): ${heldList.join(', ')}`:`Keine offenen ${universe}-Positionen.`);
     lines.push(cur.maSkip?'M&A ignorieren: an (M&A-Titel zählen nicht zum Kauf-Fenster; gehaltene M&A-Titel bleiben).':'M&A ignorieren: aus (M&A-Titel zählen mit; nur Warnung).');
-    lines.push('Nur Markierung, kein automatischer Kauf. Rückkauf-Sperre nach Trailing-Exit wird live nicht geprüft (Verkaufsgrund nicht im Buch) — nach Trailing-Verkauf selbst beachten.');
+    if(lockBy.size) lines.push(`Rückkauf-Sperre nach Trailing-Exit (${cur.trailLock} Wo.): ${[...lockBy.values()].map(l=>`${l.symbol} bis ${deDate(l.until)}`).join(', ')} – zählen nicht als Kauf-Kandidat.`);
+    lines.push(`Nur Markierung, kein automatischer Kauf.${trailNum(cur.trail)>0&&lockNum(cur.trailLock)>0?' Rückkauf-Sperre: ein Verkauf, bei dem der Trailing-Stop ausgelöst war, sperrt den Titel für die eingestellten Wochen (wie im Backtest).':''}`);
     for(const t of lines){const p=document.createElement('div');p.className='hint';p.style.margin='2px 0';p.textContent=t;sum.append(p);}
     const euNote=d.eu?note(`${universe==='SXXP'?'STOXX Europe 600: alle Kurse in EUR (Yahoo EURxxx=X, Tagesschluss). ':'HDAX: Kurse in EUR. '}Benchmark ${UNI_BENCH[universe]}. Datenreparatur: ${d.eu.repairs?.length?d.eu.repairs.map(r=>`${r.ticker} (${r.fixes}× ${r.types.join('/')})`).join(', '):'keine nötig'}.${universe==='SXXP'?' Hinweis: ZEG.L (+353 % 14.11.2023) und ABVX.PA (+510 % 23.07.2025) sind echte, ungeprüfte Kurssprünge — vor einem Kauf prüfen.':''} Kaufkurs im Buch in EUR eintragen (Kauf-Button übernimmt den EUR-Kurs).${d.coverage?.scanMs!=null?` Scan ${(d.coverage.scanMs/1000).toFixed(1)} s (${d.coverage.fromCache??'?'} von ${d.coverage.loaded} aus Cache).`:''}`):null;
     const rankHead=document.createElement('div');rankHead.dataset.rslRankHead='1';

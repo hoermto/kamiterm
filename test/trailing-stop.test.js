@@ -3,7 +3,7 @@ import './helpers/isolate-data.js'; // must stay first: temp QT_DATA_DIR
 // never reads or writes data/rsl-watchlist.json.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {rotationBacktest,trailingStopStatus,trailingStopReason,shortExitHint,evaluatePositionBook} from '../lib/fn/grokki-math.js';
+import {rotationBacktest,trailingStopStatus,trailingStopReason,shortExitHint,trailLocks,evaluatePositionBook} from '../lib/fn/grokki-math.js';
 
 const T=Date.UTC(2023,0,2)/1000, D=86400;
 const mk=(n,fn)=>Array.from({length:n},(_,i)=>{const c=fn(i);return {time:T+i*D,open:c,high:c,low:c,close:c,volume:1e7};});
@@ -119,4 +119,26 @@ test('shortExitHint: short labels for the holdings exit column',()=>{
   assert.equal(shortExitHint('RSL Aktie < RSL Benchmark'),'RSL < Bench');
   assert.equal(shortExitHint('RRG Weakness (Rank-Schutz aus)'),'RRG schwach');
   assert.equal(shortExitHint(null),null);
+});
+
+test('trailLocks: sale after a hit trailing stop locks the ticker for TRAILLOCK weeks; other sales and old ones do not',()=>{
+  // daily bars Mon-Fri from 2026-09-07; closes: up to 130, then down to 100 (stop 20 % of 130 = 104)
+  const bars=[];const t0=Date.parse('2026-09-07T00:00:00Z')/1000;
+  const path=[100,110,120,130,125,100,98];
+  path.forEach((c,w)=>{for(let d=0;d<5;d++)bars.push({time:t0+(w*7+d)*86400,open:c,high:c,low:c,close:c});});
+  const barsOf=()=>bars;
+  const opts={trail:20,trailLock:4,today:'2026-10-26'};
+  // week 6 (Fri 2026-10-16) closes 100 <= 104: stop hit; sold Mon 2026-10-19
+  const hit=trailLocks([{symbol:'MRNA',universe:'SPX',buyDate:'2026-09-07',buyPrice:100,closedDate:'2026-10-19'}],barsOf,opts);
+  assert.equal(hit.length,1);
+  assert.equal(hit[0].symbol,'MRNA');
+  assert.equal(hit[0].until,'2026-11-16'); // 4 weeks after the sale
+  assert.equal(hit[0].hitDate,'2026-10-16');
+  // sold at 130 before the drop: no stop, no lock
+  assert.equal(trailLocks([{symbol:'MRNA',universe:'SPX',buyDate:'2026-09-07',buyPrice:100,closedDate:'2026-09-29'}],barsOf,opts).length,0);
+  // lock already over
+  assert.equal(trailLocks([{symbol:'MRNA',universe:'SPX',buyDate:'2026-09-07',buyPrice:100,closedDate:'2026-10-19'}],barsOf,{...opts,today:'2026-11-20'}).length,0);
+  // trailing stop or lock off
+  assert.equal(trailLocks([{symbol:'MRNA',buyDate:'2026-09-07',buyPrice:100,closedDate:'2026-10-19'}],barsOf,{...opts,trail:0}).length,0);
+  assert.equal(trailLocks([{symbol:'MRNA',buyDate:'2026-09-07',buyPrice:100,closedDate:'2026-10-19'}],barsOf,{...opts,trailLock:0}).length,0);
 });

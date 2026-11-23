@@ -207,6 +207,7 @@ statusAlerts.onStatusEvent((ev) => {
 // Neue Kurse stoßen auch die Status-Alarme an (höchstens alle 10 Minuten).
 ohlcLive.start((e) => { broadcast("ohlc", e); statusAlerts.kick(); });
 let updateStatus = null;
+let updateInstalling = false;
 // Closing the app window quits: see lib/window-watch.js (AMBER_CLOSE_GRACE_MS, default 20 s).
 const windowGraceMs = Number(process.env.AMBER_CLOSE_GRACE_MS) || 20e3;
 const streams = new Map(); // event-stream id (from the page) -> { res, release }
@@ -266,6 +267,7 @@ async function handle(req, res) {
         app: "amber-terminal",
         root: ROOT,
         version: VERSION,
+        pid: process.pid,
         node: process.version,
         platform: process.platform,
         providers: data.health,
@@ -555,6 +557,29 @@ async function handle(req, res) {
         broadcast("update", updateStatus);
       }
       return send(res, 200, updateStatus || updater.loadStatus());
+    }
+    // "Install & restart" (update badge, popup, SETTINGS > Updates): checks once more, then hands over to
+    // scripts/update.js --apply --restart in its own process. It stops this server, installs, refreshes the npm
+    // packages and starts the new version on the same port; the page reloads once /api/health shows a new pid.
+    // Log: data/update.log.
+    if (p === "/api/update/install" && req.method === "POST") {
+      if (updateInstalling) return send(res, 409, { error: "The update is already being installed." });
+      updateStatus = await updater.check();
+      broadcast("update", updateStatus);
+      if (updateStatus.state !== "available")
+        return send(res, 409, { error: updateStatus.reason || `No update to install (${updateStatus.state}).`, status: updateStatus });
+      updateInstalling = true;
+      const fd = fs.openSync(path.join(store.DATA_DIR, "update.log"), "a");
+      fs.writeSync(fd, `
+=== ${new Date().toISOString()} Install & restart from the app ===
+`);
+      const child = spawn(process.execPath, [path.join(ROOT, "scripts", "update.js"), "--apply", "--restart"], {
+        cwd: ROOT, detached: true, windowsHide: true, stdio: ["ignore", fd, fd],
+        env: { ...process.env, PORT: String(req.socket.localPort) },
+      });
+      child.on("error", () => { updateInstalling = false; });
+      child.unref();
+      return send(res, 200, { ok: true, pid: process.pid, status: updateStatus });
     }
     // SETTINGS > Updates: where updates come from (data/launcher.cfg REPO_URL / BRANCH). Saving checks at once.
     if (p === "/api/events-cache") {
