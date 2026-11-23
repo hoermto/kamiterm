@@ -2,6 +2,7 @@
 // The global command runs in the active panel. Your layout is saved to the data folder.
 import { isTyping } from "./shortcuts.js";
 import { APP_VERSION } from "./version.js";
+import { installUpdate } from "./update-install.js";
 import { api, esc, px, pct, cls } from "./api.js";
 import { parse, defaultFn, suggestions, securityQuery } from "./commands.js";
 import { alertTarget } from "./fn/alerts.js";
@@ -47,9 +48,19 @@ const save = () => {
   );
 };
 
-export function toast(msg, err = false, ms = 4500, { onClick = null, title = "" } = {}) {
+export function toast(msg, err = false, ms = 4500, { onClick = null, title = "", action = null } = {}) {
   const t = $("#toast");
   t.textContent = msg;
+  // action: { label, run, title } adds a button to the popup (e.g. "Install & restart" for an update)
+  if (action) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "toast-act";
+    b.textContent = action.label;
+    if (action.title) b.title = action.title;
+    b.onclick = (e) => { e.stopPropagation(); t.hidden = true; action.run(); };
+    t.append(" ", b);
+  }
   t.className = `toast${err ? " err" : ""}`;
   // klickbar (AT-22: Alarm-Popup öffnet die App dazu); sonst wie bisher
   t.onclick = onClick ? () => { t.hidden = true; onClick(); } : null;
@@ -613,8 +624,10 @@ setInterval(refreshAlertCount, 120e3);
 $("#alertBadge")?.addEventListener("click", () => panels[state.active].run("ALERTS"));
 
 // Update warning: the server checks the git repo once a day (lib/updater.js). A newer version shows as a badge
-// next to the version, plus one notice per session. Click the badge to check again now.
-function showUpdate(st) {
+// next to the version, plus one notice per session. Click the badge to check again now; the notice then shows
+// again. An installable update ("available") gets an "Install & restart" button in the notice.
+const INSTALL = { label: "Install & restart", title: "Install the new version now and restart the terminal (data/ is kept)", run: () => installUpdate(toast) };
+function showUpdate(st, { force = false } = {}) {
   const b = $("#updBadge");
   if (!b || !st) return;
   const newer = st.state === "available" || st.state === "blocked";
@@ -626,21 +639,21 @@ function showUpdate(st) {
   const list = (st.commits || []).slice(0, 8).map((c) => `• ${c.subject}`).join("\n");
   const how = st.state === "blocked"
     ? `Not installed automatically: ${st.reason}.`
-    : "Close the terminal and run start.bat to install it.";
-  b.title = `${st.behind == null ? "Newer version" : `${st.behind} new commit(s)`} on ${st.branch}. ${how}\n${list}\nChecked ${new Date(st.checkedAt).toLocaleString()} · click to check again`;
+    : "Install it now, or later with start.bat.";
+  b.title = `${st.behind == null ? "Newer version" : `${st.behind} new commit(s)`} on ${st.branch}. ${how}\n${list}\nChecked ${new Date(st.checkedAt).toLocaleString()} · click to check again${st.state === "available" ? " and install" : ""}`;
   try {
     const seen = sessionStorage.getItem("amber.updSeen");
-    if (seen !== st.remote) {
-      sessionStorage.setItem("amber.updSeen", st.remote || "1");
-      toast(`Update available${v}${st.behind == null ? "" : ` (${st.behind} commit(s))`}. ${how}`, false, 12e3);
-    }
+    if (seen !== st.remote) sessionStorage.setItem("amber.updSeen", st.remote || "1");
+    else if (!force) return;
   } catch {}
+  toast(`Update available${v}${st.behind == null ? "" : ` (${st.behind} commit(s))`}. ${how}`, false, 20e3,
+    st.state === "available" ? { action: INSTALL } : {});
 }
 api.get("/api/update").then(showUpdate).catch(() => {});
 $("#updBadge")?.addEventListener("click", async () => {
   try {
     const st = await api.post("/api/update/check");
-    showUpdate(st);
+    showUpdate(st, { force: true });
     if (!(st?.state === "available" || st?.state === "blocked")) toast(st?.state === "uptodate" ? "Amber Terminal is up to date." : `Update check: ${st?.reason || st?.state}`);
   } catch (e) {
     toast(`Update check failed: ${e.message}`, true);

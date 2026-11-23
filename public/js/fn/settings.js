@@ -4,6 +4,7 @@
 //   clocks, top bar apps, app usage counts behind the Auto bar). `SETTINGS NOTIFY` (also UPDATES, DATA, UI, GENERAL) opens a tab; the last tab is kept
 //   in localStorage. Prefs are stored in data/state.json (amberPrefs, amberUsage) via prefs.js, the rest via the APIs.
 import { esc, api } from "../api.js";
+import { installUpdate } from "../update-install.js";
 import { table, sect, html } from "../ui.js";
 import { FUNCS } from "./index.js";
 import { THEMES, TAPE_MODES, DEFAULT_NAME, DEFAULT_BAR, NAME_MAX, BAR_MIN, BAR_MAX, barApps, barCandidates, usageOrder } from "../prefs-core.js";
@@ -238,6 +239,8 @@ async function renderUpdates(ctx, box, msg = "") {
       renderUpdates(ctx, box, "Checked");
     }),
   );
+  if (st.state === "available")
+    form.append(btn("Install & restart", (e) => { e?.target && (e.target.disabled = true); installUpdate(ctx.toast); }, "Install the new version now and restart the terminal; data/ is kept and this page reloads"));
   form.onsubmit = (e) => {
     e.preventDefault();
     const f = new FormData(form);
@@ -250,7 +253,7 @@ async function renderUpdates(ctx, box, msg = "") {
     ? `the branch has ${v(st.remoteVersion)}, older than the installed one (start.bat would install it)`
     : `${STATE[st.state] || st.state}${st.state === "available" ? ` ${v(st.remoteVersion)}` : ""}${st.reason ? ` (${esc(st.reason)})` : ""}`;
   box.replaceChildren(
-    html(`<p class="para dim">New versions are looked up here and installed by start.bat on its next start. Empty fields use start.bat's value or the default. Saved in data/launcher.cfg on this computer.${c.gitCheckout ? " This folder is a git checkout: without a URL here it updates from its own origin remote; its remotes are never changed." : ""}</p>`),
+    html(`<p class="para dim">New versions are looked up here and installed by start.bat on its next start, or right away with “Install &amp; restart”. Empty fields use start.bat's value or the default. Saved in data/launcher.cfg on this computer.${c.gitCheckout ? " This folder is a git checkout: without a URL here it updates from its own origin remote; its remotes are never changed." : ""}</p>`),
     form,
     html(`<p class="para">Using <b>${esc(st.source || shownUrl)}</b> · branch <b>${esc(c.branch)}</b> <span class="dim">(${FROM[c.repoFrom] || c.repoFrom})</span><br>Status: <b>${stText}</b> · installed ${esc(v(st.localVersion) || "?")}${st.local ? ` @ ${esc(st.local)}` : ""}${st.checkedAt ? ` · checked ${esc(new Date(st.checkedAt).toLocaleString())}` : ""}${msg ? ` · <span class="dim">${esc(msg)}</span>` : ""}</p>`),
   );

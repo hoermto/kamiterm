@@ -80,7 +80,7 @@ EXIT_ON_CLOSE=0       # keep running when the window is closed
 UPDATE_CHECK_HOURS=24
 ```
 
-A `launcher.cfg` next to `start.bat` sets the same for a first install. `node scripts/update.js` shows the update status from the command line, `AMBER_UPDATE_CHECK=0` turns off the daily check, and `AMBER_UPDATE=0 ./start.sh` starts without updating.
+When the terminal finds a newer version, the **⚠ UPDATE** badge and its popup offer **Install & restart** (also in SETTINGS › Updates): it installs the update, keeps `data/`, restarts the server on the same port and reloads the page (log: `data/update.log`). A `launcher.cfg` next to `start.bat` sets the same for a first install. `node scripts/update.js` shows the update status from the command line, `AMBER_UPDATE_CHECK=0` turns off the daily check, and `AMBER_UPDATE=0 ./start.sh` starts without updating.
 
 New versions are developed on `rel-<version>` branches and merged into `master`, so installs following `master` only get finished releases. Changes per version: [CHANGELOG.md](CHANGELOG.md) (in German).
 

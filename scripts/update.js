@@ -3,6 +3,8 @@
 // folder first, so the starter launches the new version. How: see lib/updater.js (web API + ZIP, or git).
 //   node scripts/update.js            report only
 //   node scripts/update.js --apply    install when possible (used by start.bat)
+//   node scripts/update.js --apply --restart   also refresh npm packages and start the terminal again (without
+//                                     opening a window): the app's "Install & restart" button
 // Never fails the start: problems are printed, the exit code stays 0.
 import { spawnSync } from "node:child_process";
 import path from "node:path";
@@ -14,8 +16,7 @@ let st;
 try {
   st = await check(ROOT, { cfg });
 } catch (e) {
-  say(`Update check failed: ${e.message}`);
-  process.exit(0);
+  st = { state: "error", reason: e.message };
 }
 const v = (x) => (x ? `v${x}` : "");
 switch (st.state) {
@@ -48,4 +49,10 @@ switch (st.state) {
     }
     break;
   }
+}
+// After "Install & restart" the server is stopped (or still running if nothing was installed): bring it back.
+if (process.argv.includes("--restart")) {
+  const run = (script, env = process.env) => spawnSync(process.execPath, [path.join(ROOT, "scripts", script)], { cwd: ROOT, stdio: "inherit", env, timeout: 600e3 });
+  run("deps.js");
+  run("launch.js", { ...process.env, QT_NO_OPEN: "1" });
 }
