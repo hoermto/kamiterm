@@ -153,6 +153,9 @@
     "$NODE" scripts/update.js --apply
   fi
 
-  # ---- 4. Start ----
+  # ---- 4. npm-Abhängigkeiten (z. B. nodemailer; nur wenn nötig, blockiert den Start nie) ----
+  "$NODE" scripts/deps.js || true
+
+  # ---- 5. Start ----
   exec "$NODE" server.js --open
 }

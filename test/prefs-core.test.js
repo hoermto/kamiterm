@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizePrefs, normalizeUsage, countRun, barApps, barCandidates, DEFAULT_BAR, THEMES } from '../public/js/prefs-core.js';
+import { normalizePrefs, normalizeUsage, countRun, barApps, barCandidates, usageOrder, DEFAULT_BAR, THEMES } from '../public/js/prefs-core.js';
 
 const AVAIL = [...DEFAULT_BAR, 'RSL26', 'RSLBT', 'SETTINGS', 'KEYS'];
 
@@ -50,4 +50,20 @@ test('normalizePrefs: ticker tape mode, default scroll', () => {
   assert.equal(normalizePrefs({ tape: 'system' }).tape, 'system');
   assert.equal(normalizePrefs({ tape: 'off' }).tape, 'off');
   assert.equal(normalizePrefs({ tape: 'sideways' }).tape, 'scroll');
+});
+
+test('App usage (SETTINGS) and the Auto bar use the same order', () => {
+  const avail = [...DEFAULT_BAR, 'RSL26', 'GSW'];
+  const usage = { GP: 9, RSL26: 5, TOP: 5, WEI: 5, GSW: 2, DES: 2, GONE: 1 };
+  const order = usageOrder(usage, avail).map(([c]) => c);
+  assert.deepEqual(order, ['GP', 'WEI', 'TOP', 'RSL26', 'GSW', 'DES', 'GONE'], 'ties: standard bar first, then registry, then code');
+  const bar = barApps({ bar: { mode: 'auto', size: 6 } }, usage, avail);
+  assert.deepEqual(bar.slice(0, 4), order.filter((c) => avail.includes(c)), 'eligible apps in the same order as the stats');
+  assert.deepEqual(bar, ['WEI', 'TOP', 'RSL26', 'GSW', 'ECO', 'GC']);
+});
+
+test('rslBasis: Standard Fr-Schluss (regelkonform), nur "live" als Alternative', () => {
+  assert.equal(normalizePrefs({}).rslBasis, 'friday');
+  assert.equal(normalizePrefs({ rslBasis: 'live' }).rslBasis, 'live');
+  assert.equal(normalizePrefs({ rslBasis: 'quatsch' }).rslBasis, 'friday');
 });

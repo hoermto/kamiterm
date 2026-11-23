@@ -1,6 +1,7 @@
 // Personal settings of the terminal (SETTINGS): colour scheme, brand name, top-bar apps, app usage.
 // Pure functions only (no DOM, no fetch), so Node tests can load this file directly.
 import { DEFAULT_CLOCKS, normalizeClocks } from "./markets-core.js";
+import { TAPE_SOURCES, normalizeTapeLists } from "./tape-core.js";
 
 // Accent colour sets. Each replaces --amber (accent), --amber-2 (light), --amber-dim (dark) and two background tints.
 export const THEMES = Object.freeze({
@@ -26,6 +27,9 @@ export const DEFAULT_PREFS = Object.freeze({
   theme: "amber",
   name: DEFAULT_NAME,
   tape: "scroll",
+  tapeSource: "standard", // Laufband-Inhalt: "standard" oder "watch" (gewählte W-Listen, tape-core.js)
+  tapeLists: Object.freeze([]),
+  rslBasis: "friday", // RSL26-Signale: "friday" = Fr-Schluss (regelkonform, wie die Alarme) | "live" = aktuell (laufende Woche)
   clocks: DEFAULT_CLOCKS,
   bar: Object.freeze({ mode: "auto", size: DEFAULT_BAR.length, apps: DEFAULT_BAR }),
 });
@@ -45,6 +49,9 @@ export function normalizePrefs(raw) {
     theme: Object.hasOwn(THEMES, r.theme) ? r.theme : DEFAULT_PREFS.theme,
     name,
     tape: Object.hasOwn(TAPE_MODES, r.tape) ? r.tape : DEFAULT_PREFS.tape,
+    tapeSource: Object.hasOwn(TAPE_SOURCES, r.tapeSource) ? r.tapeSource : DEFAULT_PREFS.tapeSource,
+    tapeLists: normalizeTapeLists(r.tapeLists),
+    rslBasis: r.rslBasis === "live" ? "live" : "friday",
     clocks: normalizeClocks(r.clocks),
     bar: {
       mode: b.mode === "custom" ? "custom" : "auto",
@@ -78,16 +85,24 @@ export const barCandidates = (funcs) => Object.values(funcs || {}).filter((f) =>
 //   available: codes that may appear (market-wide functions, in a stable order).
 //   auto:   most used first (ties: DEFAULT_BAR order, then `available` order), filled up with DEFAULT_BAR, `size` keys.
 //   custom: the user's own list and order (codes that no longer exist are skipped).
+/** All counted apps, most used first; ties in DEFAULT_BAR order, then `available` order, then by code. The Auto bar
+ *  and SETTINGS › App usage both use this order, so the stats table and the bar agree. -> [[code, n]] */
+export function usageOrder(usage, available = []) {
+  const u = normalizeUsage(usage);
+  const rank = (c) => {
+    const d = DEFAULT_BAR.indexOf(c);
+    if (d >= 0) return d;
+    const a = available.indexOf(c);
+    return a >= 0 ? DEFAULT_BAR.length + a : Infinity;
+  };
+  return Object.entries(u).sort((a, b) => b[1] - a[1] || rank(a[0]) - rank(b[0]) || a[0].localeCompare(b[0]));
+}
+
 export function barApps(prefs, usage, available) {
   const p = normalizePrefs(prefs);
   const avail = new Set(available);
   if (p.bar.mode === "custom") return p.bar.apps.filter((c) => avail.has(c));
-  const u = normalizeUsage(usage);
-  const rank = (c) => {
-    const d = DEFAULT_BAR.indexOf(c);
-    return d >= 0 ? d : DEFAULT_BAR.length + available.indexOf(c);
-  };
-  const used = available.filter((c) => u[c] > 0).sort((a, b) => u[b] - u[a] || rank(a) - rank(b));
+  const used = usageOrder(usage, available).map(([c]) => c).filter((c) => avail.has(c));
   const fill = DEFAULT_BAR.filter((c) => avail.has(c) && !used.includes(c));
   return [...used, ...fill].slice(0, p.bar.size);
 }

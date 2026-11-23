@@ -1,5 +1,6 @@
 name: ci
-on: [push, pull_request, workflow_dispatch]
+# Disabled: no runs on push or pull request; start by hand under Actions > ci > Run workflow if needed.
+on: [workflow_dispatch]
 jobs:
   test:
     strategy:

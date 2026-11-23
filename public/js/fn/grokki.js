@@ -3,6 +3,8 @@ import {holdingsGpCommand} from '../gp-overlay.js';
 import {table,kv,sect,tabs,html,equityChart,downloadText} from '../ui.js';
 import {topXVal,buySlotCandidates} from './rsl-slots.js';
 import {pnlRow,pnlTotals} from './rsl-pnl.js';
+import {getPrefs,savePrefs} from '../prefs.js';
+import {highlightRows} from '../highlight.js';
 const fmt=(v,d=2)=>Number.isFinite(v)?v.toFixed(d):'—';
 const fmt0=v=>Number.isFinite(v)?String(Math.round(v)):'—';
 const pct=v=>Number.isFinite(v)?`${v.toFixed(2)}%`:'—';
@@ -43,6 +45,25 @@ const TAB_LABELS={SPX:'SPX',NDX:'NDX',HDAX:'HDAX',SXXP:'STOXX 600'};
 const UNI_ALIAS={DAX:'HDAX',STOXX:'SXXP',STOXX600:'SXXP',SXXP600:'SXXP',EUROSTOXX600:'SXXP'};
 const canonUni=v=>{const k=String(v||'').toUpperCase();return UNI_ALIAS[k]||k;};
 const findUniArg=args=>{for(const a of args){const k=canonUni(a);if(SCAN_UNIS.includes(k))return k;}return null;};
+// Signal-Basis (AT-21): „Fr-Schluss (regelkonform)“ = Kurse bis zum letzten Freitagsschluss (Börsenschluss + 30 min),
+// gleiche Rechnung wie die RSL-Status-Alarme; „Aktuell“ = laufende Woche (letzter Tageskurs). Wahl in amberPrefs.rslBasis.
+const rslBasisPref=()=>{try{return getPrefs()?.rslBasis==='live'?'live':'friday';}catch{return 'friday';}};
+function basisBar(d,onPick){
+  const wrap=html('<div class="rsl-basis" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0"></div>');
+  const fri=d.basis==='FRI';
+  wrap.append(html('<span>Signale:</span>'));
+  for(const [k,lab,tip] of [['live','Aktuell','Laufende Woche: letzter Tageskurs zählt als Wochenschluss (nicht regelkonform, nur zur Orientierung).'],['friday','Fr-Schluss (regelkonform)','Regelwerk: Prüfung auf Basis des Freitagsschlusskurses. Gleiche Rechnung wie die RSL-Alarme.']]){
+    const b=document.createElement('button');b.type='button';b.textContent=lab;b.title=tip;b.dataset.basis=k;
+    const on=(k==='friday')===fri;if(on){b.style.outline='2px solid #ffa028';b.setAttribute('aria-pressed','true');}
+    b.onclick=()=>{if(!on)onPick(k);};wrap.append(b);
+  }
+  const wk=d.weekClose;
+  const txt=fri&&wk?`Regelkonform: ${wk.text} (Woche gilt ab Fr ${wk.close} + 30 min als abgeschlossen). Kurse, Rang, Exit-Signale und P&L in dieser Ansicht = Stand Stichtag; die RSL-Alarme nutzen dieselbe Rechnung.`
+    :'Aktuell: Signale mit laufender Woche (letzter Tageskurs als Wochenschluss). Das Regelwerk gilt nur für Signale auf Freitagsschlusskurs; die RSL-Alarme melden nur diese.';
+  const h=html(`<span class="hint" data-basis-hint style="margin:0">${esc(txt)}</span>`);
+  wrap.append(h);
+  return wrap;
+}
 function uniTabs(current,onPick){const el=tabs(SCAN_UNIS,current,onPick);el.querySelectorAll('button').forEach((b,i)=>{const u=SCAN_UNIS[i];b.textContent=TAB_LABELS[u];b.dataset.uni=u;b.title=`${UNI_LABELS[u]} · Benchmark ${UNI_BENCH[u]}`;});return el;}
 /** Strategie-Felder je Universum: zuletzt benutzt (byUniverse) oder Research-Voreinstellung (HDAX Kandidat B, STOXX 600 Kandidat A). */
 const STRAT_KEYS=['n','rrgExit','rankTop','confirmWeeks','rsExit','trail','trailLock','ranking','maSkip'];
@@ -611,6 +632,7 @@ async function rsl(ctx) {
     ranking:rankingVal(pick(q.ranking, saved.ranking, 'RSL26')),
     topX:topXVal(pick(q.topx, saved.topX, 25)),
     paramMode:'FEST',
+    basis:String(q.basis||'').toUpperCase()==='LIVE'?'LIVE':String(q.basis||'').toUpperCase().startsWith('FR')?'FRI':(rslBasisPref()==='live'?'LIVE':'FRI'),
   };
   if(action) params.action=action;
   if(symbol) params.symbol=symbol;
@@ -660,6 +682,7 @@ async function rsl(ctx) {
   const profiles=await fetchProfiles();
   ctx.el.replaceChildren(sect(`Levy RSL26 · Scanner · ${d.universeLabel} · Rangliste ${rankingVal(d.ranking)} · RRGEXIT=${d.rrgExit} · RANKTOP=${d.rankTop}`));
   ctx.el.append(uniTabs(universe,u=>ctx.go(`RSL26 ${u}`))); // Reiter: Strategie-Werte je Universum (zuletzt benutzt bzw. Research-Voreinstellung)
+  ctx.el.append(basisBar(d,async k=>{try{await savePrefs({rslBasis:k});}catch{} ctx.go(`RSL26 ${universe}`);}));
   mountProfileBar(ctx.el,{current:{...cur,universe},profiles,onChange:({type,profile})=>{
     if(type==='load'&&profile){
       saveToolSettings('RSL26',{...profilePayload(profile),universe:profile.universe||universe,paramMode:'FEST'});
@@ -791,7 +814,7 @@ async function rsl(ctx) {
     holdingsHost.append(addForm);
     if(pos.length) {
       const posTable=table(pos,[
-        {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
+        {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>r.signalPending?`<span class="dim" title="${esc(r.exitHint||'')}">ab Fr</span>`:v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
         col('symbol','Ticker'),uniCol,maCol,col('buyDate','Kauf-\ndatum'),
         col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),{...col('note','Notiz'),short:20},
         col('rank','Rank',fmt0),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
@@ -1058,6 +1081,7 @@ async function rsl(ctx) {
   } else maBox.append(note('Keine manuellen M&A-Einträge.'));
   ctx.el.append(collapsible('ma-list',`M&A-Liste (manuell, ${maList.entries?.length||0} Einträge)`,[maBox]));
 
+  if(q.hl) highlightRows(ctx.el,q.hl); // Sprung aus ALERTS: RSL26 SPX HL=MRNA
   diagnostics(ctx,d);
 }
 const colors={Leading:'#55c989',Weakening:'#e2ba43',Lagging:'#ef6a77',Improving:'#63a9ff'};

@@ -13,6 +13,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import * as data from "./lib/providers.js";
 import * as feeds from "./lib/feeds.js";
 import * as alerts from "./lib/alerts.js";
+import * as statusAlerts from "./lib/status-alerts.js";
+import * as notify from "./lib/notify.js";
+import * as notifyConfig from "./lib/notify-config.js";
 import * as store from "./lib/store.js";
 import * as toolSettings from "./lib/tool-settings.js";
 import * as secContact from "./lib/sec-contact.js";
@@ -182,9 +185,27 @@ function broadcast(type, payload) {
   const msg = `event: ${type}\ndata: ${JSON.stringify(payload)}\n\n`;
   for (const res of clients) res.write(msg);
 }
-alerts.onFire((e) => broadcast("alert", e));
+// Unquittierte Alarme (Kurs + Status) für den Zähler in der Kopfzeile; nur Typen, die über die Glocke gemeldet
+// werden (SETTINGS › Benachrichtigungen › Glocke, tools.NOTIFY.bellKinds).
+const bellKinds = () => { try { return notifyConfig.loadConfig().bellKinds; } catch { return null; } };
+const alertCount = () => { try { return statusAlerts.unackedCount(alerts.history(), bellKinds()); } catch { return 0; } };
+const broadcastCount = () => broadcast("alerts-count", { unacked: alertCount() });
+// bell:false → Browser zeigt kein Popup (Liste/Panels aktualisieren sich trotzdem)
+const onBell = (kind) => { const b = bellKinds(); return !Array.isArray(b) || b.includes(kind); };
+alerts.onFire((e) => {
+  broadcast("alert", { ...e, bell: onBell("price") });
+  broadcastCount();
+  // Mail/Telegram, wenn in den Einstellungen eingerichtet (lib/notify-config.js); Fehler ohne Geheimnisse, kein Log
+  notify.deliver({ kind: "price", title: `Kursalarm ${e.symbol || ""}`.trim(), text: e.text, at: e.at }).catch(() => {});
+});
+statusAlerts.onStatusEvent((ev) => {
+  broadcast("status-alert", { ...ev, bell: onBell(ev.kind) });
+  broadcastCount();
+  notify.deliver(ev).then((d) => { if (notify.attempted(d)) statusAlerts.markDelivery(ev.id, d); }).catch(() => {});
+});
 // Open scanner screens follow their stocks; refreshed bars are announced as "ohlc" (lib/ohlc-live.js).
-ohlcLive.start((e) => broadcast("ohlc", e));
+// Neue Kurse stoßen auch die Status-Alarme an (höchstens alle 10 Minuten).
+ohlcLive.start((e) => { broadcast("ohlc", e); statusAlerts.kick(); });
 let updateStatus = null;
 // Closing the app window quits: see lib/window-watch.js (AMBER_CLOSE_GRACE_MS, default 20 s).
 const windowGraceMs = Number(process.env.AMBER_CLOSE_GRACE_MS) || 20e3;
@@ -331,13 +352,21 @@ async function handle(req, res) {
     if (p === "/api/settings") {
       if (req.method === "GET") {
         const tool = q.tool;
+        // NOTIFY enthält SMTP-Passwort/Bot-Token: nie im Klartext ausliefern
+        if (tool === notifyConfig.TOOL) return send(res, 200, { tool, settings: notifyConfig.publicConfig(), defaults: {} });
         if (tool) return send(res, 200, { tool, settings: toolSettings.getTool(tool), defaults: toolSettings.TOOL_DEFAULTS[tool] || {} });
-        return send(res, 200, toolSettings.loadAll());
+        const all = toolSettings.loadAll();
+        if (all.tools?.[notifyConfig.TOOL]) all.tools[notifyConfig.TOOL] = notifyConfig.maskConfig(notifyConfig.loadConfig());
+        return send(res, 200, all);
       }
       if (req.method === "PUT" || req.method === "POST") {
         const body = await readBody(req);
         const tool = body.tool || q.tool;
         if (!tool) throw httpError(400, "tool required");
+        if (tool === notifyConfig.TOOL) { // geprüft speichern, Geheimnisse leer = behalten
+          if (body.reset) throw httpError(400, "NOTIFY: über SETTINGS › Benachrichtigungen leeren");
+          const saved = notifyConfig.saveConfig(body.settings || body.patch || body); broadcastCount(); return send(res, 200, { ok: true, settings: saved, defaults: {} });
+        }
         if (body.reset) return send(res, 200, { ok: true, settings: toolSettings.resetTool(tool), defaults: toolSettings.TOOL_DEFAULTS[tool] || {} });
         const settings = toolSettings.saveTool(tool, body.settings || body.patch || body);
         return send(res, 200, { ok: true, settings, defaults: toolSettings.TOOL_DEFAULTS[tool] || {} });
@@ -363,6 +392,11 @@ async function handle(req, res) {
       }
     }
 
+    // W:HOLD: virtuelle Auto-Watchlist aller gehaltenen Symbole (RSL-Buch, GSW-Buch, PORT …), live berechnet, nur lesen
+    if (p === "/api/watch/hold" && req.method === "GET") {
+      const { holdList } = await import("./lib/holdings.js");
+      return send(res, 200, holdList());
+    }
     if (p === "/api/state") {
       if (req.method === "GET") return send(res, 200, store.read("state", {}));
       if (req.method === "PUT") {
@@ -425,6 +459,48 @@ async function handle(req, res) {
       }
       if (req.method === "PATCH")
         return send(res, 200, alerts.update(id, await readBody(req)));
+    }
+    // Status-Alarme + gemeinsame Liste (ALERTS), Quittieren, Benachrichtigungs-Einstellungen
+    if (p === "/api/status-alerts" && req.method === "GET") {
+      const st = statusAlerts.loadState();
+      const log = statusAlerts.combinedLog(st, alerts.history(), { limit: Math.min(Number(q.limit) || 300, 1000), bellKinds: bellKinds() });
+      return send(res, 200, { ...log, lastRun: st.lastRun, errors: st.errors || {}, baseline: st.baseline || {},
+        providers: statusAlerts.statusProviders().map((x) => ({ id: x.id, label: x.label })), channels: notifyConfig.activeChannels(), bellKinds: bellKinds() });
+    }
+    if (p === "/api/status-alerts/count" && req.method === "GET") return send(res, 200, { unacked: alertCount() });
+    if (p === "/api/status-alerts/check" && req.method === "POST") {
+      const r = await statusAlerts.evaluate();
+      broadcastCount();
+      return send(res, 200, { ok: true, new: r.events.length, events: r.events, errors: r.errors, ran: r.ran, lastRun: r.lastRun });
+    }
+    if (p === "/api/status-alerts/reset" && req.method === "POST") {
+      // „Reset all alerts“: Status-Alarme, letzte Stände und gemeldete Schlüssel löschen, sofort neu prüfen;
+      // ohne gespeicherten Stand wird gemeldet (Glocke/Popup + Mail/Telegram je Kanal-Auswahl über onStatusEvent).
+      // Ausgelöste „einmalig“-Kursalarme werden wieder scharf (data/alerts.json) und sofort mitgeprüft.
+      const rearmed = alerts.rearmFired();
+      const r = await statusAlerts.resetAndCheck();
+      if (rearmed) alerts.evaluate().catch(() => {});
+      broadcastCount();
+      return send(res, 200, { ok: true, rearmed, new: r.events.length, events: r.events, errors: r.errors, ran: r.ran, lastRun: r.lastRun });
+    }
+    if (p === "/api/status-alerts/ack" && req.method === "POST") {
+      const body = await readBody(req);
+      const r = statusAlerts.ack({ id: body.id ? String(body.id) : null, all: !!body.all }, alerts.history(), { bellKinds: bellKinds() });
+      broadcastCount();
+      return send(res, 200, { ok: true, unacked: r.unacked });
+    }
+    if (p === "/api/notify/config") {
+      if (req.method === "GET") return send(res, 200, notifyConfig.publicConfig());
+      if (req.method === "PUT" || req.method === "POST") { const out = notifyConfig.saveConfig(await readBody(req)); broadcastCount(); return send(res, 200, out); }
+    }
+    if (p === "/api/notify/test" && req.method === "POST") {
+      const { channel } = await readBody(req);
+      const text = `Testnachricht vom Amber Terminal (${os.hostname()}, ${new Date().toLocaleString("de-DE")}).`;
+      try {
+        if (channel === "mail") return send(res, 200, { ok: true, ...(await notify.sendMail("Amber Terminal · Test", text)) });
+        if (channel === "telegram") return send(res, 200, { ok: true, ...(await notify.sendTelegram(text)) });
+      } catch (e) { throw httpError(502, e.message); }
+      throw httpError(400, 'channel: "mail" oder "telegram"');
     }
     if (p === "/api/webhook-test" && req.method === "POST") {
       const { url: hook } = await readBody(req);
@@ -590,6 +666,37 @@ async function handle(req, res) {
         });
       }
     }
+    // GSW Gold/Silber-Swap (Grokki): eigenes Buch data/gsw-book.json, eigene Einstellungen data/gsw-settings.json, Profile data/gsw-profiles.json
+    if (p === "/api/gsw" || p.startsWith("/api/gsw/")) {
+      const gsw = await import("./lib/gsw/service.js");
+      const gset = await import("./lib/gsw/settings.js");
+      if (p === "/api/gsw" && req.method === "GET") return send(res, 200, await gsw.status(q));
+      if (p === "/api/gsw/settings") {
+        if (req.method === "GET") return send(res, 200, { settings: gset.loadSettings(), defaults: gset.defaults(), pairs: gset.pairsList() });
+        if (req.method === "PUT" || req.method === "POST") return send(res, 200, { ok: true, settings: gset.saveSettings(await readBody(req)) });
+      }
+      if (p === "/api/gsw/book") {
+        if (req.method === "GET") { const b = gsw.book.loadBook(); return send(res, 200, { book: b, open: gsw.book.openLots(b), closed: gsw.book.closedLots(b) }); }
+        if (req.method === "POST") { const body = await readBody(req); const r = gsw.book.applyAction(body.action, body); return send(res, 200, { ...r, open: gsw.book.openLots(r.book), closed: gsw.book.closedLots(r.book) }); }
+      }
+      if (p === "/api/gsw/bt") {
+        if (req.method === "POST") return send(res, 200, await gsw.startBacktest(await readBody(req)));
+        if (req.method === "GET") return send(res, 200, gsw.getJob(q.id));
+      }
+      if (p === "/api/gsw/history" && req.method === "GET") return send(res, 200, await gsw.history(q));
+      if (p === "/api/gsw/run" && req.method === "POST") return send(res, 200, await gsw.runSingle(await readBody(req)));
+      // Parameter-Profile: eigene Datei data/gsw-profiles.json (fehlt → implizites Profil „Spec v3“, geschrieben erst bei Aktion)
+      if (p === "/api/gsw/profiles") {
+        const P = gsw.profiles;
+        if (req.method === "GET") return send(res, 200, { ...P.loadProfiles(), pairs: gset.pairsList() });
+        if (req.method === "POST") { const body = await readBody(req); return send(res, 200, P.createProfile(body.profile || {}, { activate: !!body.activate })); }
+        if (req.method === "PUT") { const body = await readBody(req); return send(res, 200, P.updateProfile(String(body.id || ""), body.profile || {})); }
+        if (req.method === "DELETE") return send(res, 200, P.deleteProfile(String(q.id || "")));
+      }
+      if (p === "/api/gsw/profiles/activate" && req.method === "POST") { const body = await readBody(req); return send(res, 200, gsw.profiles.activateProfile(String(body.id || ""))); }
+      if (p === "/api/gsw/profiles/delete" && req.method === "POST") { const body = await readBody(req); return send(res, 200, gsw.profiles.deleteProfile(String(body.id || ""))); }
+      return send(res, 404, { error: "Unknown GSW endpoint" });
+    }
     // Terminal functions: /api/fn/<name> runs lib/fn/<name>.js, one file per data source.
 
     const fm = /^\/api\/fn\/([a-z0-9-]{1,40})$/.exec(p);
@@ -663,6 +770,7 @@ if (isMain) {
   const { port } = await start();
   const url = `http://localhost:${port}`;
   alerts.start();
+  statusAlerts.start(); // stündlich + nach EU-/US-Schluss; erster Lauf nach 1 Minute (ohne Stand: aktueller Zustand wird gemeldet)
   // Daily update check (AMBER_UPDATE_CHECK=0 turns it off); a newer version shows as a warning in the top bar.
   if (process.env.AMBER_UPDATE_CHECK !== "0")
     updater.schedule({ onChange: (st) => { updateStatus = st; broadcast("update", st); } });

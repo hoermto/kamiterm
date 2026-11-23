@@ -4,9 +4,12 @@ import { isTyping } from "./shortcuts.js";
 import { APP_VERSION } from "./version.js";
 import { api, esc, px, pct, cls } from "./api.js";
 import { parse, defaultFn, suggestions, securityQuery } from "./commands.js";
+import { alertTarget } from "./fn/alerts.js";
+import { alertBadgeState } from "./alert-badge.js";
 import { FUNCS } from "./fn/index.js";
 import { loadPrefs, countApp, onPrefs, getPrefs, getUsage } from "./prefs.js";
 import { barApps, barCandidates } from "./prefs-core.js";
+import { tapeItems, TAPE_HOLD } from "./tape-core.js";
 import { sessionState, sessionTitle } from "./markets-core.js";
 import { lookupList, bbgCode } from "./securities.js";
 import {
@@ -44,10 +47,14 @@ const save = () => {
   );
 };
 
-export function toast(msg, err = false, ms = 4500) {
+export function toast(msg, err = false, ms = 4500, { onClick = null, title = "" } = {}) {
   const t = $("#toast");
   t.textContent = msg;
   t.className = `toast${err ? " err" : ""}`;
+  // klickbar (AT-22: Alarm-Popup öffnet die App dazu); sonst wie bisher
+  t.onclick = onClick ? () => { t.hidden = true; onClick(); } : null;
+  t.style.cursor = onClick ? "pointer" : "";
+  t.title = onClick ? title : "";
   t.hidden = false;
   clearTimeout(toast.t);
   toast.t = setTimeout(() => (t.hidden = true), ms);
@@ -469,37 +476,48 @@ clocks();
 setInterval(clocks, 15e3);
 onPrefs(clocks);
 
-// Ticker tape: the big indices, gold, oil, the dollar and bitcoin, in one request.
-const TAPE = [
-  ["SPX", "^GSPC"],
-  ["NDX", "^NDX"],
-  ["INDU", "^DJI"],
-  ["UKX", "^FTSE"],
-  ["DAX", "^GDAXI"],
-  ["NKY", "^N225"],
-  ["HSI", "^HSI"],
-  ["GOLD", "GC=F"],
-  ["WTI", "CL=F"],
-  ["US10Y", "^TNX"],
-  ["EURUSD", "EURUSD=X"],
-  ["USDJPY", "JPY=X"],
-  ["BTC", "BTC-USD"],
-  ["ETH", "ETH-USD"],
-];
+// Ticker tape: Standard (the big indices, gold, oil, the dollar and bitcoin) or the union of chosen watchlists
+// incl. W:HOLD (SETTINGS › UI › Ticker tape; prefs tapeSource/tapeLists, public/js/tape-core.js), one board request.
+// Refreshed every minute (W:HOLD is recomputed by the server on each call), on a tape setting change and when a W
+// list is saved in this window (event amber:watch). Empty selection or lists: Standard.
+let tapeBusy = false, tapeAgain = false;
 async function tape() {
+  if (tapeBusy) { tapeAgain = true; return; }
+  tapeBusy = true;
   try {
-    const { rows } = await api.fn("board", {
-      symbols: TAPE.map(([, s]) => s).join(","),
-    });
-    const run = TAPE.map(([n, s]) => {
+    const p = getPrefs();
+    let lists = {}, hold = [];
+    if (p.tapeSource === "watch" && p.tapeLists.length) {
+      const [st, h] = await Promise.all([
+        api.get("/api/state").catch(() => ({})),
+        p.tapeLists.includes(TAPE_HOLD) ? api.get("/api/watch/hold").catch(() => ({})) : {},
+      ]);
+      lists = st?.amberWatch?.lists || {};
+      hold = h?.codes || [];
+    }
+    const t = tapeItems(p, lists, hold);
+    const { rows } = await api.fn("board", { symbols: t.items.map(([, s]) => s).join(",") });
+    const run = t.items.map(([n, s]) => {
       const r = rows[s] || {};
-      return `<span><b>${n}</b>${px(r.price)}${delayTag(r)} <span class="${cls(r.changePct)}">${pct(r.changePct)}</span></span>`;
+      return `<span><b>${esc(n)}</b>${px(r.price)}${delayTag(r)} <span class="${cls(r.changePct)}">${pct(r.changePct)}</span></span>`;
     }).join("");
-    $("#tape").innerHTML = run + run;
-  } catch {}
+    const el = $("#tape");
+    el.innerHTML = run + run;
+    el.dataset.source = t.source;
+    el.title = t.fallback ? "Ticker tape: Standard (the chosen watchlists are empty)" : t.source === "watch" ? `Ticker tape: ${p.tapeLists.join(", ")}${t.capped ? ` (first ${t.items.length})` : ""}` : "Ticker tape: Standard";
+  } catch {} finally {
+    tapeBusy = false;
+    if (tapeAgain) { tapeAgain = false; tape(); }
+  }
 }
 tape();
 setInterval(tape, 60e3);
+let tapeKey = JSON.stringify([getPrefs().tapeSource, getPrefs().tapeLists]);
+onPrefs((p) => {
+  const k = JSON.stringify([p.tapeSource, p.tapeLists]);
+  if (k !== tapeKey) { tapeKey = k; tape(); }
+});
+addEventListener("amber:watch", () => { if (getPrefs().tapeSource === "watch") tape(); });
 
 // Screens with live data (ctx.follow) tell the server once a minute what they show, so it keeps refreshing
 // those stocks; a newer version than the one on view (an "ohlc" event missed) rebuilds the screen quietly.
@@ -545,15 +563,54 @@ function listenForAlerts() {
     } catch {
       return;
     }
-    toast(a.text, false, 12e3);
-    try {
-      if (window.Notification?.permission === "granted")
-        new Notification("Amber Terminal alert", { body: a.text });
-    } catch {}
+    // bell:false = in SETTINGS › Benachrichtigungen › Glocke abgewählt: kein Popup, nur Liste
+    if (a.bell !== false) {
+      toast(a.text, false, 12e3, jumpOpts({ kind: "price", symbol: a.symbol, title: `Kursalarm ${a.symbol || ""}` }));
+      try {
+        if (window.Notification?.permission === "granted")
+          new Notification("Amber Terminal alert", { body: a.text });
+      } catch {}
+    }
     window.dispatchEvent(new CustomEvent("amber:alert", { detail: a }));
+  });
+  // Klick aufs Alarm-Popup: passende App im aktiven Panel (gleiche Zuordnung wie die Zeilen in ALERTS)
+const jumpOpts = (row) => {
+  const t = alertTarget(row);
+  return t ? { onClick: () => panels[state.active].run(t.cmd), title: `Öffnen in ${t.label}` } : {};
+};
+// Status-Alarme (GSW-Swap fällig/gebucht/entfallen, RSL-Verkaufssignal, neuer Kauf-Kandidat): Popup wie Kursalarme
+  es.addEventListener("status-alert", (e) => {
+    let a;
+    try { a = JSON.parse(e.data); } catch { return; }
+    if (a.bell !== false) {
+      toast(`${a.title}: ${a.text}`, false, 15e3, jumpOpts(a));
+      try {
+        if (window.Notification?.permission === "granted") new Notification(a.title || "Amber Terminal", { body: a.text });
+      } catch {}
+    }
+    window.dispatchEvent(new CustomEvent("amber:alert", { detail: a }));
+  });
+  es.addEventListener("alerts-count", (e) => {
+    try { showAlertCount(JSON.parse(e.data).unacked); } catch {}
   });
 }
 listenForAlerts();
+
+// Zähler unquittierter Alarme in der Kopfzeile; Klick öffnet ALERTS im aktiven Panel.
+function showAlertCount(n) {
+  const b = $("#alertBadge");
+  if (!b) return;
+  const st = alertBadgeState(n); // immer sichtbar (AT-23), public/js/alert-badge.js
+  b.hidden = false;
+  b.classList.toggle("quiet", st.quiet);
+  b.textContent = st.text;
+  b.title = st.title;
+  window.dispatchEvent(new CustomEvent("amber:alerts-count", { detail: n }));
+}
+const refreshAlertCount = () => api.get("/api/status-alerts/count").then((r) => showAlertCount(r?.unacked ?? null)).catch(() => showAlertCount(null));
+refreshAlertCount();
+setInterval(refreshAlertCount, 120e3);
+$("#alertBadge")?.addEventListener("click", () => panels[state.active].run("ALERTS"));
 
 // Update warning: the server checks the git repo once a day (lib/updater.js). A newer version shows as a badge
 // next to the version, plus one notice per session. Click the badge to check again now.

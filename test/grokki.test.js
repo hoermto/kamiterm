@@ -858,3 +858,7 @@ test('bookOnly skips universe scan and backtest and returns the book quickly', a
     assert.ok(Date.now() - t0 < 8000, `bookOnly took ${Date.now()-t0}ms`);
   });
 });
+
+test('Gruppe Kamikaze: DMOV, DSCAN (Scan), GSW, GSWBT (AT-9)', () => {
+  for (const id of ['DMOV', 'DSCAN', 'GSW', 'GSWBT']) assert.equal(FUNCS[id]?.group, 'Kamikaze', id);
+});

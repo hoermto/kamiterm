@@ -139,6 +139,7 @@ if ($known) {
       $qg = Join-Path $Runtime 'git\cmd\git.exe'
       if (Test-Path $qg) { $env:PATH = (Split-Path $qg) + ';' + $env:PATH; $env:AMBER_GIT = $qg }
       & $qn scripts\update.js --apply
+      & $qn scripts\deps.js
       & $qn scripts\launch.js
       Start-Sleep -Seconds 2
       exit 0
@@ -222,7 +223,10 @@ if ($cfg.EXIT_ON_CLOSE) { $env:AMBER_EXIT_ON_CLOSE = $cfg.EXIT_ON_CLOSE }
 # ---- 4. Update (never blocks the start) ----
 & $node scripts\update.js --apply
 
-# ---- 5. Start ----
+# ---- 5. npm-Abhaengigkeiten (z. B. nodemailer; nur wenn noetig, blockiert den Start nie) ----
+& $node scripts\deps.js
+
+# ---- 6. Start ----
 & $node scripts\launch.js
 if ($LASTEXITCODE) { Fail 'The server did not start (see data\server.log).' }
 Start-Sleep -Seconds 4
