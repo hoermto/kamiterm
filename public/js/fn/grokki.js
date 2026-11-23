@@ -815,7 +815,7 @@ async function rsl(ctx) {
     holdingsHost.append(addForm);
     if(pos.length) {
       const posTable=table(pos,[
-        {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>r.signalPending?`<span class="dim" title="${esc(r.exitHint||'')}">— ab Fr</span>`:v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
+        {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>r.signalPending?`<span title="${esc(r.exitHint||'')}">—</span>`:v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
         col('symbol','Ticker'),uniCol,maCol,col('buyDate','Kauf-\ndatum'),
         col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),{...col('note','Notiz'),short:20},
         col('rank','Rank',fmt0),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
