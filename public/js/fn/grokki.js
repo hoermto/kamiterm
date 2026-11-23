@@ -409,7 +409,7 @@ function reasonCell(v,r){
 }
 const deDate=(s)=>/^\d{4}-\d{2}-\d{2}/.test(String(s||''))?`${s.slice(8,10)}.${s.slice(5,7)}.${s.slice(0,4)}`:(s||'—');
 // Exit reason short ("SL >20%", "RRG schwach & Rang > 25"); the full reason is in the tooltip.
-const exitCol={key:'exitShort',label:'Exit-\nHinweis',html:true,left:true,fmt:(v,r)=>r.exitHint?`<span title="${esc(r.exitHint)}">${esc(v||r.exitHint)}</span>`:''};
+const exitCol={key:'exitShort',label:'Exit-\nHinweis',html:true,left:true,fmt:(v,r)=>r.exitHint&&!r.signalPending?`<span title="${esc(r.exitHint)}">${esc(v||r.exitHint)}</span>`:''}; // neu gekauft (ab Fr): kein Exit, Hinweis nur im Tooltip der Spalte Exit?
 function renderBacktestResults(ctx,d) {
   const holdings=d.holdings||d.watch||[];
   if(holdings.length) {
@@ -815,7 +815,7 @@ async function rsl(ctx) {
     holdingsHost.append(addForm);
     if(pos.length) {
       const posTable=table(pos,[
-        {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>r.signalPending?`<span class="dim" title="${esc(r.exitHint||'')}">ab Fr</span>`:v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
+        {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>r.signalPending?`<span class="dim" title="${esc(r.exitHint||'')}">— ab Fr</span>`:v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
         col('symbol','Ticker'),uniCol,maCol,col('buyDate','Kauf-\ndatum'),
         col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),{...col('note','Notiz'),short:20},
         col('rank','Rank',fmt0),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
