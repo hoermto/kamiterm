@@ -51,15 +51,15 @@ const rslBasisPref=()=>{try{return getPrefs()?.rslBasis==='live'?'live':'friday'
 function basisBar(d,onPick){
   const wrap=html('<div class="rsl-basis" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0"></div>');
   const fri=d.basis==='FRI';
-  wrap.append(html('<span>Signale:</span>'));
-  for(const [k,lab,tip] of [['live','Aktuell','Laufende Woche: letzter Tageskurs zählt als Wochenschluss (nicht regelkonform, nur zur Orientierung).'],['friday','Fr-Schluss (regelkonform)','Regelwerk: Prüfung auf Basis des Freitagsschlusskurses. Gleiche Rechnung wie die RSL-Alarme.']]){
+  wrap.append(html('<span title="Gilt nur für die Verkaufssignale der Holdings. Rangliste, Kurse und P&amp;L sind immer aktuell.">Verkaufssignale:</span>'));
+  for(const [k,lab,tip] of [['live','Aktuell','Verkaufssignale mit laufender Woche: letzter Tageskurs zählt als Wochenschluss (nicht regelkonform, nur zur Orientierung).'],['friday','Fr-Schluss (regelkonform)','Regelwerk: Verkaufssignale auf Basis des Freitagsschlusskurses. Gleiche Rechnung wie die RSL-Alarme.']]){
     const b=document.createElement('button');b.type='button';b.textContent=lab;b.title=tip;b.dataset.basis=k;
     const on=(k==='friday')===fri;if(on){b.style.outline='2px solid #ffa028';b.setAttribute('aria-pressed','true');}
     b.onclick=()=>{if(!on)onPick(k);};wrap.append(b);
   }
   const wk=d.weekClose;
-  const txt=fri&&wk?`Regelkonform: ${wk.text} (Woche gilt ab Fr ${wk.close} + 30 min als abgeschlossen). Kurse, Rang, Exit-Signale und P&L in dieser Ansicht = Stand Stichtag; die RSL-Alarme nutzen dieselbe Rechnung.`
-    :'Aktuell: Signale mit laufender Woche (letzter Tageskurs als Wochenschluss). Das Regelwerk gilt nur für Signale auf Freitagsschlusskurs; die RSL-Alarme melden nur diese.';
+  const txt=fri&&wk?`Regelkonform: ${wk.text} (Woche gilt ab Fr ${wk.close} + 30 min als abgeschlossen). Exit-Signale, Rang für den Rank-Schutz und Trailing-Stop der Holdings = Stand Stichtag, wie die RSL-Alarme. Kurs und P&L sind aktuell, die Rangliste ebenfalls.`
+    :'Aktuell: Verkaufssignale mit laufender Woche (letzter Tageskurs als Wochenschluss), nur zur Orientierung. Das Regelwerk gilt für Signale auf Freitagsschlusskurs; die RSL-Alarme melden nur diese.';
   const h=html(`<span class="hint" data-basis-hint style="margin:0">${esc(txt)}</span>`);
   wrap.append(h);
   return wrap;
@@ -633,6 +633,7 @@ async function rsl(ctx) {
     ranking:rankingVal(pick(q.ranking, saved.ranking, 'RSL26')),
     topX:topXVal(pick(q.topx, saved.topX, 25)),
     paramMode:'FEST',
+    rankLive:1, // Rangliste immer aktuell; die Basis gilt nur für die Verkaufssignale der Holdings
     basis:String(q.basis||'').toUpperCase()==='LIVE'?'LIVE':String(q.basis||'').toUpperCase().startsWith('FR')?'FRI':(rslBasisPref()==='live'?'LIVE':'FRI'),
   };
   if(action) params.action=action;
@@ -683,7 +684,6 @@ async function rsl(ctx) {
   const profiles=await fetchProfiles();
   ctx.el.replaceChildren(sect(`Levy RSL26 · Scanner · ${d.universeLabel} · Rangliste ${rankingVal(d.ranking)} · RRGEXIT=${d.rrgExit} · RANKTOP=${d.rankTop}`));
   ctx.el.append(uniTabs(universe,u=>ctx.go(`RSL26 ${u}`))); // Reiter: Strategie-Werte je Universum (zuletzt benutzt bzw. Research-Voreinstellung)
-  ctx.el.append(basisBar(d,async k=>{try{await savePrefs({rslBasis:k});}catch{} ctx.go(`RSL26 ${universe}`);}));
   mountProfileBar(ctx.el,{current:{...cur,universe},profiles,onChange:({type,profile})=>{
     if(type==='load'&&profile){
       saveToolSettings('RSL26',{...profilePayload(profile),universe:profile.universe||universe,paramMode:'FEST'});
@@ -803,7 +803,8 @@ async function rsl(ctx) {
       b.onclick=()=>{try{localStorage.setItem(HOLD_FILTER_KEY,k);}catch{}paintHoldings(bundle);};
       fBar.append(b);
     }
-    holdingsHost.append(sect(`Holdings (offene Positionen) (${pos.length} von ${posAll.length} offen${fUni==='ALL'?'':` · Filter ${fUni}`})`),fBar,
+    holdingsHost.append(sect(`Holdings (offene Positionen) (${pos.length} von ${posAll.length} offen${fUni==='ALL'?'':` · Filter ${fUni}`})`),
+      basisBar(d,async k=>{try{await savePrefs({rslBasis:k});}catch{} ctx.go(`RSL26 ${universe}`);}),fBar,
       collapsible('holdings-info','ℹ Hinweise zu Holdings & Exit-Signalen',[...(trailNum(cur.trail)>0?[note(`Trailing-Stop ${trailNum(cur.trail)} %: Hoch = max(Kaufkurs, Wochenschlüsse seit Kaufdatum, inkl. laufender Woche). Exit-Hinweis, sobald der Wochenschluss ≤ Stop. Nach einem Verkauf, bei dem der Stop ausgelöst war, ist der Titel ${lockNum(cur.trailLock)} Wochen gesperrt (Rangliste „gesperrt bis“, kein Kauf-Kandidat; aus den Kursen ermittelt).`)]:[]),
       note('Exit-Signale nur für offene Positionen, unabhängig vom Kaufdatum (aktuelle Kriterien: RRG-Schwächephase, Rank, Rank-Schutz, RS-Exit RSL26 < Bench, Trailing-Stop). „offen seit …“ = Beginn der noch aktiven Schwächephase nach Leading→Weakening/Lagging; entfällt bei Improving/Leading. RANK: Exit erst bei Rank > RANKTOP in der Schwächephase. Rank-Schutz verhindert nur RRG-Exits, nicht RS-Exit oder Trailing-Stop. Kaufdatum bleibt gespeichert/angezeigt, unterdrückt aber kein Exit. Spalte „Exit?“ steht vorn; Grund im Tooltip und unter „Exit-Hinweis“. Befehle: RSL26 KAUF/EDIT/VERKAUF/LOESCHEN/HOLDINGS')]));
     const addForm=html(`<form style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0">
@@ -818,7 +819,7 @@ async function rsl(ctx) {
         {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>r.signalPending?`<span title="${esc(r.exitHint||'')}">—</span>`:v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
         col('symbol','Ticker'),uniCol,maCol,col('buyDate','Kauf-\ndatum'),
         col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),{...col('note','Notiz'),short:20},
-        col('rank','Rank',fmt0),col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
+        {...col('rank','Rank',fmt0),title:d.basis==='FRI'?'Rang zum letzten Freitagsschluss (Basis der Verkaufssignale, Rank-Schutz); die Rangliste darunter zeigt den aktuellen Rang':'Aktueller Rang'},col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
         ...rrgCols(),
         exitCol,
         ...(trailNum(cur.trail)>0?[
@@ -916,7 +917,7 @@ async function rsl(ctx) {
   const refreshHoldings=async(msg)=>{
     try{
       const ranks=(d.rows||d.rowsAll||[]).map(r=>`${r.ticker}:${r.rank}`).filter(x=>!x.endsWith(':undefined')&&!x.endsWith(':null')).join(',');
-      const fresh=await api.fn('rsl26',{universe,years:cur.years,n:cur.n,rrgExit:cur.rrgExit,rankTop:cur.rankTop,confirmWeeks:cur.confirmWeeks,rsExit:cur.rsExit?1:0,trail:cur.trail||undefined,trailLock:cur.trailLock,ranking:cur.ranking,maSkip:cur.maSkip?1:0,watch:1,bookOnly:1,ranks:ranks||undefined});
+      const fresh=await api.fn('rsl26',{universe,years:cur.years,n:cur.n,rrgExit:cur.rrgExit,rankTop:cur.rankTop,confirmWeeks:cur.confirmWeeks,rsExit:cur.rsExit?1:0,trail:cur.trail||undefined,trailLock:cur.trailLock,ranking:cur.ranking,maSkip:cur.maSkip?1:0,watch:1,bookOnly:1,ranks:ranks||undefined,basis:d.basis==='FRI'?'FRI':'LIVE',rankLive:1});
       if(!ctx.live())return;
       d.positions=fresh.positions;
       d.sold=fresh.sold;
@@ -999,6 +1000,7 @@ async function rsl(ctx) {
       ...(d.eu?[{key:'priceLocal',label:'Lokal',html:true,fmt:(v,r)=>r.cur&&r.cur!=='EUR'&&Number.isFinite(v)?`<span title="Letzter Kurs in Handelswährung; Rangliste/Stops rechnen in EUR">${esc(px(v))} ${esc(r.cur)}</span>`:'<span class="hint" style="margin:0">EUR</span>'}]:[]),
       ...(rankingVal(d.ranking)==='MOM52_4'?[{key:'score',label:'Mom\n12-1 %',html:true,fmt:v=>Number.isFinite(v)?`<b title="Rendite Wochenschluss vor 52 Wo. → vor 4 Wo. (Rangkriterium)">${(100*v).toFixed(2).replace('.',',')} %</b>`:'—'}]
         :rankingVal(d.ranking)==='RSL39'?[{key:'score',label:'RSL39',html:true,fmt:v=>Number.isFinite(v)?`<b title="Wochenschluss / SMA 39 Wochenschlüsse (Rangkriterium)">${fmt(v,4)}</b>`:'—'}]:[]),
+      ...(allRows.some(r=>r.friClose!=null)?[{key:'friClose',label:'Fr-\nSchluss',fmt:v=>v!=null?px(v):'—',title:`Schlusskurs am letzten Freitagsschluss${d.weekClose?.asOf?` (${deDate(d.weekClose.asOf)})`:''}, nur zur Orientierung; Rang und Kauf-Kandidaten rechnen mit dem aktuellen Kurs`}]:[]),
       col('rsl',rankingVal(d.ranking)==='RSL26'?'RSL\n(1 = Ø)':'RSL26\n(RS-Exit)',v=>fmt(v,4)),col('asOf','Stand'),
       {key:'_a',label:'',html:true,left:true,fmt:(_,r)=>{const cmd=holdingsGpCommand(r.ticker,positions||[]);return `<span class="ibtns">${iconBtn('data-rsl-go',cmd,'GP',`Chart: ${cmd}`,'txt')}${iconBtn('data-rsl-go',`${r.ticker} DES`,'DES',`Beschreibung: ${r.ticker} DES`,'txt')}${iconBtn('data-rsl-kauf',r.ticker,'+','Kaufen (Position anlegen)')}${iconBtn('data-rsl-verk',r.ticker,'⏏','Verkaufen')}</span>`;}},
     ],{onRow:r=>ctx.go(holdingsGpCommand(r.ticker,positions||[]))});
