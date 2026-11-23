@@ -18,9 +18,10 @@ import heatmap from "./heat.js";
 import fairValue from "./fv.js";
 import playbooks from "./playbooks.js";
 import settings from "./settings.js";
+import alertsFn from "./alerts.js";
 
 import grokki from "./grokki.js";
 import gsw from "./gsw.js";
 
 export const FUNCS = {};
-for (const f of [...grokki, ...gsw, ...market, ...security, ...calendar, ...newsfilings, ...docsearch, ...rates, ...options, ...btst, ...coverage, ...workspace, ...equity, ...events, ...heatmap, ...fairValue, ...playbooks, ...apiHelp, ...meta, ...settings]) FUNCS[f.id] = f;
+for (const f of [...grokki, ...gsw, ...market, ...security, ...calendar, ...newsfilings, ...docsearch, ...rates, ...options, ...btst, ...coverage, ...workspace, ...equity, ...events, ...heatmap, ...fairValue, ...playbooks, ...apiHelp, ...meta, ...settings, ...alertsFn]) FUNCS[f.id] = f;

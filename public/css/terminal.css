@@ -784,3 +784,32 @@ button.ibtn.txt {
   overflow: hidden;
   cursor: zoom-in;
 }
+
+/* Zähler unquittierter Alarme (ALERTS) neben der Version */
+.upd.alerts-badge {
+  background: var(--down, #ff4a4a);
+  color: #fff;
+  cursor: pointer;
+  margin-left: 4px;
+}
+/* keine offenen Alarme: Glocke bleibt sichtbar, gedämpft wie die übrigen Kopfzeilen-Elemente */
+.upd.alerts-badge.quiet {
+  background: transparent;
+  color: var(--amber-dim);
+  font-weight: 400;
+  opacity: 0.8;
+}
+.upd.alerts-badge.quiet:hover {
+  opacity: 1;
+  color: var(--amber);
+}
+/* SETTINGS: Reiterleiste (Allgemein · Benachrichtigungen · Updates · Datenquellen · UI) */
+.set-tabs {
+  border-bottom: 1px solid #2c2c2c;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+.set-tab:focus-visible {
+  outline: 1px solid var(--white);
+  outline-offset: 1px;
+}

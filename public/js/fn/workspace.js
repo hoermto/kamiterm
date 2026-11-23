@@ -225,7 +225,9 @@ async function loadWatch() {
   const st = await api.get("/api/state");
   return watchState(st?.amberWatch || {});
 }
-const saveWatch = (s) => api.put("/api/state", { amberWatch: { lists: s.lists, active: s.active, names: s.names } });
+// After a save: amber:watch, so the ticker tape (app.js) follows when it shows watchlists.
+const saveWatch = (s) => api.put("/api/state", { amberWatch: { lists: s.lists, active: s.active, names: s.names } })
+  .then((r) => { try { dispatchEvent(new Event("amber:watch")); } catch { /* no window (tests) */ } return r; });
 // Every change starts from the saved lists, not from what this screen loaded earlier: a second W panel
 // (or window) would otherwise write its older copy back over a change made in the first.
 async function changeWatch(cmd) {

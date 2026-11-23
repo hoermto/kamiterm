@@ -20,5 +20,8 @@
     "stop": "node scripts/stop.js",
     "setup": "node scripts/setup.js"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "nodemailer": "^10.6.1"
+  }
 }

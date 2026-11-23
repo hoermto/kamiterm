@@ -23,6 +23,7 @@ export const SHORTCUTS = [
   ['GSW', 'GSW (Befehl)', 'Gold/Silber-Swap: Signal, Schwellen, Holdings mit Swap-Knopf, Charts; Einstellungen oben (⚙)'],
   ['GSW', 'Enter im Formular', 'Kauf, Verkauf, Swap bzw. Einstellungen absenden (Swap und Verkauf mit Rückfrage)'],
   ['GSW', 'GSWBT (Befehl)', 'GSW-Backtest: Grid, Robust-Rangliste, Walk-Forward, OOS; Klick auf Grid-Zeile rechnet die Zelle im Detail'],
+  ['ALERTS', 'ALERTS (Befehl) oder 🔔 in der Kopfzeile', 'Kurs- und Status-Alarme (GSW, RSL) mit Quittieren; Mail/Telegram unter SETTINGS › Benachrichtigungen'],
 ];
 /** True, wenn der Fokus in einem Feld liegt, in dem getippt wird (dann keine Einzeltasten-Kürzel). */
 export function isTyping(el) {

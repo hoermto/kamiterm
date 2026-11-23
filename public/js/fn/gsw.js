@@ -1,6 +1,7 @@
 // GSW (Gold/Silber-Swap: Status, Buch, Charts) und GSWBT (Backtest: Grid, Robustheit, Walk-Forward, OOS).
 // Regel: Spezifikation strategies/Gold_Silber_Swap_Spec.md (v3). Server: lib/gsw/*, API /api/gsw*.
 import { api, esc } from '../api.js';
+import { highlightRows, hlArg } from '../highlight.js';
 import { formatGpCommand } from '../gp-overlay.js';
 import { table, sortRows, sect, html, kv, equityChart, createChart } from '../ui.js';
 
@@ -56,6 +57,17 @@ function collapsible(key, summary, nodes, { open = false, onOpen = null } = {}) 
   const fire = () => { if (d.open && !done && onOpen) { done = true; onOpen(); } };
   d.addEventListener('toggle', () => { try { localStorage.setItem(`amber.gsw.open.${key}`, d.open ? '1' : '0'); } catch {} fire(); });
   d.open = isOpen; if (isOpen) queueMicrotask(fire);
+  return d;
+}
+/** Aufklappbare Erläuterung: beim Laden der Seite immer zu (nichts gespeichert); innerhalb der Sitzung bleibt ein
+ *  geöffneter Block bei einem Neuaufbau der Ansicht (Buchung, Profilwechsel) offen. */
+const sessionOpen = new Map();
+function explainRow(key, summary, nodes) {
+  const d = document.createElement('details'); d.className = 'gsw-collapse gsw-explain'; d.dataset.key = key; d.style.margin = '6px 0';
+  const sm = document.createElement('summary'); sm.style.cssText = 'cursor:pointer;font-weight:600'; sm.textContent = summary; d.append(sm);
+  for (const n of [].concat(nodes || [])) if (n) d.append(n);
+  d.open = sessionOpen.get(key) === true;
+  d.addEventListener('toggle', () => sessionOpen.set(key, d.open));
   return d;
 }
 /** Legende unter einem Chart: [[Farbe, Text, gestrichelt?]]. */
@@ -189,29 +201,34 @@ async function gsw(ctx) {
   ctx.el.append(profileBox(ctx, d));
   // Hinweis Regel vs. Buch
   if (d.hint) ctx.el.append(html(`<p class="gsw-hint" style="margin:6px 0;padding:6px 8px;border-left:4px solid ${HINT_COLORS[d.hint.level] || '#777'};background:#111"><strong>${d.hint.level === 'due' ? 'Swap-Signal' : d.hint.level === 'ok' ? 'OK' : 'Hinweis'}:</strong> ${esc(d.hint.text)}</p>`));
-  // Datenqualität: korrigierte bzw. erkannte eingefrorene Kurse (lib/data-quality.js)
-  if (d.dataQuality?.length) ctx.el.append(dataQualityBox(d.dataQuality));
-  // Status
+  // Phasen, Datenqualität, Regeln & Schwellen: Erläuterung als eine aufklappbare Zeile, standardmäßig zu. Sichtbar
+  // bleiben der Hinweis Regel vs. Buch (oben), eine Kurzfassung des Status in der Summary und Datenwarnungen.
   const nx = st.next;
-  ctx.el.append(kv([
+  const dq = d.dataQuality || [];
+  const dqWarn = dq.filter((n) => n.level === 'warn');
+  if (dqWarn.length) ctx.el.append(html(`<p class="gsw-dq-warn" style="margin:6px 0;padding:4px 8px;border-left:4px solid #ffa028;background:#111;color:#ffa028">⚠ ${esc(dqWarn.map((n) => n.text).join(' · '))} <span class="hint" style="margin:0">(Details unter „Phasen, Datenqualität, Regeln & Schwellen“)</span></p>`));
+  const statusKv = kv([
     ['Phase (Regel)', `${st.phase}${st.lastSwitch ? ` seit ${deDate(st.lastSwitch.execDate)} (Signal ${deDate(st.lastSwitch.signalDate)}, ${st.lastSwitch.rule})` : ''}`],
     ['sig (Spot-Einheiten)', `${de(st.sig, 2)} = GLD/SLV ${de(st.etfRatio, 5)} × k${st.window} ${de(st.kMed, 6)}`],
     ['Nächste Schwelle', `${nx.name} ${nx.key} = ${deMax(nx.spot, 2)} · Abstand ${pcs(nx.distPct)} (GLD/SLV ${de(nx.etf, 5)}${pair.id !== 'GLDSLV' ? ` · ${pair.label} ≈ ${de(nx.pair, 5)}` : ''})`],
     ['Spike-Modus', st.pos === 'silver' ? (st.spike ? 'aktiv: Ausstieg erst bei sig < L2' : `aus (scharf bei sig > ${deMax(P.S)})`) : 'nur im Silber-Bein'],
     ['Spot-Ratio GC=F/SI=F', `${de(st.spotRatio, 3)} (Kontrollgröße, nicht das Signal)`],
     ['Parameter', `U1 ${deMax(P.U1)} · L1 ${deMax(P.L1)} · S ${deMax(P.S)} · L2 ${deMax(P.L2)} · Median ${P.window} Tg · Kosten ${deMax(P.costPct, 3)} %/Seite · Start ${deDate(d.start)}`],
-  ]));
-  // Schwellen-Tabelle
-  ctx.el.append(sect('Schwellen'), table(d.levels, [
+  ]);
+  const rulesTable = table(d.levels, [
     { key: 'name', label: 'Schwelle', left: true, fmt: (v, r) => `${v} (${r.key})` },
     { key: 'spot', label: 'sig\n(Spot)', fmt: (v) => deMax(v, 2) },
     { key: 'etf', label: 'GLD/SLV', fmt: (v) => de(v, 5), title: `Schwelle / k${P.window} (heute ${de(st.kMed, 6)})` },
     ...(pair.id !== 'GLDSLV' ? [{ key: 'pair', label: `${pair.label}\n≈ heute`, fmt: (v) => de(v, 5), title: `Umgerechnet mit dem heutigen Verhältnis Paar-Ratio / GLD-SLV-Ratio (${de(st.conv, 5)}); nur Orientierung, das Signal bleibt GLD/SLV × k` }] : []),
     { key: 'distPct', label: 'Abstand\n%', fmt: (v) => pcs(v), title: 'Schwelle / sig − 1' },
     { key: 'role', label: 'Regel', left: true, short: 46 },
-  ]));
+  ]);
+  const sum = [`${dqWarn.length ? '⚠ ' : ''}Phasen, Datenqualität, Regeln & Schwellen`, `Phase ${st.phase}`, `sig ${de(st.sig, 2)}`, `nächste ${nx.key} ${deMax(nx.spot, 2)} (${pcs(nx.distPct)})`,
+    `U1 ${deMax(P.U1)} · L1 ${deMax(P.L1)} · S ${deMax(P.S)} · L2 ${deMax(P.L2)}`].join(' · ');
+  ctx.el.append(explainRow('rules', sum, [dq.length ? dataQualityBox(dq) : null, statusKv, sect('Regeln & Schwellen'), rulesTable]));
   // Holdings
   ctx.el.append(holdingsBox(ctx, d));
+  { const hl = hlArg(ctx.args); if (hl) highlightRows(ctx.el, hl); } // Sprung aus ALERTS: GSW HL=EWG2
   // Charts
   const ch = d.chart, dates = ch.dates;
   const tradesBt = d.backtest.trades;
@@ -853,6 +870,6 @@ function taxNote(t) {
 }
 
 export default [
-  { id: 'GSW', name: 'Gold/Silber-Swap · Signal, Schwellen, Holdings, Swap-Knopf, Charts', help: 'Holdings-Spalte Signal/Aktion je Lot: rot = Swap fällig (Buch-Metall ≠ Regel-Metall), orange = fällig, Haltefrist läuft, violett = Spike halten, grün = halten, darunter Abstand zur nächsten Schwelle. „📈 Historie“ (aufklappbar): Equity des echten Buchs vs. Regel, Buy & Hold Gold und Buy & Hold Silber mit denselben Einzahlungen, historische Lots mit Bearbeiten (Datum, Kurs, Stück, Gebühren, Notiz) und Löschen. Charts: ① sig mit Schwellen; ② Kursverhältnis des Paars mit umgerechneten Schwellen und ③ Paar-Kurse sind einklappbar. Parameter-Profile (data/gsw-profiles.json): oben Profil wählen; das aktive Profil bestimmt Paar, Schwellen, Chart-Levels und Haltefrist-Warnung. Werte unter „Profilwerte bearbeiten“ ändern → „Anwenden (Vorschau)“, dann Überschreiben / Als neues Profil / Verwerfen. Aktives Profil nicht löschbar. Buch profilunabhängig.', group: 'Kamikaze', needs: false, source: 'Yahoo Close GLD, SLV, GC=F, SI=F + Handelspaar; Buch data/gsw-book.json; Regel v3 (Spec)', render: gsw },
+  { id: 'GSW', name: 'Gold/Silber-Swap · Signal, Schwellen, Holdings, Swap-Knopf, Charts', help: 'Holdings-Spalte Signal/Aktion je Lot: rot = Swap fällig (Buch-Metall ≠ Regel-Metall), orange = fällig, Haltefrist läuft, violett = Spike halten, grün = halten, darunter Abstand zur nächsten Schwelle. „📈 Historie“ (aufklappbar): Equity des echten Buchs vs. Regel, Buy & Hold Gold und Buy & Hold Silber mit denselben Einzahlungen, historische Lots mit Bearbeiten (Datum, Kurs, Stück, Gebühren, Notiz) und Löschen. „Phasen, Datenqualität, Regeln & Schwellen“ (Status-Details, Datenqualität, U1/L1/S/L2 mit Abstand und Regel) ist eine aufklappbare Zeile, beim Öffnen zu; die Zeile selbst zeigt Phase, sig und nächste Schwelle, Datenwarnungen bleiben sichtbar. Charts: ① sig mit Schwellen; ② Kursverhältnis des Paars mit umgerechneten Schwellen und ③ Paar-Kurse sind einklappbar. Parameter-Profile (data/gsw-profiles.json): oben Profil wählen; das aktive Profil bestimmt Paar, Schwellen, Chart-Levels und Haltefrist-Warnung. Werte unter „Profilwerte bearbeiten“ ändern → „Anwenden (Vorschau)“, dann Überschreiben / Als neues Profil / Verwerfen. Aktives Profil nicht löschbar. Buch profilunabhängig.', group: 'Kamikaze', needs: false, source: 'Yahoo Close GLD, SLV, GC=F, SI=F + Handelspaar; Buch data/gsw-book.json; Regel v3 (Spec)', render: gsw },
   { id: 'GSWBT', name: 'GSW-Backtest · Grid, Robustheit, Walk-Forward, OOS, Handelspaar wählbar', help: 'Profil laden füllt Paar, Sperre, Steuer und Einzelparameter. „Als Profil speichern“ im Einzellauf, in der Detailansicht und per ＋P an jeder Grid-Zeile (Name abfragen, Kennzahlen als Snapshot).', group: 'Kamikaze', needs: false, source: 'Yahoo Close; gleiche Engine wie GSW (lib/gsw); Worker-Thread', render: gswbt },
 ];
