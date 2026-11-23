@@ -407,6 +407,23 @@ function reasonCell(v,r){
   const style=r.trailing?' style="color:#ff7a45;font-weight:600"':'';
   return (tip||style)?`<span${style}${tip}>${esc(shown)}</span>`:esc(shown);
 }
+// RSL26-Spalten der Holdings: Rang und RSL der Signal-Basis (Fr-Schluss bzw. aktuell), dazu RSL26 aktuell und Δ zur Vorwoche.
+function rslDeltaCell(v, fri, d, extra='') {
+  if(!Number.isFinite(v)) return '—';
+  const when=d.weekClose?.asOf?` (${deDate(d.weekClose.asOf)})`:'';
+  const tip=`RSL26 aktuell − RSL26 am letzten Freitagsschluss${when}${Number.isFinite(fri)?`: ${fmt(fri,4)}`:''}${extra?` · ${extra}`:''}`;
+  const c=v>0?'#2ecc71':v<0?'#ff5555':'inherit';
+  return `<span style="color:${c}" title="${esc(tip)}">${v>0?'+':v<0?'−':'±'}${fmt(Math.abs(v),4)}</span>`;
+}
+function rslHoldCols(d) {
+  const fri=d.basis==='FRI', when=d.weekClose?.asOf?` (${deDate(d.weekClose.asOf)})`:'';
+  return [
+    {...col('rank',fri?'Rang\nFr':'Rang',fmt0),title:fri?`Rang am letzten Freitagsschluss${when}: Basis der Verkaufssignale (Rank-Schutz), gereiht nach RSL26 Fr; die Rangliste darunter zeigt den aktuellen Rang`:'Aktueller Rang, gereiht nach RSL26 aktuell'},
+    ...(fri?[{...col('rsl','RSL26\nFr',v=>fmt(v,4)),title:`RSL26 am letzten Freitagsschluss${when}: der Wert, nach dem „Rang Fr“ gereiht ist und mit dem die Verkaufssignale rechnen`}]:[]),
+    {key:fri?'rslNow':'rsl',label:'RSL26\naktuell',html:true,title:'RSL26 mit dem aktuellen Kurs (laufende Woche)',fmt:(v,r)=>Number.isFinite(v)?`<span title="${esc(`RSL26 aktuell${r.rankNow!=null?` · aktueller Rang ${r.rankNow}`:''}`)}">${fmt(v,4)}</span>`:'—'},
+    {key:'rslDelta',label:'Δ RSL26\nWoche',html:true,fmt:(v,r)=>rslDeltaCell(v,r.rslFri,d,fri&&r.rankNow!=null?`Rang Fr ${r.rank??'—'} → aktuell ${r.rankNow}`:'')},
+  ];
+}
 const deDate=(s)=>/^\d{4}-\d{2}-\d{2}/.test(String(s||''))?`${s.slice(8,10)}.${s.slice(5,7)}.${s.slice(0,4)}`:(s||'—');
 // Exit reason short ("SL >20%", "RRG schwach & Rang > 25"); the full reason is in the tooltip.
 const exitCol={key:'exitShort',label:'Exit-\nHinweis',html:true,left:true,fmt:(v,r)=>r.exitHint&&!r.signalPending?`<span title="${esc(r.exitHint)}">${esc(v||r.exitHint)}</span>`:''}; // neu gekauft (ab Fr): kein Exit, Hinweis nur im Tooltip der Spalte Exit?
@@ -819,7 +836,7 @@ async function rsl(ctx) {
         {key:'exitSignal',label:'Exit?',html:true,fmt:(v,r)=>r.signalPending?`<span title="${esc(r.exitHint||'')}">—</span>`:v?`<b style="color:#ff5555" title="${esc(r.exitHint||'Exit-Signal')}">JA</b>`:`<span title="${esc(r.exitHint||'kein Exit-Signal')}">—</span>`},
         col('symbol','Ticker'),uniCol,maCol,col('buyDate','Kauf-\ndatum'),
         col('buyPrice','Kauf-\nkurs',px),col('qty','Stück',fmtQty),...pnlCols('open'),{...col('note','Notiz'),short:20},
-        {...col('rank','Rank',fmt0),title:d.basis==='FRI'?'Rang zum letzten Freitagsschluss (Basis der Verkaufssignale, Rank-Schutz); die Rangliste darunter zeigt den aktuellen Rang':'Aktueller Rang'},col('rsl','RSL',v=>fmt(v,4)),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
+        ...rslHoldCols(d),col('benchRsl','Bench\nRSL',v=>fmt(v,4)),
         ...rrgCols(),
         exitCol,
         ...(trailNum(cur.trail)>0?[
@@ -1001,7 +1018,9 @@ async function rsl(ctx) {
       ...(rankingVal(d.ranking)==='MOM52_4'?[{key:'score',label:'Mom\n12-1 %',html:true,fmt:v=>Number.isFinite(v)?`<b title="Rendite Wochenschluss vor 52 Wo. → vor 4 Wo. (Rangkriterium)">${(100*v).toFixed(2).replace('.',',')} %</b>`:'—'}]
         :rankingVal(d.ranking)==='RSL39'?[{key:'score',label:'RSL39',html:true,fmt:v=>Number.isFinite(v)?`<b title="Wochenschluss / SMA 39 Wochenschlüsse (Rangkriterium)">${fmt(v,4)}</b>`:'—'}]:[]),
       ...(allRows.some(r=>r.friClose!=null)?[{key:'friClose',label:'Fr-\nSchluss',fmt:v=>v!=null?px(v):'—',title:`Schlusskurs am letzten Freitagsschluss${d.weekClose?.asOf?` (${deDate(d.weekClose.asOf)})`:''}, nur zur Orientierung; Rang und Kauf-Kandidaten rechnen mit dem aktuellen Kurs`}]:[]),
-      col('rsl',rankingVal(d.ranking)==='RSL26'?'RSL\n(1 = Ø)':'RSL26\n(RS-Exit)',v=>fmt(v,4)),col('asOf','Stand'),
+      col('rsl',rankingVal(d.ranking)==='RSL26'?'RSL26\naktuell':'RSL26\n(RS-Exit)',v=>fmt(v,4)),
+      ...(allRows.some(r=>r.friRsl!=null)?[{key:'rslDelta',label:'Δ RSL26\nWoche',html:true,fmt:(v,r)=>rslDeltaCell(v,r.friRsl,d,r.friRank!=null?`Rang am Freitagsschluss ${r.friRank} → aktuell ${r.rank}`:'')}]:[]),
+      col('asOf','Stand'),
       {key:'_a',label:'',html:true,left:true,fmt:(_,r)=>{const cmd=holdingsGpCommand(r.ticker,positions||[]);return `<span class="ibtns">${iconBtn('data-rsl-go',cmd,'GP',`Chart: ${cmd}`,'txt')}${iconBtn('data-rsl-go',`${r.ticker} DES`,'DES',`Beschreibung: ${r.ticker} DES`,'txt')}${iconBtn('data-rsl-kauf',r.ticker,'+','Kaufen (Position anlegen)')}${iconBtn('data-rsl-verk',r.ticker,'⏏','Verkaufen')}</span>`;}},
     ],{onRow:r=>ctx.go(holdingsGpCommand(r.ticker,positions||[]))});
     rankTable.querySelectorAll('tbody tr[data-i]').forEach(tr=>{
