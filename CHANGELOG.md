@@ -2,7 +2,7 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
-## [Unreleased]
+## [1.8.1] – in Arbeit
 
 ### Neue Funktionen
 - **🔔 immer sichtbar**: ohne offene Alarme als gedämpfte Glocke ohne Zahl in Terminal-Farbe („Keine offenen Alarme · Klick öffnet ALERTS“; bei fehlendem/altem Server-Endpunkt „Alarmzähler nicht verfügbar“), mit offenen Alarmen wie bisher rot mit Zahl. Klick öffnet immer ALERTS. Über die Glocke abgewählte Typen (🔕) zählen weiterhin nicht.
