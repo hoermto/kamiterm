@@ -794,11 +794,32 @@ async function rsl(ctx) {
   const money2=(v,c)=>Number.isFinite(v)?`${v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} ${curSym(c)}`:'—';
   const pnlColor=v=>!Number.isFinite(v)?'inherit':v>0?'#2ecc71':v<0?'#ff5555':'inherit';
   const pnlCols=(kind)=>[
-    ...(kind==='open'?[{key:'_px',label:'Kurs',fmt:(_,r)=>{const x=pnlRow(r);return x.price!=null?px(x.price):'—';}}]:[]),
+    ...(kind==='open'?[{key:'_px',label:'Kurs',fmt:(_,r)=>{const x=pnlRow(r);return x.price!=null?px(x.price):'—';}},
+      {key:'_val',label:'Wert',html:true,fmt:(_,r)=>{const x=pnlRow(r),q=Number(r.qty);return x.price!=null&&q>0?`<span title="Kurs × Stück · Einsatz ${money2(x.cost,x.cur)} (Kaufkurs × Stück + Gebühr)">${money2(x.price*q,x.cur)}</span>`:'—';}}]:[]),
     {key:'_pp',label:'P&L %',html:true,fmt:(_,r)=>{const x=pnlRow(r);return x.pnlPct!=null?`<span data-pnl-pct style="color:${pnlColor(x.pnlPct)}" title="Kursrendite ${kind==='open'?'letzter Schluss':'Verkaufskurs'} vs. Kaufkurs, ohne Gebühren">${x.pnlPct.toFixed(2).replace('.',',')} %</span>`:'—';}},
     {key:'_pa',label:kind==='open'?'P&L\nunreal.':'P&L\nreal.',html:true,fmt:(_,r)=>{const x=pnlRow(r);return x.pnlAbs!=null?`<span style="color:${pnlColor(x.pnlAbs)}" title="(Kurs − Kaufkurs) × Stück − ${x.fees} × Gebühr 1 ${curSym(x.cur)}${x.pnlAbsPct!=null?` · ${x.pnlAbsPct.toFixed(2).replace('.',',')} % auf Einsatz inkl. Gebühr`:''}">${money2(x.pnlAbs,x.cur)}</span>`:'<span class="hint" style="margin:0" title="Stückzahl oder Kaufkurs fehlt">—</span>';}},
     {key:'_d',label:'Tage',fmt:(_,r)=>{const x=pnlRow(r);return x.days!=null?String(x.days):'—';}},
   ];
+  // Summenzeile(n) unter den offenen Positionen, je Währung: Wert, P&L % auf Einsatz (inkl. Kaufgebühr), P&L unreal.
+  const addOpenSumRows=(tbl,list)=>{
+    const ths=[...tbl.querySelectorAll('thead th')].map(th=>th.textContent);
+    const iVal=ths.indexOf('Wert'),iPct=ths.indexOf('P&L %'),iAbs=ths.findIndex(t=>t.startsWith('P&L')&&t.includes('unreal'));
+    if(iVal<0||iPct<0||iAbs<0) return;
+    const by={};
+    for(const p of list){const x=pnlRow(p),q=Number(p.qty);if(x.price==null||!(q>0)||x.cost==null||x.pnlAbs==null)continue;
+      const t=by[x.cur]||(by[x.cur]={value:0,cost:0,pnl:0,n:0});t.value+=x.price*q;t.cost+=x.cost;t.pnl+=x.pnlAbs;t.n++;}
+    const tf=document.createElement('tfoot');
+    for(const [c,t] of Object.entries(by)){
+      const pct=t.cost?t.pnl/t.cost*100:null;
+      const cells=ths.map(()=>'<td></td>');
+      cells[1]=`<td class="l"><b>Summe${Object.keys(by).length>1?' '+c:''}</b></td>`;
+      cells[iVal]=`<td><b title="Einsatz ${money2(t.cost,c)} (${t.n} Positionen, Kaufkurs × Stück + Gebühr)">${money2(t.value,c)}</b></td>`;
+      cells[iPct]=`<td><b data-pnl-sum-pct style="color:${pnlColor(pct)}" title="P&L unrealisiert / Einsatz inkl. Kaufgebühr">${pct!=null?pct.toFixed(2).replace('.',',')+' %':'—'}</b></td>`;
+      cells[iAbs]=`<td><b data-pnl-sum style="color:${pnlColor(t.pnl)}">${money2(t.pnl,c)}</b></td>`;
+      const tr=document.createElement('tr');tr.innerHTML=cells.join('');tf.append(tr);
+    }
+    if(tf.children.length) tbl.append(tf);
+  };
   const pnlSummary=(list,label)=>{
     const t=pnlTotals(list);
     const parts=t.currencies.map(c=>{const v=t.byCur[c];return `${c}: realisiert ${money2(v.realized,c)} · unrealisiert ${money2(v.unrealized,c)} · gesamt ${money2(v.total,c)}`;});
@@ -892,6 +913,7 @@ async function rsl(ctx) {
         editBox.replaceChildren(f);
       },true);
       const bl=benchLine(pos,d);
+      addOpenSumRows(posTable,pos);
       holdingsHost.append(...(bl?[bl]:[]),posTable,editBox);
       if(trailNum(cur.trail)>0) holdingsHost.append(note(`ℹ Trailing-Stop: Referenz ist der höchste Wochenschluss seit Kauf (meist Freitagsschluss, laufende Woche mit letztem Schlusskurs, mindestens Kaufkurs), nicht das Handelshoch (Intraday-Hoch). Stop = Hoch × (1 − ${trailNum(cur.trail)} %). Ausgelöst, wenn ein Wochenschluss ≤ Stop; Ausführung Montag-Open, kein Intraday-Stop. „Fallhöhe bis Stop“ = wie viel % der Kurs bis zum Stop noch fallen darf (max. ${trailNum(cur.trail)} %, negativ = unter Stop). Wie im Backtest.`));
     } else {
@@ -909,10 +931,10 @@ async function rsl(ctx) {
       holdingsHost.append(collapsible('closed',`Geschlossene Positionen (${soldF.length}${fUni==='ALL'?'':` · ${fUni}`}${soldF.length>sold.length?`, neueste ${sold.length} gezeigt`:''})`,[soldTable]));
     }
     if(pos.length||soldF.length) holdingsHost.append(pnlSummary([...pos,...soldF],fUni==='ALL'?'Alle':fUni));
-    holdingsHost.append(equitySection(fUni));
+    holdingsHost.append(equitySection(fUni,posAll));
   };
   // Equity-Kurve der echten Trades vs. Benchmark: lädt erst beim Aufklappen (GET /api/fn/rslpnl, nur lesen).
-  const equitySection=(fUni)=>{
+  const equitySection=(fUni,openPos=[])=>{
     const benchOpts=['^GSPC','^NDX','^GDAXI','^STOXX'];
     const body=html('<div data-rsl-equity></div>');
     const det=collapsible('equity',`📈 Equity der Holdings vs. Benchmark (${fUni==='ALL'?'Alle':fUni})`,[body]);
@@ -920,7 +942,9 @@ async function rsl(ctx) {
     const load=async(bench)=>{
       body.replaceChildren(note('Lade Equity…'));
       try{
-        const r=await api.fn('rslpnl',{filter:fUni,bench:bench||undefined});
+        // aktuelle Kurse wie in der Tabelle, damit der letzte Punkt der Kurve zur Summe der Holdings passt
+        const pxNow=openPos.map(p=>[p.symbol,pnlRow(p).price]).filter(([,v])=>v>0).map(([k,v])=>`${k}:${v}`).join(',');
+        const r=await api.fn('rslpnl',{filter:fUni,bench:bench||undefined,px:pxNow||undefined});
         if(!ctx.live())return;
         body.replaceChildren();
         const bar=html('<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0"></div>');
@@ -928,16 +952,16 @@ async function rsl(ctx) {
         for(const b of benchOpts){const o=document.createElement('option');o.value=b;o.textContent=b;if(b===r.bench)o.selected=true;sel.append(o);}
         sel.onchange=()=>load(sel.value);lab.append(sel);bar.append(lab);
         const info=document.createElement('span');info.className='hint';info.style.margin='0';info.title=r.method||'';
-        info.textContent=r.points?.length?`${r.trades} Trades · Währung ${r.reportCur} · P&L ${money2(r.pnl,r.reportCur)} vs. Benchmark ${money2(r.benchPnl,r.reportCur)} · ⓘ Methode (Tooltip)`:(r.note||'Keine Daten.');
+        info.textContent=r.points?.length?`${r.trades} Trades · Währung ${r.reportCur} · Equity ${money2(r.last.equity,r.reportCur)} = Wert offen ${money2(r.last.marketValue,r.reportCur)} + realisiert ${money2(r.last.realized,r.reportCur)} · Einsatz offen ${money2(r.last.deposits,r.reportCur)} · P&L ${money2(r.pnl,r.reportCur)} vs. Benchmark ${money2(r.benchPnl,r.reportCur)} · ⓘ Methode (Tooltip)`:(r.note||'Keine Daten.');
         bar.append(info);body.append(bar);
         if(r.points?.length){
           const host=html('<div data-rsl-equity-chart></div>');body.append(host);
           chart?.remove();
-          // Einzahlungen = flows: P&L-Balken ziehen neu eingezahltes Kapital ab (gleiche Logik wie r.pnl).
+          // Einsatz = flows: P&L-Balken ziehen Käufe/Verkäufe (Änderung des Einsatzes) ab (gleiche Logik wie r.pnl).
           chart=equityChart(host,[
             {title:`Holdings (${r.reportCur})`,color:'#ffa028',data:r.points.map(p=>({time:p.date,value:p.equity}))},
             {title:`${r.bench} gleiche Cashflows`,color:'#63a9ff',data:r.points.map(p=>({time:p.date,value:p.bench}))},
-            {title:'Einzahlungen',color:'#777',flows:true,data:r.points.map(p=>({time:p.date,value:p.deposits}))},
+            {title:'Einsatz offene Positionen',color:'#777',flows:true,data:r.points.map(p=>({time:p.date,value:p.deposits}))},
           ],{storeKey:'rsl26-holdings',cur:curSym(r.reportCur)});
           ctx.onCleanup(()=>chart?.remove());
         }

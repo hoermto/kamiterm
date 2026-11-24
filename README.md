@@ -15,7 +15,7 @@ This file covers what was added.
 - **Universes:** Nasdaq 100, S&P 500, HDAX and STOXX Europe 600 (EUR), each with its own benchmark. Settings are remembered per universe.
 - **Ranking:** RSL26, RSL39 or 12-1 momentum (`MOM52_4`), with a configurable list length (Top X) and markers in the list: *in portfolio*, *held in another universe*, *buy candidate* for free slots, *skipped (M&A)*.
 - **Entry and exit rules:** N positions, M&A skip; exits on RRG weakness (Leading → Weakening/Lagging) with rank protection (RANKTOP) or confirmation weeks, RS exit (RSL below the benchmark), trailing stop on weekly closes, buy-back lock after a trailing exit. Profiles save a full parameter set; built-in profiles come from the best backtests.
-- **Holdings:** buy, edit, sell (also partial, fractional shares), reopen; P&L per position, open and closed, and an equity curve against the benchmark. Exit signals with reasons, the distance to the trailing stop, and compact columns.
+- **Holdings:** buy, edit, sell (also partial, fractional shares), reopen; P&L per position, open and closed, the value per position with a sum row (value, P&L % and total), and an equity curve against the benchmark (value of the open positions + realized P&L). Exit signals with reasons, the distance to the trailing stop, and compact columns.
 - **One click per row:** **GP** chart, **DES** description, **+** buy, **⏏** sell (ranking); **GP ✎ ⏏ ✕** in the holdings.
 
 ### RSLBT: backtest of the same strategy
