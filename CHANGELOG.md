@@ -2,7 +2,9 @@
 
 Alle nennenswerten Änderungen am Terminal. Versionsnummer: `package.json` (Server-Banner, `/api/health`, `/api/about`, MCP-Server) und `public/js/version.js` (Kopfzeile, HELP).
 
-## [1.8.1] – in Arbeit
+## [1.8.2] – in Arbeit
+
+## [1.8.1] – 2026-11-25
 
 ### Neue Funktionen
 - **Ein Kurschart für GP, FV und DMOV** (`public/js/ohlc-chart.js`): Zeitraum-Reiter, CANDLES | LINE, Studien (SMA 50/200, EMA 20, Bollinger, Volumen, RSI, MACD), LIVE und Kurszeile wie in GP. **FV** zeigt jetzt Kerzen mit 1Y | 5Y | 10Y | MAX (Standard 10Y, gemerkt), die Linien Fair und Normal als Stufen darüber; vorher eine Monatslinie nur ab dem ersten Jahresbericht. **DMOV** bekommt Linie/Kerzen und Studien, die DMOV-Zeiträume wählen weiter den Bereich, Ex-Tage bleiben markiert. Neuer Zeitraum **10Y** (Wochenkerzen) auch in GP (`GP 10Y`). Studienwahl je Bildschirm getrennt gespeichert (GP wie bisher, FV und DMOV eigene, Standard ohne Studien).
