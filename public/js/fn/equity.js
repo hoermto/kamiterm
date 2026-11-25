@@ -3,7 +3,8 @@
 // earnings estimates (EE) and analyst ratings (ANR). The maths runs on the server (lib/fn/eq-*.js, eqs.js,
 // dvd.js, ee.js, anr.js), so the numbers the tests check are the numbers on screen.
 import { api, esc, px, pct, cls, big, num, date } from "../api.js";
-import { table, kv, sect, tabs, html, lineChart, priceChart, delayTag } from "../ui.js";
+import { table, kv, sect, tabs, html, lineChart, delayTag } from "../ui.js";
+import { ohlcChart } from "../ohlc-chart.js";
 import { toSecurity, parseOption, YELLOW } from "../securities.js";
 import { verdictHtml } from "./events.js";
 
@@ -791,39 +792,37 @@ function dmovOpts(args) {
 // Trading days of daily bars per DMOV period, for the chart.
 const DMOV_BARS = { "1Y": 260, "2Y": 520, "3Y": 780, "5Y": 1300, ALL: 4000 };
 const isoOf = (t) => new Date(t * 1000).toISOString().slice(0, 10);
-// DMOV chart: daily candles over the period, every past ex-date marked with its dividend; today's buy-write
-// entry too once it is in the data. "Full chart" opens GP for the same security.
-async function dmovChart(ctx, d, period, host) {
-  ctx.dmovChart?.remove();
-  ctx.dmovChart = null;
-  const res = await api.candles(ctx.sec.id, "1D", DMOV_BARS[period] || 520).catch(() => null);
-  if (!ctx.live() || !host.isConnected) return;
-  const bars = (res?.candles || []).filter((b) => b.close > 0);
-  if (!bars.length) {
-    host.replaceChildren(html(`<p class="hint">No price chart available.</p>`));
-    return;
-  }
-  host.replaceChildren();
-  const c = priceChart(host, { type: "candles", height: 300 });
-  let gone = false;
-  const remove = () => { if (!gone) { gone = true; c.remove(); } };
-  ctx.dmovChart = { remove };
-  ctx.onCleanup(remove);
-  c.series.setData(bars.map((b) => ({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close })));
-  // Marker on the first bar on or after a date (an ex-date can fall on a holiday in the data).
-  const barOn = (iso) => bars.find((b) => isoOf(b.time) >= iso);
-  const marks = [];
+// DMOV chart: the shared OHLC chart (ohlc-chart.js) on daily bars over the period, every past ex-date marked with
+// its dividend; today's buy-write entry too once it is in the data. The DMOV period tabs choose the range.
+function dmovChart(ctx, d, period, host) {
   const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  for (const e of d.events || []) {
-    const b = barOn(e.exDate);
-    if (b) marks.push({ time: b.time, position: "belowBar", color: css("--amber"), shape: "arrowUp", text: `ex ${num(e.amount, 2)}` });
-  }
-  const q = d.buyWrite?.quote;
-  const lastIso = isoOf(bars.at(-1).time);
-  if (q?.entryDate && q.entryDate <= lastIso) marks.push({ time: barOn(q.entryDate).time, position: "aboveBar", color: css("--up"), shape: "arrowDown", text: "entry" });
-  marks.sort((a, b) => a.time - b.time);
-  window.LightweightCharts.createSeriesMarkers?.(c.series, marks);
-  c.chart.timeScale().fitContent();
+  const decorate = (chart, series, { vis: bars }) => {
+    if (!bars.length) return;
+    // Marker on the first bar on or after a date (an ex-date can fall on a holiday in the data).
+    const barOn = (iso) => bars.find((b) => isoOf(b.time) >= iso);
+    const marks = [];
+    for (const e of d.events || []) {
+      const b = barOn(e.exDate);
+      if (b) marks.push({ time: b.time, position: "belowBar", color: css("--amber"), shape: "arrowUp", text: `ex ${num(e.amount, 2)}` });
+    }
+    const q = d.buyWrite?.quote;
+    const lastIso = isoOf(bars.at(-1).time);
+    if (q?.entryDate && q.entryDate <= lastIso) marks.push({ time: barOn(q.entryDate).time, position: "aboveBar", color: css("--up"), shape: "arrowDown", text: "entry" });
+    marks.sort((a, b) => a.time - b.time);
+    window.LightweightCharts.createSeriesMarkers?.(series, marks);
+  };
+  // A new period redraws the screen in place: the previous chart (and its LIVE timer) goes first.
+  ctx.dmovChart?.then((c) => c?.remove());
+  ctx.dmovChart = ohlcChart(ctx, host, {
+    range: period,
+    ranges: [],
+    rangeMap: { [period]: ["1D", DMOV_BARS[period] || 520] },
+    studiesKey: "amberStudiesDMOV",
+    defaultStudies: [],
+    height: 300,
+    decorate,
+  }).catch((e) => { host.replaceChildren(html(`<p class="hint">No price chart available: ${esc(e.message)}</p>`)); return null; });
+  return ctx.dmovChart;
 }
 const dmovCmd = (ctx, period, o) =>
   `${ctx.sec.id} DMOV ${period}${o.entry ? ` ENTRY=${o.entry}` : ""}${o.dtemin ? ` DTE=${o.dtemin}-${o.dtemax}` : ""}`;
@@ -849,7 +848,7 @@ async function renderDmov(ctx, period, opts) {
       renderDmov(ctx, p, opts);
     }),
   );
-  const chartHost = html(`<div style="position:relative;height:300px;margin:4px 0 8px"><p class="hint">Loading the chart…</p></div>`);
+  const chartHost = html(`<div style="margin:4px 0 8px"></div>`);
   const full = html(`<button class="tab" title="Open the full price chart (GP) for ${esc(d.symbol)}">Full chart (GP)</button>`);
   full.onclick = () => ctx.go(`${ctx.sec.id} GP`);
   ctx.el.append(
