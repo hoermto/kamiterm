@@ -83,7 +83,7 @@ test('pnlRow / pnlTotals: unrealized, realized, fees, fractional, currencies', (
   assert.equal(t.closed, 2); assert.equal(t.wins, 1); assert.equal(t.winRate, 50); assert.equal(t.missing, 1);
 });
 
-test('buildEquity: money-weighted twin, fractional qty, fees, EUR→USD', () => {
+test('buildEquity: holdings value + realized P&L, fractional qty, fees, EUR→USD', () => {
   const D = 86400, t0 = Date.UTC(2026, 0, 5) / 1000; // Montag
   const mk = (f) => Array.from({ length: 40 }, (_, i) => ({ time: t0 + i * D, close: f(i) }));
   const pos = [
@@ -95,14 +95,33 @@ test('buildEquity: money-weighted twin, fractional qty, fees, EUR→USD', () => 
   assert.equal(one.pnl, 23, '(110−100)×2,5 − 2 Gebühren');
   assert.equal(one.benchPnl, -2, 'flat benchmark loses only the fees');
   assert.equal(one.points[0].deposits, 251);
+  assert.equal(one.last.deposits, 0, 'nothing open at the end');
+  assert.equal(one.last.equity, 23, 'equity = realized P&L only');
   const fx = makeFx(mk(() => 1.2)); // 1 EUR = 1,20 USD
   const mixed = buildEquity({ positions: pos, seriesBy, benchBars: mk(() => 50), benchCur: 'USD', reportCur: 'USD', fx, fee: 1, today: t0 + 30 * D });
   assert.equal(mixed.trades, 2);
-  // B: Einzahlung (10×10+1)×1,2 = 121,2 USD; Wert 10×12×1,2 = 144 USD
-  assert.ok(Math.abs(mixed.last.deposits - (251 + 121.2)) < 0.01);
-  assert.ok(Math.abs(mixed.last.equity - (274 + 144)) < 0.01, 'A: 110×2,5−1 Cash; B: 10×12×1,2');
+  // B: Einsatz (10×10+1)×1,2 = 121,2 USD; Wert 10×12×1,2 = 144 USD; A realisiert 23
+  assert.ok(Math.abs(mixed.last.deposits - 121.2) < 0.01);
+  assert.ok(Math.abs(mixed.last.equity - (23 + 144)) < 0.01, 'A: realized 23; B: 10×12×1,2');
+  assert.ok(Math.abs(mixed.pnl - (23 + 22.8)) < 0.01, 'P&L = realized + unrealized (144 − 121,2)');
   const skip = buildEquity({ positions: [{ symbol: 'C', universe: 'SPX', buyDate: '2026-01-05', buyPrice: 1 }], seriesBy, benchBars: mk(() => 1) });
   assert.equal(skip.trades, 0); assert.equal(skip.skipped[0].reason, 'Stückzahl fehlt');
+});
+
+test('buildEquity: proceeds reinvested on the sell day are not new money; last point uses current prices', () => {
+  const D = 86400, t0 = Date.UTC(2026, 0, 5) / 1000;
+  const mk = (f) => Array.from({ length: 40 }, (_, i) => ({ time: t0 + i * D, close: f(i) }));
+  const pos = [
+    { symbol: 'A', universe: 'SPX', buyDate: '2026-01-05', buyPrice: 100, qty: 10, status: 'closed', closedDate: '2026-01-12', sellPrice: 90 },
+    { symbol: 'B', universe: 'SPX', buyDate: '2026-01-12', buyPrice: 50, qty: 18, status: 'open' },
+  ];
+  const seriesBy = new Map([['A', mk(() => 90)], ['B', mk(() => 50)]]);
+  const r = buildEquity({ positions: pos, seriesBy, benchBars: mk(() => 50), fee: 1, today: t0 + 14 * D, nowPx: new Map([['B', 55]]) });
+  // A: −100 − 2 Gebühren realisiert; B: Einsatz 901, Wert 18 × 55 = 990
+  assert.equal(r.last.deposits, 901);
+  assert.equal(r.last.equity, 990 - 102);
+  assert.equal(r.pnl, -102 + 89);
+  assert.equal(r.points.at(-2).equity, 900 - 102, 'earlier days use the daily close');
 });
 
 test('EU universes: HDAX replaces DAX tab, STOXX 600 added, research defaults', () => {

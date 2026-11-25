@@ -4,11 +4,13 @@
 // P/E is the stock's own median over up to 15 years. The expected return assumes 5 years of growth, the P/E
 // back at normal (at most 30) and the dividends. Maths on the server: lib/valuation.js, lib/fn/fv.js, lib/fn/fvscan.js.
 import { api, esc, num, px, big } from "../api.js";
-import { table, sortRows, sect, tabs, html, lineChart } from "../ui.js";
+import { table, sortRows, sect, tabs, html } from "../ui.js";
+import { ohlcChart } from "../ohlc-chart.js";
 import { watchButtons } from "./workspace.js";
 import { yahooWords } from "../securities.js";
 
 const finite = (v) => typeof v === "number" && Number.isFinite(v);
+const FV_RANGES = ["1Y", "5Y", "10Y", "MAX"];
 const BASES = ["EPS", "FCF", "OE"];
 const BASIS_TIPS = { EPS: "Earnings per share (GAAP, diluted)", FCF: "Free cash flow per share", OE: "Owner earnings: free cash flow minus stock-based pay, per share" };
 const sgn = (v, d = 1) => (finite(v) ? `${v > 0 ? "+" : ""}${v.toFixed(d)}%` : "—");
@@ -49,7 +51,9 @@ async function fv(ctx) {
   if (!ctx.live()) return;
   // SEC company facts only for US stocks (or when SEC was asked and failed)
   ctx.usesSec?.(d.dataSource === "sec" || d.notes?.some((n) => /^SEC did not answer/.test(n)) || !/\.[A-Z]{1,3}$/.test(d.symbol));
-  saveSettings("FV", { basis, pe });
+  // Chart range of the price chart (1Y, 5Y, 10Y, MAX), saved with basis and P/E.
+  let chartRange = FV_RANGES.includes(saved.chartRange) ? saved.chartRange : "10Y";
+  saveSettings("FV", { basis, pe, chartRange });
   const cur = d.currency;
   const go = (b, p) => ctx.go(`${ctx.sec.id} FV ${b}${p !== 15 ? ` PE=${p}` : ""}`);
 
@@ -83,19 +87,41 @@ async function fv(ctx) {
     d.earningsYield != null && ["Earnings yield", `${p1(d.earningsYield, 2)}${d.bondYield != null ? ` <span class="${d.yieldGap >= 0 ? "up" : "down"}">vs 10-year Treasury ${p1(d.bondYield, 2)} (${sgn(d.yieldGap, 2)})</span>` : ""}`, "", "Earnings over price. Below the bond yield, the stock pays for growth that has to come"],
   ]));
 
-  // --- chart: price vs value lines ---
-  const host = html(`<div style="height:320px;position:relative;margin:6px 0"></div>`);
-  ctx.el.append(host, html(`<p class="hint"><span style="color:var(--amber)">Price</span> · <span class="up">Fair value (${unit} ${d.pe})</span> · <span style="color:#5aa9ff">Value at the normal ${unit} (${x1(d.normalPe)})</span>. Monthly, with the annual figures as published at the time.</p>`));
+  // --- chart: the shared OHLC chart (ranges, candles/line, studies) with the value lines on top ---
+  const host = html(`<div data-fv-chart></div>`);
+  ctx.el.append(host, html(`<p class="hint">Price · <span class="up">Fair value (${unit} ${d.pe})</span> · <span style="color:#5aa9ff">Value at the normal ${unit} (${x1(d.normalPe)})</span>. Value lines monthly, with the annual figures as published at the time${d.lines.length ? ` (from ${esc(d.lines[0].iso || new Date(d.lines[0].time * 1000).toISOString().slice(0, 10))})` : ", none for this stock"}.</p>`));
   const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const line = (f) => d.lines.filter((r) => finite(r[f])).map((r) => ({ time: r.time, value: r[f] }));
-  if (d.lines.length) {
-    const c = lineChart(host, [
-      { title: "Price", color: css("--amber"), data: line("price") },
-      { title: "Fair", color: css("--up"), data: line("fair") },
-      { title: "Normal", color: "#5aa9ff", data: line("normal") },
-    ]);
-    ctx.onCleanup(() => c.remove());
-  } else host.replaceChildren(html(`<p class="hint">No annual figures for a chart.</p>`));
+  // Step lines over the visible bars: the value in force at the first bar, then each month, held to the last bar.
+  const valueLine = (chart, f, color, title, vis) => {
+    const t0 = vis[0].time, tN = vis.at(-1).time;
+    const pts = d.lines.map((r) => ({ time: r.time, v: r[f] }));
+    const before = pts.filter((r) => r.time <= t0).at(-1);
+    const inView = pts.filter((r) => r.time > t0 && r.time <= tN);
+    if (before) inView.unshift({ ...before, time: t0 });
+    if (inView.length && inView.at(-1).time < tN) inView.push({ ...inView.at(-1), time: tN });
+    if (!inView.some((r) => finite(r.v))) return;
+    chart
+      .addSeries(window.LightweightCharts.LineSeries, { color, lineWidth: 2, lineType: 1, title, priceLineVisible: false, crosshairMarkerVisible: false })
+      .setData(inView.map((r) => (finite(r.v) ? { time: r.time, value: r.v } : { time: r.time })));
+  };
+  ohlcChart(ctx, host, {
+    range: chartRange,
+    ranges: FV_RANGES,
+    studiesKey: "amberStudiesFV",
+    defaultStudies: [],
+    height: 340,
+    tools: [],
+    decorate: (chart, series, { vis }) => {
+      if (!vis.length || !d.lines.length) return;
+      valueLine(chart, "fair", css("--up"), "Fair", vis);
+      valueLine(chart, "normal", "#5aa9ff", "Normal", vis);
+    },
+    onRange: (r) => {
+      if (r === chartRange) return;
+      chartRange = r;
+      saveSettings("FV", { basis, pe, chartRange });
+    },
+  }).catch((e) => host.replaceChildren(html(`<p class="hint">Price chart not available: ${esc(e.message)}</p>`)));
 
   // --- expected return ---
   const g = d.growth;
