@@ -1,5 +1,4 @@
 // HELP lists every function; DATA says where each one's numbers come from and how fresh they are.
-import { APP_VERSION } from "../version.js";
 import { esc } from "../api.js";
 import { table, sect, html } from "../ui.js";
 import { FUNCS } from "./index.js";
@@ -34,7 +33,10 @@ export default [
     name: "Functions",
     group: "Help",
     source: "This app",
-    render(ctx) {
+    async render(ctx) {
+      // Served by the server from package.json (only version source); loaded here so the module also loads in tests.
+      const { APP_VERSION } = await import("../version.js");
+      if (!ctx.live()) return;
       ctx.el.innerHTML = "";
       ctx.el.append(
         html(

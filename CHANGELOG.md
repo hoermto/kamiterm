@@ -1,6 +1,6 @@
 # Changelog · Amber Terminal
 
-Alle nennenswerten Änderungen am Terminal. Versionsnummer: nur in `package.json`. Server-Banner, `/api/health`, `/api/about`, MCP-Server und Updater lesen sie dort; die Oberfläche (Kopfzeile, HELP) bekommt sie über `/js/version.js`, das der Server aus `package.json` erzeugt. Neue Version: `npm version x.y.z --no-git-tag-version` (setzt `package.json` und `package-lock.json`), dazu eine Überschrift `## [x.y.z]` hier.
+Alle nennenswerten Änderungen am Terminal. Versionsnummer: nur in `package.json`. Server-Banner, `/api/health`, `/api/about`, MCP-Server und Updater lesen sie dort; die Oberfläche (Kopfzeile, HELP) bekommt sie über `/js/version.js`, das der Server aus `package.json` erzeugt. Neue Version: `npm version x.y.z --no-git-tag-version` (setzt `package.json` und `package-lock.json`), danach `npm install` (frischt nur die npm-Marke auf, sonst meldet die Startprüfung veraltete Pakete), dazu eine Überschrift `## [x.y.z]` hier.
 
 ## [1.9.0] – in Arbeit
 
